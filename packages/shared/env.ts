@@ -24,6 +24,8 @@ export type Env = {
   X_CLIENT_SECRET?: string;
   X_REDIRECT_URI?: string;
   OTLP_ENDPOINT?: string;
+  CRON_SECRET?: string;
+  API_FOOTBALL_DAILY_BUDGET?: string;
 };
 
 const REQUIRED: (keyof Env)[] = ["OPENROUTER_API_KEY", "NEON_DATABASE_URL"];

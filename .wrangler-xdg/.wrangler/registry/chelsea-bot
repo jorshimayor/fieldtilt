@@ -1,5 +1,0 @@
-{
-  "debugPortAddress": "127.0.0.1:59451",
-  "defaultEntrypointService": "core:user:chelsea-bot",
-  "userWorkerService": "core:user:chelsea-bot"
-}

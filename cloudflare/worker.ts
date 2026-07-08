@@ -3,14 +3,19 @@ import dashboardHtml from "../public/index.html";
 import apiIndex from "../api/index";
 import apiDashboard from "../api/dashboard";
 import apiGenerateTweet from "../api/generate-tweet";
+import apiHealth from "../api/health";
+import apiRender from "../api/render";
 import cronPrewarm from "../api/cron/prewarm";
 import cronFixtures from "../api/cron/fixtures";
 import cronWeekly from "../api/cron/weekly";
 import cronMatchDay from "../api/cron/match-day";
+import cronTransfers from "../api/cron/transfers";
+import cronSpotlight from "../api/cron/spotlight";
 import xAuth from "../api/x/auth";
 import xCallback from "../api/x/callback";
 import xPublish from "../api/x/publish";
 import testTools from "../api/test/tools";
+import { requireOpsAuth } from "../packages/shared/auth";
 
 type EnvBindings = Record<string, string | undefined>;
 
@@ -55,6 +60,39 @@ async function callHandler(
   return (handler as any)(req);
 }
 
+type Route = { handler: (req: Request) => Promise<Response>; protected?: boolean };
+
+// Endpoints that spend money/quota (LLM calls, API-Football, posting to X)
+// are gated behind CRON_SECRET — see packages/shared/auth.ts.
+const routes: Record<string, Route> = {
+  "/api/index": { handler: apiIndex as any, protected: true },
+  "/api/health": { handler: apiHealth as any },
+  "/api/dashboard": { handler: apiDashboard as any },
+  "/api/generate-tweet": { handler: apiGenerateTweet as any, protected: true },
+  "/api/render": { handler: apiRender as any }, // does its own auth check
+
+  "/api/cron/prewarm": { handler: cronPrewarm as any, protected: true },
+  "/api/cron/fixtures": { handler: cronFixtures as any, protected: true },
+  "/api/cron/weekly": { handler: cronWeekly as any, protected: true },
+  "/api/cron/match-day": { handler: cronMatchDay as any, protected: true },
+  "/api/cron/transfers": { handler: cronTransfers as any, protected: true },
+  "/api/cron/spotlight": { handler: cronSpotlight as any, protected: true },
+
+  "/api/x/auth": { handler: xAuth as any },
+  "/api/x/callback": { handler: xCallback as any },
+  "/api/x/publish": { handler: xPublish as any, protected: true },
+
+  "/api/test/tools": { handler: testTools as any, protected: true },
+};
+
+/** Build the internal Request used when the Cloudflare scheduler fires. */
+function cronRequest(path: string): Request {
+  const secret = (globalThis as any).process?.env?.CRON_SECRET || "";
+  return new Request(`https://local${path}`, {
+    headers: secret ? { Authorization: `Bearer ${secret}` } : {},
+  });
+}
+
 export default {
   async fetch(req: Request, env: EnvBindings): Promise<Response> {
     setProcessEnv(env);
@@ -63,22 +101,13 @@ export default {
 
     if (p === "/" || p === "/index.html") return serveDashboard();
 
-    if (p === "/api/index") return callHandler(apiIndex as any, req);
-    if (p === "/api/dashboard") return callHandler(apiDashboard as any, req);
-    if (p === "/api/generate-tweet") return callHandler(apiGenerateTweet as any, req);
-
-    if (p === "/api/cron/prewarm") return callHandler(cronPrewarm as any, req);
-    if (p === "/api/cron/fixtures") return callHandler(cronFixtures as any, req);
-    if (p === "/api/cron/weekly") return callHandler(cronWeekly as any, req);
-    if (p === "/api/cron/match-day") return callHandler(cronMatchDay as any, req);
-
-    if (p === "/api/x/auth") return callHandler(xAuth as any, req);
-    if (p === "/api/x/callback") return callHandler(xCallback as any, req);
-    if (p === "/api/x/publish") return callHandler(xPublish as any, req);
-
-    if (p === "/api/test/tools") return callHandler(testTools as any, req);
-
-    return notFound();
+    const route = routes[p];
+    if (!route) return notFound();
+    if (route.protected) {
+      const denied = requireOpsAuth(req);
+      if (denied) return denied;
+    }
+    return callHandler(route.handler, req);
   },
 
   async scheduled(event: any, env: EnvBindings): Promise<void> {
@@ -86,18 +115,28 @@ export default {
     const cron = (event as any).cron as string | undefined;
 
     if (cron === "*/5 * * * *") {
-      await callHandler(cronPrewarm as any, new Request("https://local/api/cron/prewarm"));
-      await callHandler(cronMatchDay as any, new Request("https://local/api/cron/match-day"));
+      await callHandler(cronPrewarm as any, cronRequest("/api/cron/prewarm"));
+      await callHandler(cronMatchDay as any, cronRequest("/api/cron/match-day"));
       return;
     }
 
     if (cron === "0 7 * * *") {
-      await callHandler(cronFixtures as any, new Request("https://local/api/cron/fixtures"));
+      await callHandler(cronFixtures as any, cronRequest("/api/cron/fixtures"));
+      return;
+    }
+
+    if (cron === "0 8 * * *") {
+      await callHandler(cronTransfers as any, cronRequest("/api/cron/transfers"));
       return;
     }
 
     if (cron === "0 9 * * 1") {
-      await callHandler(cronWeekly as any, new Request("https://local/api/cron/weekly"));
+      await callHandler(cronWeekly as any, cronRequest("/api/cron/weekly"));
+      return;
+    }
+
+    if (cron === "0 12 * * 3") {
+      await callHandler(cronSpotlight as any, cronRequest("/api/cron/spotlight"));
     }
   },
 };

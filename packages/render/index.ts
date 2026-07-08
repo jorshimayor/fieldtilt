@@ -1,0 +1,49 @@
+export * from "./cards";
+export { svgToPng } from "./png";
+
+import {
+  matchPreviewCard,
+  scoreCard,
+  postMatchCard,
+  playerStatCard,
+  transferCard,
+  formCard,
+  MatchPreviewData,
+  ScoreCardData,
+  PostMatchData,
+  PlayerStatData,
+  TransferCardData,
+  FormCardData,
+} from "./cards";
+import { svgToPng } from "./png";
+
+export type CardKind =
+  | "match_preview"
+  | "score"
+  | "post_match"
+  | "player_stat"
+  | "transfer"
+  | "form";
+
+export function buildCardSvg(kind: CardKind, data: unknown): string {
+  switch (kind) {
+    case "match_preview":
+      return matchPreviewCard(data as MatchPreviewData);
+    case "score":
+      return scoreCard(data as ScoreCardData);
+    case "post_match":
+      return postMatchCard(data as PostMatchData);
+    case "player_stat":
+      return playerStatCard(data as PlayerStatData);
+    case "transfer":
+      return transferCard(data as TransferCardData);
+    case "form":
+      return formCard(data as FormCardData);
+    default:
+      throw new Error(`unknown card kind: ${kind}`);
+  }
+}
+
+export async function renderCardPng(kind: CardKind, data: unknown): Promise<Uint8Array> {
+  return svgToPng(buildCardSvg(kind, data));
+}

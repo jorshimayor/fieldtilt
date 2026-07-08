@@ -6,9 +6,10 @@
   "scripts": {
     "build": "echo build",
     "dev": "pnpm build:worker && cross-env XDG_CONFIG_HOME=.wrangler-xdg WRANGLER_LOG_PATH=.wrangler-xdg wrangler dev dist/worker.mjs --port 3000",
-    "build:worker": "esbuild cloudflare/worker.ts --bundle --format=esm --platform=browser --outfile=dist/worker.mjs --loader:.html=text",
+    "build:worker": "esbuild cloudflare/worker.ts --bundle --format=esm --platform=browser --outfile=dist/worker.mjs --loader:.html=text --loader:.ttf=binary --external:*.wasm && cp node_modules/@resvg/resvg-wasm/index_bg.wasm dist/resvg.wasm",
     "deploy": "pnpm build:worker && cross-env XDG_CONFIG_HOME=.wrangler-xdg WRANGLER_LOG_PATH=.wrangler-xdg wrangler deploy dist/worker.mjs",
-    "test": "tsx tests/unit/safety.test.ts && tsx tests/unit/tweet-prompts.test.ts",
+    "test": "tsx tests/unit/safety.test.ts && tsx tests/unit/tweet-prompts.test.ts && tsx tests/unit/render.test.ts && tsx tests/unit/football.test.ts",
+    "typecheck": "tsc --noEmit",
     "test:generate": "tsx scripts/smokeGenerate.ts",
     "check:bundle": "node scripts/checkBundle.mjs",
     "check:coldstart": "node scripts/checkColdstart.mjs",
@@ -21,14 +22,15 @@
     "cross-env": "^7.0.3",
     "dotenv-cli": "^8.0.0",
     "esbuild": "^0.23.1",
-    "wrangler": "^4.84.1",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wrangler": "^4.84.1"
   },
   "dependencies": {
     "@langchain/langgraph": "^0.2.74",
     "@neondatabase/serverless": "^0.9.5",
     "@opentelemetry/api": "^1.9.1",
+    "@resvg/resvg-wasm": "^2.6.2",
     "@upstash/redis": "^1.37.0",
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",

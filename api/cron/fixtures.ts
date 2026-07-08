@@ -1,38 +1,36 @@
 export const config = { runtime: "edge" };
 
 /**
- * Daily morning fixtures post.
- * Schedule target: 08:00 Africa/Lagos (WAT, UTC+1) = 07:00 UTC every day.
- * Vercel cron expression: "0 7 * * *"
+ * Daily morning cron — 07:00 UTC (08:00 WAT).
  *
- * Flow:
- *   1. Pull the next Chelsea fixture from API-Football.
- *   2. Ask the LLM to write a MATCH PREVIEW tweet.
- *   3. Publish (unless flags.publish_draft_only).
- *   4. Persist to messages table.
+ * 1. Warms the `nextfixture` cache key that gates the 5-minute match-day
+ *    poller (so it doesn't burn API-Football quota on non-match days).
+ * 2. If the next Chelsea fixture kicks off within 48h, posts a MATCH PREVIEW
+ *    tweet with a preview infographic. Otherwise stays quiet.
  */
 
 import { getChelseaFixtures } from "../../packages/tools/football";
-import { routeAndChat } from "../../packages/shared/openrouter";
-import {
-  buildTweetMessages,
-  normalizeTweet,
-} from "../../packages/shared/tweet-prompts";
-import { publishTweetForUser } from "../../packages/shared/x";
-import { once } from "../../packages/shared/redis";
-import { db } from "../../packages/db/client";
-import { messages } from "../../packages/db/schema";
-import flags from "../../config/flags.json";
+import { setCache } from "../../packages/tools/cache";
+import { composeAndPost } from "../../packages/shared/poster";
 import { withErrorLogging } from "../../packages/observability/index";
+
+export const NEXT_FIXTURE_KEY = "nextfixture:chelsea";
 
 export default withErrorLogging(async function handler(): Promise<Response> {
   const { fixtures } = await getChelseaFixtures({ next: 1 });
   const next = fixtures[0];
-  if (!next) {
-    return json({ skipped: "no upcoming fixture" });
+  if (!next) return json({ skipped: "no upcoming fixture" });
+
+  // Gate for the match-day poller (24h TTL, refreshed daily).
+  await setCache(NEXT_FIXTURE_KEY, { id: next.id, date: next.date }, 24 * 60 * 60 * 1000);
+
+  const kickoff = new Date(next.date).getTime();
+  const hoursAway = (kickoff - Date.now()) / 36e5;
+  if (hoursAway > 48) {
+    return json({ skipped: `next fixture ${Math.round(hoursAway)}h away — no preview yet`, fixtureId: next.id });
   }
 
-  const dateLocal = new Date(next.date).toLocaleString("en-GB", {
+  const dateLabel = new Date(next.date).toLocaleString("en-GB", {
     timeZone: "Africa/Lagos",
     weekday: "short",
     day: "numeric",
@@ -41,49 +39,34 @@ export default withErrorLogging(async function handler(): Promise<Response> {
     minute: "2-digit",
   });
 
-  const m = buildTweetMessages("match_preview", "professional", {
-    opponent: next.opponent,
-    competition: next.competition,
-    date: dateLocal,
-    venue: next.venue,
-    hook: next.isChelseaHome ? "Home fixture at the Bridge." : "Away day.",
-  });
-  const llm = await routeAndChat({ messages: m });
-  const tweet = normalizeTweet(llm.content);
-  if (!tweet) return json({ skipped: "llm produced SKIP" });
-
-  let tweetId = "";
-  if (!flags.publish_draft_only) {
-    const idKey = `tweet:fixtures:${next.id}`;
-    const firstTime = await once(idKey, 24 * 60 * 60);
-    if (firstTime) {
-      const res = await publishTweetForUser(tweet);
-      tweetId = res.id || "";
-    }
-  }
-
-  await db.insert(messages).values({
-    direction: "out",
-    content: tweet,
-    modelUsed: llm.model,
+  const result = await composeAndPost({
+    kind: "match_preview",
+    data: {
+      opponent: next.opponent,
+      competition: next.competition,
+      date: `${dateLabel} WAT`,
+      venue: next.venue,
+      hook: next.isChelseaHome ? "Home fixture at the Bridge." : "Away day.",
+    },
+    card: {
+      kind: "match_preview",
+      data: {
+        home: next.home,
+        away: next.away,
+        competition: next.competition,
+        dateLabel: `${dateLabel} WAT`,
+        venue: next.venue,
+      },
+    },
+    idKey: `tweet:fixtures:${next.id}:${new Date().toISOString().slice(0, 10)}`,
   });
 
-  return json({
-    fixtureId: next.id,
-    opponent: next.opponent,
-    date: next.date,
-    tweet,
-    posted: Boolean(tweetId),
-    tweetId,
-  });
+  return json({ fixtureId: next.id, opponent: next.opponent, date: next.date, ...result });
 });
 
 function json(obj: unknown, status = 200): Response {
   return new Response(JSON.stringify(obj), {
     status,
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "no-store",
-    },
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 }

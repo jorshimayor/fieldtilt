@@ -16,7 +16,10 @@ jobs:
           node-version: "20"
       - run: npm i -g pnpm@9.11.0
       - run: pnpm install --no-frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
       - run: pnpm -r build
+      - run: pnpm build:worker
       - run: pnpm check:bundle
       - run: pnpm check:coldstart
       - run: pnpm check:tokens

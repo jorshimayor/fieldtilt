@@ -1,72 +1,78 @@
 export const config = { runtime: "edge" };
 
 /**
- * Weekly deep-dive post.
- * Schedule target: Monday 10:00 Africa/Lagos (WAT, UTC+1) = Mon 09:00 UTC.
- * Vercel cron expression: "0 9 * * 1"
+ * Weekly deep-dive — Monday 09:00 UTC (10:00 WAT).
  *
- * Flow:
- *   1. Pull last 5 Chelsea fixtures to build a "window" summary.
- *   2. Ask the LLM for a weekly deep-dive tweet themed around form.
- *   3. Publish (unless flag says draft only).
+ * Pulls last-5 results (with real scores), the Premier League standing, and
+ * season stats, then posts a form-review tweet with a RECENT FORM infographic.
  */
 
-import { getChelseaFixtures } from "../../packages/tools/football";
-import { routeAndChat } from "../../packages/shared/openrouter";
 import {
-  buildTweetMessages,
-  normalizeTweet,
-} from "../../packages/shared/tweet-prompts";
-import { publishTweetForUser } from "../../packages/shared/x";
-import { once } from "../../packages/shared/redis";
-import { db } from "../../packages/db/client";
-import { messages } from "../../packages/db/schema";
-import flags from "../../config/flags.json";
+  getChelseaFixtures,
+  getLeagueStandings,
+  getChelseaSeasonStats,
+  seasonLabel,
+  currentSeason,
+} from "../../packages/tools/football";
+import { composeAndPost } from "../../packages/shared/poster";
 import { withErrorLogging } from "../../packages/observability/index";
 
 export default withErrorLogging(async function handler(): Promise<Response> {
-  const { fixtures } = await getChelseaFixtures({ last: 5 });
-  if (!fixtures.length) return json({ skipped: "no recent fixtures" });
+  const season = currentSeason();
+  const [{ fixtures }, standings, teamStats] = await Promise.all([
+    getChelseaFixtures({ last: 5 }),
+    getLeagueStandings(season),
+    getChelseaSeasonStats(season),
+  ]);
+  const finished = fixtures.filter((f) => f.outcome);
+  if (!finished.length) return json({ skipped: "no recent finished fixtures" });
 
-  // Super-lightweight summary: W/D/L + last 5 opponents.
-  const summary = fixtures
-    .map((f) => `${f.opponent} (${f.competition}) [${f.status}]`)
-    .join(", ");
+  const results = finished.map((f) => ({
+    opponent: f.opponent,
+    score: `${f.goalsHome ?? "?"}-${f.goalsAway ?? "?"}`,
+    outcome: f.outcome as "W" | "D" | "L",
+  }));
 
-  const m = buildTweetMessages("weekly_deep_dive", "professional", {
-    theme: "Form across the last 5 matches",
-    numbers: summary,
-    window: "last 5 matches",
+  const c = standings.chelsea;
+  const record = `${results.map((r) => r.outcome).join("")}`;
+  const numbers = [
+    `Last 5: ${record}`,
+    c ? `P${c.played} • ${c.points}pts • #${c.rank} in the PL` : "",
+    teamStats.goalsFor ? `${teamStats.goalsFor} scored / ${teamStats.goalsAgainst} conceded this season` : "",
+  ]
+    .filter(Boolean)
+    .join(" | ");
+
+  const result = await composeAndPost({
+    kind: "weekly_deep_dive",
+    data: {
+      theme: "Form across the last 5 matches",
+      numbers,
+      window: "last 5 matches",
+    },
+    card: {
+      kind: "form",
+      data: {
+        seasonLabel: seasonLabel(season),
+        results,
+        position: c?.rank ?? null,
+        points: c?.points ?? null,
+        played: c?.played ?? null,
+        goalsFor: c?.goalsFor ?? null,
+        goalsAgainst: c?.goalsAgainst ?? null,
+        competition: "Premier League",
+      },
+    },
+    idKey: `tweet:weekly:${new Date().toISOString().slice(0, 10)}`,
+    idTtlSec: 7 * 24 * 60 * 60,
   });
-  const llm = await routeAndChat({ messages: m });
-  const tweet = normalizeTweet(llm.content);
-  if (!tweet) return json({ skipped: "llm produced SKIP" });
 
-  let tweetId = "";
-  if (!flags.publish_draft_only) {
-    const weekKey = `tweet:weekly:${new Date().toISOString().slice(0, 10)}`;
-    const firstTime = await once(weekKey, 7 * 24 * 60 * 60);
-    if (firstTime) {
-      const res = await publishTweetForUser(tweet);
-      tweetId = res.id || "";
-    }
-  }
-
-  await db.insert(messages).values({
-    direction: "out",
-    content: tweet,
-    modelUsed: llm.model,
-  });
-
-  return json({ tweet, posted: Boolean(tweetId), tweetId });
+  return json(result);
 });
 
 function json(obj: unknown, status = 200): Response {
   return new Response(JSON.stringify(obj), {
     status,
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "no-store",
-    },
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 }

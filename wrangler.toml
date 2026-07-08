@@ -2,5 +2,24 @@ name = "chelsea-bot"
 main = "dist/worker.mjs"
 compatibility_date = "2026-04-22"
 
+# NOTE: image rendering (resvg-wasm) needs more than the free plan's 10ms CPU
+# budget. Run this Worker on the $5/mo Workers Paid plan for infographics, and
+# then uncomment the limits block below to allow up to 30s CPU per invocation.
+# [limits]
+# cpu_ms = 30000
+
 [triggers]
-crons = ["*/5 * * * *", "0 7 * * *", "0 9 * * 1"]
+crons = [
+  "*/5 * * * *", # match-day poller (gated to the match window; cheap otherwise)
+  "0 7 * * *",   # daily fixtures / match preview
+  "0 8 * * *",   # transfer watch
+  "0 9 * * 1",   # weekly form deep-dive
+  "0 12 * * 3",  # player spotlight
+]
+
+# dist/resvg.wasm ships next to the bundle (copied by build:worker) and is
+# compiled by Cloudflare at deploy time.
+[[rules]]
+type = "CompiledWasm"
+globs = ["**/*.wasm"]
+fallthrough = true

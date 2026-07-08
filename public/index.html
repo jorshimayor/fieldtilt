@@ -41,12 +41,27 @@
             BlueBanter TS — fixtures, stats, and tweet studio
           </p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 items-center">
+          <input
+            id="adminKey"
+            type="password"
+            placeholder="Admin key (CRON_SECRET)"
+            class="rounded p-2 text-sm bg-[#0a2a66] border border-[#1d4ed8] w-56"
+          />
           <button id="refresh" class="btn rounded px-3 py-2 text-sm">
             Refresh
           </button>
         </div>
       </header>
+
+      <!-- Health -->
+      <section class="card rounded-xl p-4">
+        <h2 class="text-xl font-semibold mb-3">Production Readiness</h2>
+        <div id="health" class="flex flex-wrap gap-2 text-sm">
+          <span class="muted">Loading…</span>
+        </div>
+        <ul id="healthHints" class="muted text-xs mt-2 list-disc ml-5"></ul>
+      </section>
 
       <!-- Fixtures -->
       <section class="card rounded-xl p-4">
@@ -123,6 +138,30 @@
         <p id="meta" class="muted text-xs"></p>
       </section>
 
+      <!-- Infographic previews -->
+      <section class="card rounded-xl p-4 space-y-3">
+        <h2 class="text-xl font-semibold">
+          Infographic Studio
+          <span class="muted text-sm font-normal">— the cards attached to tweets</span>
+        </h2>
+        <div class="flex flex-wrap gap-2" id="cardKinds">
+          <button data-kind="match_preview" class="btn rounded px-3 py-2 text-sm">Match preview</button>
+          <button data-kind="score" class="btn rounded px-3 py-2 text-sm">Live score</button>
+          <button data-kind="post_match" class="btn rounded px-3 py-2 text-sm">Post-match</button>
+          <button data-kind="player_stat" class="btn rounded px-3 py-2 text-sm">Player stat</button>
+          <button data-kind="transfer" class="btn rounded px-3 py-2 text-sm">Transfer</button>
+          <button data-kind="form" class="btn rounded px-3 py-2 text-sm">Weekly form</button>
+        </div>
+        <img
+          id="cardPreview"
+          class="rounded-lg border border-[#1e3a8a] w-full max-w-3xl hidden"
+          alt="Infographic preview"
+        />
+        <p id="cardMeta" class="muted text-xs">
+          Demo data — cron posts use live API-Football numbers.
+        </p>
+      </section>
+
       <!-- Recent posts -->
       <section class="card rounded-xl p-4">
         <h2 class="text-xl font-semibold mb-3">Recent Tweets (last 10)</h2>
@@ -135,7 +174,77 @@
     <script>
       let chart;
 
+      // Admin key (CRON_SECRET) — stored locally, sent to protected endpoints.
+      const keyInput = document.getElementById("adminKey");
+      keyInput.value = localStorage.getItem("adminKey") || "";
+      keyInput.addEventListener("change", function () {
+        localStorage.setItem("adminKey", keyInput.value.trim());
+      });
+      function authHeaders(extra) {
+        const h = extra || {};
+        const k = (keyInput.value || "").trim();
+        if (k) h["Authorization"] = "Bearer " + k;
+        return h;
+      }
+
+      async function loadHealth() {
+        const el = document.getElementById("health");
+        const hints = document.getElementById("healthHints");
+        try {
+          const res = await fetch("/api/health");
+          const h = await res.json();
+          const items = Object.entries(h.checks || {}).concat([
+            ["x_account_connected", h.xAccountConnected === true],
+            ["live_posting", !h.draftMode],
+          ]);
+          el.innerHTML = items
+            .map(function (kv) {
+              const ok = kv[1] === true;
+              return (
+                '<span class="chip rounded px-2 py-1">' +
+                (ok ? "✅ " : "⚠️ ") +
+                escapeHtml(kv[0].replace(/_/g, " ")) +
+                "</span>"
+              );
+            })
+            .join("");
+          hints.innerHTML = (h.hints || [])
+            .map(function (t) {
+              return "<li>" + escapeHtml(t) + "</li>";
+            })
+            .join("");
+        } catch (e) {
+          el.innerHTML = '<span class="muted">Health check failed: ' + escapeHtml(e.message) + "</span>";
+        }
+      }
+
+      // Infographic previews
+      document.querySelectorAll("#cardKinds button").forEach(function (btn) {
+        btn.addEventListener("click", async function () {
+          const img = document.getElementById("cardPreview");
+          const meta = document.getElementById("cardMeta");
+          meta.textContent = "Rendering…";
+          try {
+            const res = await fetch("/api/render?kind=" + btn.dataset.kind, {
+              headers: authHeaders(),
+            });
+            if (!res.ok) {
+              const j = await res.json().catch(function () { return {}; });
+              meta.textContent = "Render failed (" + res.status + "): " + (j.error || "check the admin key");
+              return;
+            }
+            const blob = await res.blob();
+            img.src = URL.createObjectURL(blob);
+            img.classList.remove("hidden");
+            meta.textContent = btn.dataset.kind + " — demo data. Cron posts use live API-Football numbers.";
+          } catch (e) {
+            meta.textContent = "Render error: " + e.message;
+          }
+        });
+      });
+
       async function load() {
+        loadHealth();
         try {
           const res = await fetch("/api/dashboard");
           if (!res.ok) {
@@ -290,7 +399,7 @@
           try {
             const res = await fetch("/api/generate-tweet", {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: authHeaders({ "Content-Type": "application/json" }),
               body: JSON.stringify({ kind: kind, tone: tone, data: data }),
             });
             const j = await res.json();
@@ -316,7 +425,7 @@
           if (!text) return;
           const url =
             "/api/x/publish?confirm=1&text=" + encodeURIComponent(text);
-          const res = await fetch(url);
+          const res = await fetch(url, { headers: authHeaders() });
           const j = await res.json().catch(function () {
             return {};
           });

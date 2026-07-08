@@ -13,6 +13,7 @@
       "@db/*": ["packages/db/*"],
       "@shared/*": ["packages/shared/*"],
       "@tools/*": ["packages/tools/*"],
+      "@render/*": ["packages/render/*"],
       "@observability/*": ["packages/observability/*"]
     }
   }

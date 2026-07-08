@@ -53,6 +53,17 @@ export const statCache = pgTable("stat_cache", {
   expiresAt: timestamp("expires_at")
 });
 
+/**
+ * Durable idempotency for posted content (transfers, spotlights, …).
+ * Redis `once()` handles short-window dedup; this survives Redis eviction.
+ */
+export const postedItems = pgTable("posted_items", {
+  key: text("key").primaryKey(),
+  kind: text("kind").notNull(),
+  tweetId: text("tweet_id"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
 export const oauthTokens = pgTable("oauth_tokens", {
   id: bigserial("id", { mode: "bigint" }).primaryKey(),
   userId: bigint("user_id", { mode: "number" }),
