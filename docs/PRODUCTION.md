@@ -29,7 +29,8 @@ Every post = LLM tweet copy (grounded in the fetched numbers, never invented)
 ```sh
 # once per secret (repeat for each)
 npx wrangler secret put OPENROUTER_API_KEY
-npx wrangler secret put API_FOOTBALL_KEY
+npx wrangler secret put FOOTBALL_DATA_KEY   # free tier (football-data.org)…
+# npx wrangler secret put API_FOOTBALL_KEY  # …or/and paid full-stats tier — auto-preferred when set
 npx wrangler secret put NEON_DATABASE_URL
 npx wrangler secret put UPSTASH_REDIS_URL
 npx wrangler secret put UPSTASH_REDIS_TOKEN
@@ -60,15 +61,21 @@ open https://<worker-url>/api/health   # all checks should be ✅
 If you authorized before `media.write` existed, visit `/api/x/auth` again —
 image upload fails with 403 otherwise.
 
-## 5. Dry-run, then go live
+## 5. Approval queue vs auto-post
 
-`config/flags.json` ships with `"publish_draft_only": true`: crons run the
-full pipeline (data → tweet → infographic) and log to the `messages` table
-without posting. Watch a match day in draft mode, check the dashboard
-(`https://<worker-url>/`, enter your CRON_SECRET as the admin key), then:
+`config/flags.json` ships with `"publish_draft_only": true` — **approval
+mode**: every cron composes its tweet + infographic into the drafts queue
+instead of posting. On the dashboard (`https://<worker-url>/`, admin key =
+CRON_SECRET) you can edit the text, preview the image, and hit **Post to X**
+— the image is rasterized in your browser, so this whole flow works on the
+free Workers plan.
+
+For unattended **auto-post** (crons post directly, no review):
 
 1. Set `"publish_draft_only": false` in `config/flags.json`
-2. `pnpm deploy`
+2. Upgrade to Workers Paid + uncomment `[limits]` in wrangler.toml (images
+   now render server-side)
+3. `pnpm deploy`
 
 ## 6. Operating notes
 

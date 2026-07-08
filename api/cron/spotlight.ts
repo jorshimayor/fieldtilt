@@ -50,8 +50,27 @@ export default withErrorLogging(async function handler(): Promise<Response> {
     ];
     if (p.rating) stats.push({ label: "Avg rating", value: p.rating });
 
+    // Editorial-style background photo (API-Football headshot under a scrim).
+    let photoDataUri: string | undefined;
+    if (p.photoUrl) {
+      try {
+        const res = await fetch(p.photoUrl);
+        if (res.ok) {
+          const buf = new Uint8Array(await res.arrayBuffer());
+          let bin = "";
+          for (let i = 0; i < buf.length; i += 0x8000) {
+            bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+          }
+          photoDataUri = `data:image/png;base64,${btoa(bin)}`;
+        }
+      } catch {
+        // typographic layout carries the card without a photo
+      }
+    }
+
     const result = await composeAndPost({
       kind: "player_stat",
+      source: "cron:spotlight",
       data: {
         player: p.player,
         season: seasonLabel(season),
@@ -66,7 +85,9 @@ export default withErrorLogging(async function handler(): Promise<Response> {
           player: p.player,
           season: seasonLabel(season),
           competition: "Premier League",
+          context: p.position ? `Position · ${p.position}` : undefined,
           stats,
+          photoDataUri,
         },
       },
     });

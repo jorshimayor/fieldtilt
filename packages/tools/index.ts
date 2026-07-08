@@ -9,13 +9,10 @@ export {
   CHELSEA_TEAM_ID,
   getChelseaFixtures,
   getMatchStats,
-  getChelseaPlayerSummary,
+  getLiveChelseaMatch,
+  activeProviderName,
 } from "./football";
-export type {
-  NormalizedFixture,
-  NormalizedMatchStats,
-  NormalizedPlayerSummary,
-} from "./football";
+export type { NormalizedFixture, NormalizedMatchStats } from "./football";
 
 export async function getLiveEvents(input: { matchId?: string }) {
   const key = `live:${input.matchId || "latest"}`;

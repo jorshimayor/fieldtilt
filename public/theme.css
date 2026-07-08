@@ -1,0 +1,136 @@
+/* =============================================================================
+   THEME — web mirror of packages/render/theme.ts (the canonical tokens).
+   Change tokens there first; keep these variables in sync.
+   Aesthetic: editorial sports — near-black, white grotesk type, tight-tracked
+   headlines, letter-spaced uppercase labels, hairlines, one quiet accent.
+   ============================================================================= */
+
+:root {
+  /* color */
+  --bg: #0b0c0f;
+  --bg-alt: #12141a;
+  --ink: #ffffff;
+  --ink-dim: #c7cbd4;
+  --ink-mute: #878d99;
+  --line: #2a2e37;
+  --accent: #3d6bff;
+  --win: #8fe3a1;
+  --draw: #9aa0ac;
+  --loss: #e5484d;
+
+  /* type */
+  --font: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  --track-label: 0.16em;
+  --track-tight: -0.02em;
+
+  /* shape */
+  --radius: 14px;
+  --hairline: 1px solid var(--line);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+}
+
+/* headline: big, black weight, tight */
+.display {
+  font-weight: 800;
+  letter-spacing: var(--track-tight);
+  line-height: 1.02;
+}
+
+/* LABEL — small caps, wide tracking, muted */
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.brand {
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.card {
+  background: var(--bg-alt);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.chip {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink-dim);
+}
+
+.btn {
+  background: var(--ink);
+  color: var(--bg);
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  font-weight: 700;
+  transition: opacity 0.15s;
+}
+.btn:hover {
+  opacity: 0.85;
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-dim);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-weight: 700;
+}
+.btn-ghost:hover {
+  border-color: var(--ink-mute);
+  color: var(--ink);
+}
+.btn-danger {
+  background: transparent;
+  color: var(--loss);
+  border: 1px solid var(--loss);
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+input,
+select,
+textarea {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.hairline {
+  border-top: var(--hairline);
+}
+
+.muted {
+  color: var(--ink-mute);
+}
+.dim {
+  color: var(--ink-dim);
+}
+
+.status-pending {
+  color: var(--draw);
+}
+.status-posted {
+  color: var(--win);
+}
+.status-rejected {
+  color: var(--loss);
+}

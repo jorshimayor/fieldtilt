@@ -18,7 +18,8 @@ export type TweetKind =
   | "post_match"
   | "player_stat"
   | "transfer_news"
-  | "weekly_deep_dive";
+  | "weekly_deep_dive"
+  | "long_read";
 
 export type Tone = "professional" | "savage";
 
@@ -110,6 +111,22 @@ Structure: a thematic insight (form, a player arc, a tactical trend) backed by o
 Key numbers: ${d.numbers}
 Window: ${d.window ?? "last 5 matches"}`,
   },
+
+  long_read: {
+    system: (tone) => `${BASE_VOICE(tone)}
+OVERRIDE for this task only: this is a LONG-FORM post (X premium long post),
+not a 280-character tweet. Target 600–1500 characters. Structure:
+- A sharp one-line hook.
+- 2–4 short paragraphs of analysis grounded ONLY in the numbers provided.
+- A closing line, ending with "#CFC 💙".
+Blank line between paragraphs. No markdown, no headers, no bullet lists.
+Everything else in the rules above still applies (factual, one output, no invented stats).`,
+    user: (d) => `Topic: ${d.topic}
+Angle: ${d.angle ?? "form and underlying numbers"}
+Data / numbers to ground the piece:
+${d.numbers}
+Window: ${d.window ?? "this season"}`,
+  },
 };
 
 /** Hard safety: always enforce the suffix + length. */
@@ -133,6 +150,16 @@ export function normalizeTweet(raw: string): string {
     const trimmed = body.slice(0, maxBody - 1).replace(/\s+\S*$/, "") + "…";
     t = `${trimmed} ${SUFFIX}`;
   }
+  return t;
+}
+
+/** Long-form variant: keeps paragraphs, soft-caps at X's long-post limit. */
+export function normalizeLongform(raw: string): string {
+  let t = (raw || "").trim();
+  if (t === "SKIP") return "";
+  t = t.replace(/^["“'`]+|["”'`]+$/g, "").trim();
+  if (!/#CFC/i.test(t)) t = `${t}\n\n${SUFFIX}`;
+  if (t.length > 4000) t = t.slice(0, 3999).replace(/\s+\S*$/, "") + "…";
   return t;
 }
 

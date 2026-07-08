@@ -45,6 +45,7 @@ export default withErrorLogging(async function handler(): Promise<Response> {
 
   const result = await composeAndPost({
     kind: "weekly_deep_dive",
+    source: "cron:weekly",
     data: {
       theme: "Form across the last 5 matches",
       numbers,

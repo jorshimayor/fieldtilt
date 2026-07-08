@@ -13,6 +13,7 @@ import { initWasm, Resvg } from "@resvg/resvg-wasm";
 // Resolved at runtime relative to dist/worker.mjs; kept external in esbuild.
 import resvgWasm from "./resvg.wasm";
 import { fontBuffers, FONT_FAMILY } from "./fonts";
+import { color } from "./theme";
 
 let ready: Promise<void> | null = null;
 
@@ -32,7 +33,7 @@ function ensureWasm(): Promise<void> {
 export async function svgToPng(svg: string): Promise<Uint8Array> {
   await ensureWasm();
   const resvg = new Resvg(svg, {
-    background: "#050e2b",
+    background: color.bg,
     font: {
       fontBuffers,
       defaultFontFamily: FONT_FAMILY,

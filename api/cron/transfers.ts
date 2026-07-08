@@ -15,7 +15,13 @@ import { withErrorLogging } from "../../packages/observability/index";
 const MAX_POSTS_PER_RUN = 2;
 
 export default withErrorLogging(async function handler(): Promise<Response> {
-  const { transfers } = await getChelseaTransfers({ sinceDays: 14 });
+  const { transfers, supported } = await getChelseaTransfers({ sinceDays: 14 });
+  if (!supported) {
+    return json({
+      skipped:
+        "transfer data not available on the current provider (football-data.org) — add an API_FOOTBALL_KEY to enable, or post transfers manually via the dashboard Compose studio",
+    });
+  }
   if (!transfers.length) return json({ skipped: "no recent transfers" });
 
   const posted: unknown[] = [];
@@ -28,6 +34,7 @@ export default withErrorLogging(async function handler(): Promise<Response> {
     const feeLabel = /€|£|\$/.test(t.type) ? t.type : t.type === "N/A" ? "Undisclosed" : t.type;
     const result = await composeAndPost({
       kind: "transfer_news",
+      source: "cron:transfers",
       data: {
         player: t.player,
         direction: t.direction === "in" ? "in" : "out",

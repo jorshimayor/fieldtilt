@@ -9,12 +9,19 @@ export const config = { runtime: "edge" };
  *    tweet with a preview infographic. Otherwise stays quiet.
  */
 
-import { getChelseaFixtures } from "../../packages/tools/football";
+import {
+  getChelseaFixtures,
+  getHeadToHead,
+  activeProviderName,
+} from "../../packages/tools/football";
 import { setCache } from "../../packages/tools/cache";
 import { composeAndPost } from "../../packages/shared/poster";
 import { withErrorLogging } from "../../packages/observability/index";
 
-export const NEXT_FIXTURE_KEY = "nextfixture:chelsea";
+/** Fixture ids are provider-scoped, so the warm cache is too. */
+export function nextFixtureKey(): string {
+  return `nextfixture:chelsea:${activeProviderName()}`;
+}
 
 export default withErrorLogging(async function handler(): Promise<Response> {
   const { fixtures } = await getChelseaFixtures({ next: 1 });
@@ -22,7 +29,7 @@ export default withErrorLogging(async function handler(): Promise<Response> {
   if (!next) return json({ skipped: "no upcoming fixture" });
 
   // Gate for the match-day poller (24h TTL, refreshed daily).
-  await setCache(NEXT_FIXTURE_KEY, { id: next.id, date: next.date }, 24 * 60 * 60 * 1000);
+  await setCache(nextFixtureKey(), { id: next.id, date: next.date }, 24 * 60 * 60 * 1000);
 
   const kickoff = new Date(next.date).getTime();
   const hoursAway = (kickoff - Date.now()) / 36e5;
@@ -39,14 +46,28 @@ export default withErrorLogging(async function handler(): Promise<Response> {
     minute: "2-digit",
   });
 
+  // Historical context: head-to-head over the last 10 meetings.
+  let h2hSummary = "";
+  try {
+    h2hSummary = (await getHeadToHead({ opponentId: next.opponentId, fixtureId: next.id })).summary;
+  } catch {
+    // preview still posts without it
+  }
+
   const result = await composeAndPost({
     kind: "match_preview",
+    source: "cron:fixtures",
     data: {
       opponent: next.opponent,
       competition: next.competition,
       date: `${dateLabel} WAT`,
       venue: next.venue,
-      hook: next.isChelseaHome ? "Home fixture at the Bridge." : "Away day.",
+      hook: [
+        next.isChelseaHome ? "Home fixture at the Bridge." : "Away day.",
+        h2hSummary ? `H2H: ${h2hSummary}.` : "",
+      ]
+        .filter(Boolean)
+        .join(" "),
     },
     card: {
       kind: "match_preview",
@@ -56,6 +77,7 @@ export default withErrorLogging(async function handler(): Promise<Response> {
         competition: next.competition,
         dateLabel: `${dateLabel} WAT`,
         venue: next.venue,
+        footnote: h2hSummary ? `H2H · ${h2hSummary}` : undefined,
       },
     },
     idKey: `tweet:fixtures:${next.id}:${new Date().toISOString().slice(0, 10)}`,

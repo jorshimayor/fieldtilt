@@ -3,6 +3,11 @@ declare module "*.html" {
   export default content;
 }
 
+declare module "*.css" {
+  const content: string;
+  export default content;
+}
+
 declare module "*.ttf" {
   const bytes: Uint8Array;
   export default bytes;

@@ -3,183 +3,149 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Chelsea Bot — Dashboard</title>
+    <title>BRIDGWAYS — Control Room</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-    <style>
-      html,
-      body {
-        background: #03122f;
-        color: #e6ecff;
-      }
-      .chip {
-        background: #0a2a66;
-        border: 1px solid #1d4ed8;
-      }
-      .card {
-        background: #0a1a3d;
-        border: 1px solid #1e3a8a;
-      }
-      .btn {
-        background: #034694;
-        border: 1px solid #3b82f6;
-      }
-      .btn:hover {
-        background: #1d4ed8;
-      }
-      .muted {
-        color: #9dbcf5;
-      }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,700;0,800;1,400;1,800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/theme.css" />
   </head>
   <body class="min-h-screen">
-    <main class="max-w-6xl mx-auto p-6 space-y-6">
-      <header class="flex items-center justify-between">
+    <main class="max-w-6xl mx-auto p-6 space-y-8">
+      <header class="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 class="text-3xl font-bold">Chelsea Bot 💙</h1>
-          <p class="muted text-sm">
-            BlueBanter TS — fixtures, stats, and tweet studio
-          </p>
+          <h1 class="brand text-2xl">BRIDGWAYS.</h1>
+          <p class="label mt-1">Chelsea FC · Control Room</p>
         </div>
         <div class="flex gap-2 items-center">
           <input
             id="adminKey"
             type="password"
             placeholder="Admin key (CRON_SECRET)"
-            class="rounded p-2 text-sm bg-[#0a2a66] border border-[#1d4ed8] w-56"
+            class="p-2 text-sm w-56"
           />
-          <button id="refresh" class="btn rounded px-3 py-2 text-sm">
-            Refresh
-          </button>
+          <button id="refresh" class="btn px-4 py-2 text-sm">Refresh</button>
         </div>
       </header>
 
-      <!-- Health -->
-      <section class="card rounded-xl p-4">
-        <h2 class="text-xl font-semibold mb-3">Production Readiness</h2>
-        <div id="health" class="flex flex-wrap gap-2 text-sm">
-          <span class="muted">Loading…</span>
+      <!-- Approval queue -->
+      <section class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="display text-xl">APPROVAL QUEUE</h2>
+          <div class="flex gap-2 text-xs">
+            <button data-status="pending" class="qtab btn px-3 py-1.5">Pending</button>
+            <button data-status="posted" class="qtab btn-ghost px-3 py-1.5">Posted</button>
+            <button data-status="rejected" class="qtab btn-ghost px-3 py-1.5">Rejected</button>
+          </div>
         </div>
-        <ul id="healthHints" class="muted text-xs mt-2 list-disc ml-5"></ul>
-      </section>
-
-      <!-- Fixtures -->
-      <section class="card rounded-xl p-4">
-        <h2 class="text-xl font-semibold mb-3">Upcoming Fixtures</h2>
-        <div id="fixtures" class="grid md:grid-cols-2 gap-3">
-          <div class="muted">Loading…</div>
+        <div id="queue" class="space-y-4">
+          <div class="muted text-sm">Enter your admin key, then Refresh.</div>
         </div>
       </section>
 
-      <!-- Chart of last match -->
-      <section class="card rounded-xl p-4">
-        <h2 class="text-xl font-semibold mb-3">
-          Last Match Stats
-          <span id="lastOpp" class="muted text-sm font-normal"></span>
-        </h2>
-        <canvas id="statsChart" height="120"></canvas>
-      </section>
-
-      <!-- Tweet studio -->
-      <section class="card rounded-xl p-4 space-y-3">
-        <h2 class="text-xl font-semibold">Tweet Studio</h2>
-        <div class="grid md:grid-cols-3 gap-3">
-          <label class="text-sm">
-            Kind
-            <select
-              id="kind"
-              class="w-full mt-1 rounded p-2 bg-[#0a2a66] border border-[#1d4ed8]"
-            >
+      <!-- Compose -->
+      <section class="card rounded-xl p-5 space-y-4">
+        <h2 class="display text-xl">COMPOSE</h2>
+        <div class="grid md:grid-cols-4 gap-3 text-sm">
+          <label>
+            <span class="label">Kind</span>
+            <select id="kind" class="w-full mt-1 p-2">
               <option value="match_preview">Match preview</option>
               <option value="live_update">Live update</option>
               <option value="post_match">Post-match</option>
               <option value="player_stat">Player stat</option>
               <option value="transfer_news">Transfer news</option>
               <option value="weekly_deep_dive">Weekly deep-dive</option>
+              <option value="long_read">Long-form read</option>
             </select>
           </label>
-          <label class="text-sm">
-            Tone
-            <select
-              id="tone"
-              class="w-full mt-1 rounded p-2 bg-[#0a2a66] border border-[#1d4ed8]"
-            >
+          <label>
+            <span class="label">Tone</span>
+            <select id="tone" class="w-full mt-1 p-2">
               <option value="professional">Professional</option>
               <option value="savage">Savage</option>
             </select>
           </label>
-          <label class="text-sm">
-            Data (JSON)
-            <textarea
-              id="data"
-              rows="3"
-              class="w-full mt-1 rounded p-2 bg-[#0a2a66] border border-[#1d4ed8] font-mono text-xs"
-            >
-{"opponent":"Arsenal","competition":"Premier League","date":"Sat 3 PM","venue":"Stamford Bridge"}</textarea>
+          <label>
+            <span class="label">Card (image)</span>
+            <select id="cardKind" class="w-full mt-1 p-2">
+              <option value="">No image</option>
+              <option value="match_preview">Match preview</option>
+              <option value="score">Score</option>
+              <option value="post_match">Post-match</option>
+              <option value="player_stat">Player stat</option>
+              <option value="transfer">Transfer</option>
+              <option value="form">Form</option>
+              <option value="editorial">Editorial</option>
+            </select>
+          </label>
+          <label class="flex items-end gap-2 pb-1">
+            <input type="checkbox" id="longform" class="w-4 h-4" />
+            <span class="dim">Long-form</span>
           </label>
         </div>
-        <div class="flex gap-2">
-          <button id="generate" class="btn rounded px-3 py-2 text-sm">
-            Generate
-          </button>
-          <button
-            id="post"
-            class="btn rounded px-3 py-2 text-sm"
-            disabled
-            title="Requires server-side OAuth + confirm=1"
-          >
-            Post to X
-          </button>
-        </div>
-        <pre
-          id="preview"
-          class="whitespace-pre-wrap rounded p-3 bg-[#04183b] border border-[#1e3a8a] text-sm min-h-[4rem]"
-        ></pre>
-        <p id="meta" class="muted text-xs"></p>
+        <label class="block text-sm">
+          <span class="label">Tweet data (JSON — grounds the LLM copy)</span>
+          <textarea id="data" rows="3" class="w-full mt-1 p-2 font-mono text-xs">
+{"opponent":"Arsenal","competition":"Premier League","date":"Sat 3 PM","venue":"Stamford Bridge"}</textarea>
+        </label>
+        <label class="block text-sm">
+          <span class="label">Card data (JSON — leave empty to use demo data)</span>
+          <textarea id="cardData" rows="2" class="w-full mt-1 p-2 font-mono text-xs"></textarea>
+        </label>
+        <button id="compose" class="btn px-4 py-2 text-sm">Generate → queue</button>
+        <p id="composeMeta" class="muted text-xs"></p>
       </section>
 
-      <!-- Infographic previews -->
-      <section class="card rounded-xl p-4 space-y-3">
-        <h2 class="text-xl font-semibold">
-          Infographic Studio
-          <span class="muted text-sm font-normal">— the cards attached to tweets</span>
-        </h2>
+      <!-- Health -->
+      <section class="card rounded-xl p-5">
+        <h2 class="display text-xl mb-3">READINESS</h2>
+        <div id="health" class="flex flex-wrap gap-2 text-xs">
+          <span class="muted">Loading…</span>
+        </div>
+        <ul id="healthHints" class="muted text-xs mt-3 list-disc ml-5 space-y-1"></ul>
+      </section>
+
+      <!-- Design studio -->
+      <section class="card rounded-xl p-5 space-y-3">
+        <h2 class="display text-xl">DESIGN STUDIO</h2>
+        <p class="label">Card templates with demo data</p>
         <div class="flex flex-wrap gap-2" id="cardKinds">
-          <button data-kind="match_preview" class="btn rounded px-3 py-2 text-sm">Match preview</button>
-          <button data-kind="score" class="btn rounded px-3 py-2 text-sm">Live score</button>
-          <button data-kind="post_match" class="btn rounded px-3 py-2 text-sm">Post-match</button>
-          <button data-kind="player_stat" class="btn rounded px-3 py-2 text-sm">Player stat</button>
-          <button data-kind="transfer" class="btn rounded px-3 py-2 text-sm">Transfer</button>
-          <button data-kind="form" class="btn rounded px-3 py-2 text-sm">Weekly form</button>
+          <button data-kind="match_preview" class="btn-ghost px-3 py-1.5 text-xs">Match preview</button>
+          <button data-kind="score" class="btn-ghost px-3 py-1.5 text-xs">Live score</button>
+          <button data-kind="post_match" class="btn-ghost px-3 py-1.5 text-xs">Post-match</button>
+          <button data-kind="player_stat" class="btn-ghost px-3 py-1.5 text-xs">Player stat</button>
+          <button data-kind="transfer" class="btn-ghost px-3 py-1.5 text-xs">Transfer</button>
+          <button data-kind="form" class="btn-ghost px-3 py-1.5 text-xs">Weekly form</button>
+          <button data-kind="editorial" class="btn-ghost px-3 py-1.5 text-xs">Editorial</button>
         </div>
-        <img
-          id="cardPreview"
-          class="rounded-lg border border-[#1e3a8a] w-full max-w-3xl hidden"
-          alt="Infographic preview"
-        />
-        <p id="cardMeta" class="muted text-xs">
-          Demo data — cron posts use live API-Football numbers.
-        </p>
+        <div id="studioPreview" class="max-w-xl"></div>
       </section>
 
-      <!-- Recent posts -->
-      <section class="card rounded-xl p-4">
-        <h2 class="text-xl font-semibold mb-3">Recent Tweets (last 10)</h2>
-        <ul id="posts" class="space-y-2 text-sm">
-          <li class="muted">Loading…</li>
-        </ul>
+      <!-- Fixtures + recent -->
+      <section class="grid md:grid-cols-2 gap-6">
+        <div class="card rounded-xl p-5">
+          <h2 class="display text-xl mb-3">FIXTURES</h2>
+          <div id="fixtures" class="space-y-2 text-sm">
+            <div class="muted">Loading…</div>
+          </div>
+        </div>
+        <div class="card rounded-xl p-5">
+          <h2 class="display text-xl mb-3">RECENTLY POSTED</h2>
+          <ul id="posts" class="space-y-2 text-sm">
+            <li class="muted">Loading…</li>
+          </ul>
+        </div>
       </section>
     </main>
 
     <script>
-      let chart;
-
-      // Admin key (CRON_SECRET) — stored locally, sent to protected endpoints.
+      // ---------- auth ----------
       const keyInput = document.getElementById("adminKey");
       keyInput.value = localStorage.getItem("adminKey") || "";
-      keyInput.addEventListener("change", function () {
-        localStorage.setItem("adminKey", keyInput.value.trim());
-      });
+      keyInput.addEventListener("change", () => localStorage.setItem("adminKey", keyInput.value.trim()));
       function authHeaders(extra) {
         const h = extra || {};
         const k = (keyInput.value || "").trim();
@@ -187,6 +153,248 @@
         return h;
       }
 
+      function escapeHtml(s) {
+        const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+        return String(s ?? "").replace(/[&<>"']/g, (c) => map[c]);
+      }
+
+      // ---------- client-side rasterization (free-plan path) ----------
+      // Fetch the card as SVG with fonts embedded, draw to canvas, get a PNG.
+      async function fetchCardSvg(cardKind, cardData) {
+        const res = await fetch("/api/render", {
+          method: "POST",
+          headers: authHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ kind: cardKind, data: cardData || undefined, format: "svg", fonts: true }),
+        });
+        if (!res.ok) throw new Error("render failed (" + res.status + ")");
+        return res.text();
+      }
+
+      function svgSize(svgText) {
+        const m = svgText.match(/viewBox="0 0 (\d+) (\d+)"/);
+        return m ? { w: +m[1], h: +m[2] } : { w: 1200, h: 675 };
+      }
+
+      async function svgToPngBase64(svgText) {
+        const { w, h } = svgSize(svgText);
+        const blob = new Blob([svgText], { type: "image/svg+xml" });
+        const url = URL.createObjectURL(blob);
+        try {
+          const img = new Image();
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = () => reject(new Error("svg decode failed"));
+            img.src = url;
+          });
+          // brief delay lets embedded @font-face data URIs finish loading
+          await new Promise((r) => setTimeout(r, 250));
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+          return canvas.toDataURL("image/png");
+        } finally {
+          URL.revokeObjectURL(url);
+        }
+      }
+
+      // ---------- approval queue ----------
+      let queueStatus = "pending";
+      document.querySelectorAll(".qtab").forEach((b) =>
+        b.addEventListener("click", () => {
+          queueStatus = b.dataset.status;
+          document.querySelectorAll(".qtab").forEach((x) => (x.className = x.className.replace("btn ", "btn-ghost ")));
+          b.className = b.className.replace("btn-ghost ", "btn ");
+          loadQueue();
+        })
+      );
+
+      async function loadQueue() {
+        const el = document.getElementById("queue");
+        try {
+          const res = await fetch("/api/drafts?status=" + queueStatus, { headers: authHeaders() });
+          if (!res.ok) {
+            el.innerHTML = '<div class="muted text-sm">Queue unavailable (' + res.status + ") — check the admin key.</div>";
+            return;
+          }
+          const j = await res.json();
+          const list = j.drafts || [];
+          if (!list.length) {
+            el.innerHTML = '<div class="muted text-sm">Nothing ' + queueStatus + ".</div>";
+            return;
+          }
+          el.innerHTML = list.map(draftHtml).join("");
+          list.forEach(wireDraft);
+        } catch (e) {
+          el.innerHTML = '<div class="muted text-sm">Queue error: ' + escapeHtml(e.message) + "</div>";
+        }
+      }
+
+      function draftHtml(d) {
+        const when = d.createdAt ? new Date(d.createdAt).toLocaleString() : "";
+        const isPending = d.status === "pending";
+        return (
+          '<div class="card rounded-xl p-4 space-y-3" id="draft-' + d.id + '">' +
+          '<div class="flex items-center justify-between flex-wrap gap-2">' +
+          '<div class="flex gap-2 items-center">' +
+          '<span class="chip px-2.5 py-1 text-xs">' + escapeHtml(d.kind) + "</span>" +
+          (d.longform ? '<span class="chip px-2.5 py-1 text-xs">long-form</span>' : "") +
+          (d.cardKind ? '<span class="chip px-2.5 py-1 text-xs">🖼 ' + escapeHtml(d.cardKind) + "</span>" : "") +
+          '<span class="label">' + escapeHtml(d.source || "") + " · " + when + "</span>" +
+          "</div>" +
+          '<span class="label status-' + d.status + '">' + d.status + (d.tweetId ? " · " + escapeHtml(d.tweetId) : "") + "</span>" +
+          "</div>" +
+          '<div class="grid md:grid-cols-2 gap-4">' +
+          '<textarea data-role="content" rows="6" class="w-full p-3 text-sm" ' + (isPending ? "" : "readonly") + ">" +
+          escapeHtml(d.content) +
+          "</textarea>" +
+          '<div data-role="preview" class="min-h-[80px]">' +
+          (d.cardKind ? '<div class="muted text-xs">Loading preview…</div>' : '<div class="muted text-xs">No image for this draft.</div>') +
+          "</div></div>" +
+          (isPending
+            ? '<div class="flex gap-2">' +
+              '<button data-role="post" class="btn px-4 py-2 text-sm">Post to X</button>' +
+              '<button data-role="reject" class="btn-danger px-4 py-2 text-sm">Reject</button>' +
+              '<span data-role="meta" class="muted text-xs self-center"></span>' +
+              "</div>"
+            : d.status === "rejected"
+              ? '<button data-role="restore" class="btn-ghost px-4 py-2 text-sm">Restore to pending</button>'
+              : "") +
+          "</div>"
+        );
+      }
+
+      function wireDraft(d) {
+        const root = document.getElementById("draft-" + d.id);
+        if (!root) return;
+        const previewEl = root.querySelector('[data-role="preview"]');
+        let svgText = null;
+        if (d.cardKind) {
+          fetchCardSvg(d.cardKind, d.cardData)
+            .then((svg) => {
+              svgText = svg;
+              const blob = new Blob([svg], { type: "image/svg+xml" });
+              previewEl.innerHTML = '<img class="rounded-lg border border-[#2a2e37] max-w-full" />';
+              previewEl.querySelector("img").src = URL.createObjectURL(blob);
+            })
+            .catch((e) => (previewEl.innerHTML = '<div class="muted text-xs">Preview failed: ' + escapeHtml(e.message) + "</div>"));
+        }
+        const meta = root.querySelector('[data-role="meta"]');
+        const postBtn = root.querySelector('[data-role="post"]');
+        if (postBtn)
+          postBtn.addEventListener("click", async () => {
+            postBtn.disabled = true;
+            meta.textContent = "Posting…";
+            try {
+              let pngBase64;
+              if (d.cardKind) {
+                meta.textContent = "Rendering image in browser…";
+                if (!svgText) svgText = await fetchCardSvg(d.cardKind, d.cardData);
+                pngBase64 = await svgToPngBase64(svgText);
+              }
+              meta.textContent = "Uploading to X…";
+              const res = await fetch("/api/drafts", {
+                method: "POST",
+                headers: authHeaders({ "Content-Type": "application/json" }),
+                body: JSON.stringify({
+                  action: "post",
+                  id: d.id,
+                  content: root.querySelector('[data-role="content"]').value,
+                  pngBase64: pngBase64,
+                }),
+              });
+              const j = await res.json();
+              if (!res.ok || j.error) throw new Error(j.error?.message || j.error || "post failed");
+              meta.textContent = "Posted! id=" + j.tweetId;
+              setTimeout(loadQueue, 800);
+            } catch (e) {
+              meta.textContent = "Error: " + e.message;
+              postBtn.disabled = false;
+            }
+          });
+        const rejectBtn = root.querySelector('[data-role="reject"]');
+        if (rejectBtn)
+          rejectBtn.addEventListener("click", async () => {
+            await fetch("/api/drafts", {
+              method: "POST",
+              headers: authHeaders({ "Content-Type": "application/json" }),
+              body: JSON.stringify({ action: "reject", id: d.id }),
+            });
+            loadQueue();
+          });
+        const restoreBtn = root.querySelector('[data-role="restore"]');
+        if (restoreBtn)
+          restoreBtn.addEventListener("click", async () => {
+            await fetch("/api/drafts", {
+              method: "POST",
+              headers: authHeaders({ "Content-Type": "application/json" }),
+              body: JSON.stringify({ action: "restore", id: d.id }),
+            });
+            loadQueue();
+          });
+      }
+
+      // ---------- compose ----------
+      document.getElementById("compose").addEventListener("click", async () => {
+        const meta = document.getElementById("composeMeta");
+        let data, cardData;
+        try {
+          data = JSON.parse(document.getElementById("data").value || "{}");
+        } catch {
+          meta.textContent = "Tweet data is not valid JSON.";
+          return;
+        }
+        const cardDataRaw = document.getElementById("cardData").value.trim();
+        if (cardDataRaw) {
+          try {
+            cardData = JSON.parse(cardDataRaw);
+          } catch {
+            meta.textContent = "Card data is not valid JSON.";
+            return;
+          }
+        }
+        const cardKind = document.getElementById("cardKind").value;
+        meta.textContent = "Generating…";
+        try {
+          const res = await fetch("/api/drafts", {
+            method: "POST",
+            headers: authHeaders({ "Content-Type": "application/json" }),
+            body: JSON.stringify({
+              action: "compose",
+              kind: document.getElementById("kind").value,
+              tone: document.getElementById("tone").value,
+              longform: document.getElementById("longform").checked,
+              data: data,
+              card: cardKind ? { kind: cardKind, data: cardData } : undefined,
+            }),
+          });
+          const j = await res.json();
+          if (!res.ok || j.error) throw new Error(j.error?.message || j.error || "compose failed");
+          meta.textContent = j.skipped === "queued for approval" ? "Queued — see the approval queue above." : j.skipped || "Queued.";
+          queueStatus = "pending";
+          loadQueue();
+        } catch (e) {
+          meta.textContent = "Error: " + e.message;
+        }
+      });
+
+      // ---------- design studio ----------
+      document.querySelectorAll("#cardKinds button").forEach((btn) =>
+        btn.addEventListener("click", async () => {
+          const box = document.getElementById("studioPreview");
+          box.innerHTML = '<div class="muted text-xs">Rendering…</div>';
+          try {
+            const svg = await fetchCardSvg(btn.dataset.kind, null);
+            const blob = new Blob([svg], { type: "image/svg+xml" });
+            box.innerHTML = '<img class="rounded-lg border border-[#2a2e37] max-w-full" />';
+            box.querySelector("img").src = URL.createObjectURL(blob);
+          } catch (e) {
+            box.innerHTML = '<div class="muted text-xs">' + escapeHtml(e.message) + " — check the admin key.</div>";
+          }
+        })
+      );
+
+      // ---------- health / fixtures / posts ----------
       async function loadHealth() {
         const el = document.getElementById("health");
         const hints = document.getElementById("healthHints");
@@ -195,245 +403,72 @@
           const h = await res.json();
           const items = Object.entries(h.checks || {}).concat([
             ["x_account_connected", h.xAccountConnected === true],
-            ["live_posting", !h.draftMode],
+            ["auto_post", !h.draftMode],
           ]);
           el.innerHTML = items
-            .map(function (kv) {
-              const ok = kv[1] === true;
-              return (
-                '<span class="chip rounded px-2 py-1">' +
-                (ok ? "✅ " : "⚠️ ") +
-                escapeHtml(kv[0].replace(/_/g, " ")) +
-                "</span>"
-              );
-            })
+            .map(([k, ok]) => '<span class="chip px-2.5 py-1">' + (ok === true ? "✓ " : "○ ") + escapeHtml(k.replace(/_/g, " ")) + "</span>")
             .join("");
-          hints.innerHTML = (h.hints || [])
-            .map(function (t) {
-              return "<li>" + escapeHtml(t) + "</li>";
-            })
-            .join("");
+          hints.innerHTML = (h.hints || []).map((t) => "<li>" + escapeHtml(t) + "</li>").join("");
         } catch (e) {
-          el.innerHTML = '<span class="muted">Health check failed: ' + escapeHtml(e.message) + "</span>";
+          el.innerHTML = '<span class="muted">Health check failed</span>';
         }
       }
 
-      // Infographic previews
-      document.querySelectorAll("#cardKinds button").forEach(function (btn) {
-        btn.addEventListener("click", async function () {
-          const img = document.getElementById("cardPreview");
-          const meta = document.getElementById("cardMeta");
-          meta.textContent = "Rendering…";
-          try {
-            const res = await fetch("/api/render?kind=" + btn.dataset.kind, {
-              headers: authHeaders(),
-            });
-            if (!res.ok) {
-              const j = await res.json().catch(function () { return {}; });
-              meta.textContent = "Render failed (" + res.status + "): " + (j.error || "check the admin key");
-              return;
-            }
-            const blob = await res.blob();
-            img.src = URL.createObjectURL(blob);
-            img.classList.remove("hidden");
-            meta.textContent = btn.dataset.kind + " — demo data. Cron posts use live API-Football numbers.";
-          } catch (e) {
-            meta.textContent = "Render error: " + e.message;
-          }
-        });
-      });
-
-      async function load() {
-        loadHealth();
+      async function loadDashboard() {
         try {
           const res = await fetch("/api/dashboard");
-          if (!res.ok) {
-            document.getElementById("fixtures").innerHTML =
-              '<div class="muted">Dashboard endpoint failed (' +
-              res.status +
-              ")</div>";
-            return;
-          }
+          if (!res.ok) throw new Error("dashboard " + res.status);
           const d = await res.json();
-          renderFixtures(d.upcoming || []);
-          renderChart(d.lastFixture, d.lastStats);
-          renderPosts(d.recentPosts || []);
+          const fx = document.getElementById("fixtures");
+          fx.innerHTML =
+            (d.upcoming || [])
+              .map((f) => {
+                const when = new Date(f.date).toLocaleString("en-GB", {
+                  timeZone: "Africa/Lagos",
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+                const matchup = f.isChelseaHome ? "Chelsea vs " + f.opponent : f.opponent + " vs Chelsea";
+                return (
+                  '<div class="hairline pt-2"><div class="label">' +
+                  escapeHtml(f.competition) +
+                  '</div><div class="dim font-semibold">' +
+                  escapeHtml(matchup) +
+                  '</div><div class="muted text-xs">' +
+                  when +
+                  " — " +
+                  escapeHtml(f.venue || "") +
+                  "</div></div>"
+                );
+              })
+              .join("") || '<div class="muted">No upcoming fixtures.</div>';
+          const posts = document.getElementById("posts");
+          posts.innerHTML =
+            (d.recentPosts || [])
+              .map(
+                (p) =>
+                  '<li class="hairline pt-2"><div class="dim">' +
+                  escapeHtml(p.content) +
+                  '</div><div class="muted text-xs mt-1">' +
+                  new Date(p.createdAt).toLocaleString() +
+                  "</div></li>"
+              )
+              .join("") || '<li class="muted">No posts yet.</li>';
         } catch (e) {
-          document.getElementById("fixtures").innerHTML =
-            '<div class="muted">Dashboard fetch error: ' + e.message + "</div>";
+          document.getElementById("fixtures").innerHTML = '<div class="muted">' + escapeHtml(e.message) + "</div>";
         }
       }
 
-      function renderFixtures(list) {
-        const el = document.getElementById("fixtures");
-        if (!list.length) {
-          el.innerHTML = '<div class="muted">No upcoming fixtures.</div>';
-          return;
-        }
-        el.innerHTML = list
-          .map(function (f) {
-            const when = new Date(f.date).toLocaleString("en-GB", {
-              timeZone: "Africa/Lagos",
-              weekday: "short",
-              day: "numeric",
-              month: "short",
-              hour: "2-digit",
-              minute: "2-digit",
-            });
-            const matchup = f.isChelseaHome
-              ? "Chelsea vs " + f.opponent
-              : f.opponent + " vs Chelsea";
-            return (
-              '<div class="chip rounded-lg p-3">' +
-              '<div class="text-xs muted uppercase">' +
-              escapeHtml(f.competition) +
-              "</div>" +
-              '<div class="font-semibold">' +
-              escapeHtml(matchup) +
-              "</div>" +
-              '<div class="text-xs muted">' +
-              when +
-              " — " +
-              escapeHtml(f.venue || "") +
-              "</div>" +
-              "</div>"
-            );
-          })
-          .join("");
+      function loadAll() {
+        loadHealth();
+        loadQueue();
+        loadDashboard();
       }
-
-      function renderChart(fx, stats) {
-        const ctx = document.getElementById("statsChart").getContext("2d");
-        const oppEl = document.getElementById("lastOpp");
-        if (!fx || !stats) {
-          oppEl.textContent = "— no data";
-          if (chart) chart.destroy();
-          return;
-        }
-        oppEl.textContent =
-          "(" + (fx.isChelseaHome ? "vs " : "@ ") + fx.opponent + ")";
-        const labels = ["Possession %", "Shots", "On target", "xG", "Pass %"];
-        const data = [
-          stats.possession || 0,
-          stats.shotsTotal || 0,
-          stats.shotsOnTarget || 0,
-          stats.xg || 0,
-          stats.passAccuracy || 0,
-        ];
-        if (chart) chart.destroy();
-        chart = new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: "Chelsea",
-                data: data,
-                backgroundColor: "rgba(59, 130, 246, 0.75)",
-                borderColor: "#3b82f6",
-                borderWidth: 1,
-              },
-            ],
-          },
-          options: {
-            scales: { y: { beginAtZero: true, ticks: { color: "#9dbcf5" } } },
-            plugins: { legend: { labels: { color: "#e6ecff" } } },
-          },
-        });
-      }
-
-      function renderPosts(list) {
-        const el = document.getElementById("posts");
-        if (!list.length) {
-          el.innerHTML = '<li class="muted">No posts yet.</li>';
-          return;
-        }
-        el.innerHTML = list
-          .map(function (p) {
-            return (
-              '<li class="chip rounded p-2">' +
-              "<div>" +
-              escapeHtml(p.content) +
-              "</div>" +
-              '<div class="muted text-xs mt-1">' +
-              new Date(p.createdAt).toLocaleString() +
-              " — " +
-              escapeHtml(p.modelUsed || "n/a") +
-              "</div>" +
-              "</li>"
-            );
-          })
-          .join("");
-      }
-
-      function escapeHtml(s) {
-        const map = {
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#39;",
-        };
-        return String(s).replace(/[&<>"']/g, function (c) {
-          return map[c];
-        });
-      }
-
-      document.getElementById("refresh").addEventListener("click", load);
-
-      document
-        .getElementById("generate")
-        .addEventListener("click", async function () {
-          const kind = document.getElementById("kind").value;
-          const tone = document.getElementById("tone").value;
-          let data = {};
-          try {
-            data = JSON.parse(document.getElementById("data").value || "{}");
-          } catch (e) {
-            document.getElementById("preview").textContent =
-              "Invalid JSON in the data field.";
-            return;
-          }
-          document.getElementById("preview").textContent = "Generating…";
-          document.getElementById("meta").textContent = "";
-          try {
-            const res = await fetch("/api/generate-tweet", {
-              method: "POST",
-              headers: authHeaders({ "Content-Type": "application/json" }),
-              body: JSON.stringify({ kind: kind, tone: tone, data: data }),
-            });
-            const j = await res.json();
-            document.getElementById("preview").textContent =
-              j.tweet || j.error || "(empty)";
-            document.getElementById("meta").textContent =
-              "model=" +
-              (j.model || "n/a") +
-              " • length=" +
-              (j.length || 0) +
-              "/280";
-            document.getElementById("post").disabled = !j.tweet;
-          } catch (e) {
-            document.getElementById("preview").textContent =
-              "Error: " + e.message;
-          }
-        });
-
-      document
-        .getElementById("post")
-        .addEventListener("click", async function () {
-          const text = document.getElementById("preview").textContent;
-          if (!text) return;
-          const url =
-            "/api/x/publish?confirm=1&text=" + encodeURIComponent(text);
-          const res = await fetch(url, { headers: authHeaders() });
-          const j = await res.json().catch(function () {
-            return {};
-          });
-          document.getElementById("meta").textContent =
-            "posted id=" + (j.id || "(none)");
-        });
-
-      load();
+      document.getElementById("refresh").addEventListener("click", loadAll);
+      loadAll();
     </script>
   </body>
 </html>

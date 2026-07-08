@@ -14,6 +14,8 @@ export type Env = {
   OPENROUTER_API_KEY: string;
   NEON_DATABASE_URL: string;
   API_FOOTBALL_KEY?: string;
+  FOOTBALL_DATA_KEY?: string;
+  FOOTBALL_PROVIDER?: string;
   UPSTASH_REDIS_URL?: string;
   UPSTASH_REDIS_TOKEN?: string;
   SENTRY_DSN?: string;
@@ -26,6 +28,7 @@ export type Env = {
   OTLP_ENDPOINT?: string;
   CRON_SECRET?: string;
   API_FOOTBALL_DAILY_BUDGET?: string;
+  OPENROUTER_MODEL?: string;
 };
 
 const REQUIRED: (keyof Env)[] = ["OPENROUTER_API_KEY", "NEON_DATABASE_URL"];

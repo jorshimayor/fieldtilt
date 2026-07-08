@@ -8,12 +8,14 @@ import {
   playerStatCard,
   transferCard,
   formCard,
+  editorialCard,
   MatchPreviewData,
   ScoreCardData,
   PostMatchData,
   PlayerStatData,
   TransferCardData,
   FormCardData,
+  EditorialData,
 } from "./cards";
 import { svgToPng } from "./png";
 
@@ -23,7 +25,8 @@ export type CardKind =
   | "post_match"
   | "player_stat"
   | "transfer"
-  | "form";
+  | "form"
+  | "editorial";
 
 export function buildCardSvg(kind: CardKind, data: unknown): string {
   switch (kind) {
@@ -39,10 +42,13 @@ export function buildCardSvg(kind: CardKind, data: unknown): string {
       return transferCard(data as TransferCardData);
     case "form":
       return formCard(data as FormCardData);
+    case "editorial":
+      return editorialCard(data as EditorialData);
     default:
       throw new Error(`unknown card kind: ${kind}`);
   }
 }
+
 
 export async function renderCardPng(kind: CardKind, data: unknown): Promise<Uint8Array> {
   return svgToPng(buildCardSvg(kind, data));

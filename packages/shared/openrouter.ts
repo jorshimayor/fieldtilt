@@ -22,15 +22,22 @@ function getClient(): OpenAI {
   return _client;
 }
 
+/** Cost lever: pin any OpenRouter model (e.g. a :free variant) via env. */
+function pickModel(): Model {
+  const override = (globalThis as any).process?.env?.OPENROUTER_MODEL;
+  if (override) return { id: override, maxOutputTokens: 2000, priceRank: 0 };
+  return models[0];
+}
+
 export async function routeAndChat(input: ChatInput): Promise<ChatOutput> {
-  const model = models[0];
+  const model = pickModel();
   const res = await getClient().chat.completions.create({ model: model.id, messages: input.messages as OpenAI.ChatCompletionMessageParam[], max_tokens: model.maxOutputTokens });
   const content = res.choices?.[0]?.message?.content || "";
   return { id: res.id || "", model: model.id, content };
 }
 
 export async function routeAndStream(input: ChatInput): Promise<{ stream: ReadableStream<Uint8Array>; usage: Promise<number> }> {
-  const model = models[0];
+  const model = pickModel();
   const enc = new TextEncoder();
   const res = await getClient().chat.completions.create({ model: model.id, messages: input.messages as OpenAI.ChatCompletionMessageParam[], max_tokens: model.maxOutputTokens, stream: true });
   const it = res as any;

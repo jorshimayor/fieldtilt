@@ -9,10 +9,13 @@ import {
   playerStatCard,
   transferCard,
   formCard,
+  editorialCard,
   esc,
-  CARD_W,
-  CARD_H,
+  embedFontsInSvg,
+  PORTRAIT,
+  LANDSCAPE,
 } from "../../packages/render/cards";
+import { BRAND } from "../../packages/render/theme";
 
 let failures = 0;
 function check(name: string, cond: boolean) {
@@ -28,7 +31,7 @@ console.log("esc()");
 check("escapes XML entities", esc(`<&>"'`) === "&lt;&amp;&gt;&quot;&apos;");
 check("stringifies non-strings", esc(3) === "3" && esc(null) === "");
 
-console.log("matchPreviewCard");
+console.log("matchPreviewCard (landscape)");
 {
   const svg = matchPreviewCard({
     home: "Chelsea",
@@ -36,14 +39,16 @@ console.log("matchPreviewCard");
     competition: "Premier League",
     dateLabel: "Sat 12 Jul, 16:00 WAT",
     venue: "Stamford Bridge",
+    footnote: "H2H · W4 D3 L3 in the last 10",
   });
-  check("is an svg with the right canvas", svg.startsWith("<svg") && svg.includes(`viewBox="0 0 ${CARD_W} ${CARD_H}"`));
-  check("contains both teams", svg.includes("Chelsea") && svg.includes("Arsenal"));
+  check("landscape canvas", svg.includes(`viewBox="0 0 ${LANDSCAPE.w} ${LANDSCAPE.h}"`));
+  check("contains both teams", svg.includes("CHELSEA") && svg.includes("ARSENAL"));
   check("escapes injected markup", !svg.includes("<FC>") && svg.includes("&lt;FC&gt;"));
-  check("shows kickoff", svg.includes("16:00"));
+  check("brand wordmark present", svg.includes(BRAND));
+  check("H2H footnote present", svg.includes("H2H"));
 }
 
-console.log("scoreCard");
+console.log("scoreCard (landscape)");
 {
   const svg = scoreCard({
     home: "Chelsea",
@@ -53,13 +58,15 @@ console.log("scoreCard");
     competition: "Premier League",
     statusLabel: "LIVE 78'",
     scorers: ["Palmer 23'"],
+    statLine: "54% possession · 1.8 xG",
   });
-  check("shows the scoreline", svg.includes("2 - 1"));
-  check("shows LIVE badge", svg.includes("LIVE 78"));
+  check("shows the scoreline", svg.includes(">2-1</text>"));
+  check("LIVE status shown", svg.includes("LIVE 78"));
   check("lists scorers", svg.includes("Palmer 23"));
+  check("in-match stat line", svg.includes("54% POSSESSION"));
 }
 
-console.log("postMatchCard");
+console.log("postMatchCard (portrait)");
 {
   const svg = postMatchCard({
     home: "Chelsea",
@@ -67,51 +74,56 @@ console.log("postMatchCard");
     homeGoals: 2,
     awayGoals: 1,
     competition: "Premier League",
+    seasonLabel: "Premier League 25/26",
     statusLabel: "FULL TIME",
     stats: { possession: 54, xg: 2.31, shotsTotal: 15, shotsOnTarget: 7 },
   });
-  check("shows FT stats", svg.includes("54%") && svg.includes("2.31") && svg.includes("7 / 15"));
-  const empty = postMatchCard({
-    home: "A",
-    away: "B",
-    homeGoals: 0,
-    awayGoals: 0,
-    competition: "",
-    statusLabel: "FULL TIME",
-    stats: {},
-  });
-  check("handles missing stats gracefully", empty.includes("Stats unavailable"));
+  check("portrait canvas", svg.includes(`viewBox="0 0 ${PORTRAIT.w} ${PORTRAIT.h}"`));
+  check("hero stats", svg.includes("54%") && svg.includes("2.31"));
+  check("stat rows", svg.includes("Shots") && svg.includes("On target"));
+  check("season footer", svg.includes("PREMIER LEAGUE 25/26"));
 }
 
-console.log("playerStatCard");
+console.log("playerStatCard (portrait)");
 {
   const svg = playerStatCard({
-    player: "Cole Palmer",
+    player: "Moises Caicedo",
     season: "2025/26",
+    context: "vs Arsenal",
     stats: [
-      { label: "Goals", value: "18" },
-      { label: "Assists", value: "12" },
+      { label: "Pass accuracy", value: "89%" },
+      { label: "Passes into final third", value: "14" },
     ],
   });
-  check("shows player + season", svg.includes("Cole Palmer") && svg.includes("2025/26"));
-  check("renders stat tiles", svg.includes("18") && svg.includes("GOALS"));
+  check("stacked name", svg.includes("MOISES") && svg.includes("CAICEDO"));
+  check("stat rail values", svg.includes("89%") && svg.includes("14"));
+  check("labels wrap + uppercase", svg.includes("PASSES INTO") && svg.includes("FINAL THIRD"));
+  check("watermark when no photo", svg.includes('opacity="0.05"'));
+  const withPhoto = playerStatCard({
+    player: "X Y",
+    season: "2025/26",
+    stats: [],
+    photoDataUri: "data:image/png;base64,AAAA",
+  });
+  check("photo goes full-bleed under scrim", withPhoto.includes("<image") && withPhoto.includes("slice"));
 }
 
-console.log("transferCard");
+console.log("transferCard (portrait)");
 {
   const svgIn = transferCard({
-    player: "Estêvão",
+    player: "Estêvão Willian",
     direction: "in",
     counterparty: "Palmeiras",
     transferType: "€ 45M",
   });
-  check("incoming badge", svgIn.includes("INCOMING"));
-  check("shows both clubs", svgIn.includes("Palmeiras") && svgIn.includes("Chelsea"));
+  check("incoming tag", svgIn.includes("INCOMING"));
+  check("from → to", svgIn.includes("Palmeiras") && svgIn.includes("Chelsea"));
+  check("fee stat", svgIn.includes("€ 45M"));
   const svgOut = transferCard({ player: "X", direction: "out", counterparty: "Milan" });
-  check("outgoing badge", svgOut.includes("OUTGOING"));
+  check("outgoing tag", svgOut.includes("OUTGOING"));
 }
 
-console.log("formCard");
+console.log("formCard (portrait)");
 {
   const svg = formCard({
     seasonLabel: "2025/26",
@@ -124,8 +136,32 @@ console.log("formCard");
     goalsFor: 58,
     goalsAgainst: 31,
   });
-  check("form pills present", svg.includes("RECENT FORM"));
-  check("league tiles present", svg.includes("#3") && svg.includes("61") && svg.includes("LEAGUE POSITION"));
+  check("FORM headline", svg.includes("FORM."));
+  check("league tiles", svg.includes("#3") && svg.includes("LEAGUE POSITION"));
+  check("result rows", svg.includes("Arsenal") && svg.includes("2-1"));
+}
+
+console.log("editorialCard (portrait)");
+{
+  const svg = editorialCard({
+    eyebrow: "On this day",
+    lines: [
+      { text: "Two years ago today, Chelsea" },
+      { text: "Estêvão Willian.", em: true },
+    ],
+    dateLabel: "2024, June 22.",
+  });
+  check("eyebrow kicker", svg.includes("ON THIS DAY"));
+  check("emphasis is bold italic", svg.includes('font-style="italic"'));
+  check("date label", svg.includes("2024, June 22."));
+}
+
+console.log("embedFontsInSvg()");
+{
+  const svg = `<svg width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"></svg>`;
+  const out = embedFontsInSvg(svg, [new Uint8Array([1, 2, 3])]);
+  check("injects @font-face style", out.includes("@font-face") && out.includes("base64"));
+  check("keeps svg root first", out.startsWith("<svg"));
 }
 
 if (failures) {

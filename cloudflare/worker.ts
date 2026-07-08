@@ -1,10 +1,12 @@
 import dashboardHtml from "../public/index.html";
+import themeCss from "../public/theme.css";
 
 import apiIndex from "../api/index";
 import apiDashboard from "../api/dashboard";
 import apiGenerateTweet from "../api/generate-tweet";
 import apiHealth from "../api/health";
 import apiRender from "../api/render";
+import apiDrafts from "../api/drafts";
 import cronPrewarm from "../api/cron/prewarm";
 import cronFixtures from "../api/cron/fixtures";
 import cronWeekly from "../api/cron/weekly";
@@ -70,6 +72,7 @@ const routes: Record<string, Route> = {
   "/api/dashboard": { handler: apiDashboard as any },
   "/api/generate-tweet": { handler: apiGenerateTweet as any, protected: true },
   "/api/render": { handler: apiRender as any }, // does its own auth check
+  "/api/drafts": { handler: apiDrafts as any, protected: true },
 
   "/api/cron/prewarm": { handler: cronPrewarm as any, protected: true },
   "/api/cron/fixtures": { handler: cronFixtures as any, protected: true },
@@ -100,6 +103,12 @@ export default {
     const p = url.pathname;
 
     if (p === "/" || p === "/index.html") return serveDashboard();
+    if (p === "/theme.css") {
+      return new Response(themeCss, {
+        status: 200,
+        headers: { "Content-Type": "text/css; charset=utf-8", "Cache-Control": "public, max-age=300" },
+      });
+    }
 
     const route = routes[p];
     if (!route) return notFound();

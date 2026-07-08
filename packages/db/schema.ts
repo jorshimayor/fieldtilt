@@ -54,6 +54,29 @@ export const statCache = pgTable("stat_cache", {
 });
 
 /**
+ * Approval queue. Every composed post (tweet text + infographic spec) lands
+ * here as `pending`; the dashboard lets you edit + post manually, or the
+ * pipeline auto-posts when config/flags.json has publish_draft_only=false.
+ * cardData stores the card's *data*, not pixels — images render on demand.
+ */
+export const drafts = pgTable("drafts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  kind: text("kind").notNull(), // tweet kind (match_preview, live_update, …)
+  source: text("source"), // e.g. "cron:fixtures", "dashboard"
+  content: text("content").notNull(), // tweet text
+  longform: boolean("longform").default(false),
+  cardKind: text("card_kind"),
+  cardData: jsonb("card_data"),
+  status: text("status").$type<"pending" | "posted" | "rejected">().notNull().default("pending"),
+  tweetId: text("tweet_id"),
+  modelUsed: text("model_used"),
+  createdAt: timestamp("created_at").defaultNow(),
+  postedAt: timestamp("posted_at")
+}, (table) => ({
+  statusIdx: index("drafts_status_idx").on(table.status, table.createdAt)
+}));
+
+/**
  * Durable idempotency for posted content (transfers, spotlights, …).
  * Redis `once()` handles short-window dedup; this survives Redis eviction.
  */
