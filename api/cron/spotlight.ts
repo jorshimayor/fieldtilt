@@ -13,6 +13,7 @@ import {
   seasonLabel,
   currentSeason,
 } from "../../packages/tools/football";
+import { getChelseaAdvancedStats } from "../../packages/tools/understat";
 import { composeAndPost, claimPostedKey, recordPostedTweet } from "../../packages/shared/poster";
 import { withErrorLogging } from "../../packages/observability/index";
 
@@ -46,9 +47,26 @@ export default withErrorLogging(async function handler(): Promise<Response> {
       { label: "Appearances", value: String(p.appearances) },
       { label: "Goals", value: String(p.goals) },
       { label: "Assists", value: String(p.assists) },
-      { label: "Minutes", value: String(p.minutes) },
     ];
+    if (p.minutes != null) stats.push({ label: "Minutes", value: String(p.minutes) });
     if (p.rating) stats.push({ label: "Avg rating", value: p.rating });
+
+    // Advanced layer (Understat xG model) — best-effort, card omits it if down.
+    let xgLine = "";
+    try {
+      const { players: adv } = await getChelseaAdvancedStats(season);
+      const lastName = p.player.split(" ").slice(-1)[0].toLowerCase();
+      const a = adv.find((x) => x.player.toLowerCase().includes(lastName));
+      if (a) {
+        stats.splice(3); // keep the card to 6 tiles: apps/goals/assists + xG trio
+        stats.push({ label: "Expected goals (xG)", value: a.xG.toFixed(1) });
+        stats.push({ label: "Expected assists (xA)", value: a.xA.toFixed(1) });
+        stats.push({ label: "xG per 90", value: a.per90.xG.toFixed(2) });
+        xgLine = `xG ${a.xG.toFixed(1)} (${a.goals} goals), xA ${a.xA.toFixed(1)} — xG: Understat`;
+      }
+    } catch {
+      // typographic card still works without the xG layer
+    }
 
     // Editorial-style background photo (API-Football headshot under a scrim).
     let photoDataUri: string | undefined;
@@ -77,7 +95,7 @@ export default withErrorLogging(async function handler(): Promise<Response> {
         goals: p.goals,
         assists: p.assists,
         apps: p.appearances,
-        extra: p.rating ? `avg rating ${p.rating}` : `position ${p.position}`,
+        extra: xgLine || (p.rating ? `avg rating ${p.rating}` : `position ${p.position}`),
       },
       card: {
         kind: "player_stat",

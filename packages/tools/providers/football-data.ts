@@ -5,19 +5,24 @@
  * Auth: header X-Auth-Token
  * Chelsea team id: 61 · Premier League code: PL
  * Free tier: current season, live scores/status, standings, scorers, H2H.
- * Rate limit: 10 requests/minute (guarded below at 8/min).
+ * Rate limit: 10 requests/minute, obeyed via the API's response headers.
  *
  * NOT available on this source (crons degrade gracefully):
  *   - live minute-by-minute stats (possession, shots) and xG  → cards omit them
  *   - transfers                                               → transfers cron skips
  *   - player photos / minutes / ratings                       → typographic cards
  *
- * Pure mappers (mapFd*) are exported for unit tests.
+ * Rate limiting is driven by the API's own response headers
+ * (X-Requests-Available-Minute / X-RequestCounter-Reset), as the maintainer
+ * asks: https://docs.football-data.org/general/v4/lookup_tables.html#_response_headers
+ * The last-seen state is shared across isolates via the cache so every code
+ * path throttles off the server's real counter, not a local guess.
+ *
+ * Pure mappers (mapFd*) and parseRateHeaders are exported for unit tests.
  */
 
 import { setCache, getCache } from "../cache";
 import { env } from "@shared/env";
-import { redis } from "@shared/redis";
 import {
   FootballProvider,
   NormalizedFixture,
@@ -35,24 +40,76 @@ const BASE = "https://api.football-data.org/v4";
 export const FD_CHELSEA_TEAM_ID = 61;
 export const FD_PL_CODE = "PL";
 
-/** 10 req/min on the free tier — stop at 8 to leave headroom. No-op without Redis. */
-async function underRateLimit(): Promise<boolean> {
-  if (!redis) return true;
-  const minute = Math.floor(Date.now() / 60_000);
-  const key = `fd:rate:${minute}`;
-  const n = await redis.incr(key);
-  if (n === 1) await redis.expire(key, 120);
-  return n <= 8;
+// ---------------------------------------------------------------- rate limit
+// The free tier allows 10 req/min. Instead of guessing locally, we obey the
+// counters the API sends back with every response:
+//   X-Requests-Available-Minute : requests left in the current window
+//   X-RequestCounter-Reset      : seconds until the window resets
+
+type RateState = { remaining: number; resetAtMs: number };
+
+const RATE_KEY = "fd:ratestate";
+/** Keep one request in hand so a concurrent call can't tip us into a 429. */
+const RATE_RESERVE = 1;
+/** Only sleep-and-continue for short resets; longer ones fail fast to cache. */
+const MAX_WAIT_MS = 15_000;
+
+export function parseRateHeaders(headers: {
+  get(name: string): string | null;
+}): { remaining: number | null; resetSec: number } {
+  const remaining = parseInt(headers.get("X-Requests-Available-Minute") || "", 10);
+  const reset = parseInt(headers.get("X-RequestCounter-Reset") || "", 10);
+  return {
+    remaining: Number.isNaN(remaining) ? null : remaining,
+    resetSec: Number.isNaN(reset) || reset <= 0 ? 60 : reset,
+  };
 }
 
-async function fd(path: string): Promise<any | null> {
-  if (!(await underRateLimit())) {
-    console.error("football_data_rate_limited", { path });
-    return null;
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+async function getRateState(): Promise<RateState | null> {
+  const s = await getCache<RateState>(RATE_KEY);
+  return s && s.resetAtMs > Date.now() ? s : null;
+}
+
+async function saveRateState(remaining: number, resetSec: number): Promise<void> {
+  const state: RateState = { remaining, resetAtMs: Date.now() + resetSec * 1000 };
+  await setCache(RATE_KEY, state, resetSec * 1000 + 5000);
+}
+
+async function fd(path: string, attempt = 0): Promise<any | null> {
+  // Before spending a request, check the server's last-reported budget.
+  const state = await getRateState();
+  if (state && state.remaining <= RATE_RESERVE) {
+    const waitMs = state.resetAtMs - Date.now();
+    if (waitMs > 0 && waitMs <= MAX_WAIT_MS) {
+      await sleep(waitMs + 250);
+    } else if (waitMs > MAX_WAIT_MS) {
+      console.error("football_data_throttled_skip", { path, waitMs });
+      return null;
+    }
   }
+
   const res = await fetch(`${BASE}${path}`, {
     headers: { "X-Auth-Token": env.FOOTBALL_DATA_KEY || "" },
   });
+
+  const rate = parseRateHeaders(res.headers);
+  if (rate.remaining != null) {
+    await saveRateState(rate.remaining, rate.resetSec);
+  }
+
+  if (res.status === 429) {
+    await saveRateState(0, rate.resetSec);
+    if (attempt === 0 && rate.resetSec * 1000 <= MAX_WAIT_MS) {
+      await sleep(rate.resetSec * 1000 + 250);
+      return fd(path, 1);
+    }
+    console.error("football_data_rate_limited", { path, retryAfterSec: rate.resetSec });
+    return null;
+  }
   if (!res.ok) {
     console.error("football_data_http_error", { path, status: res.status });
     return null;

@@ -26,6 +26,7 @@ Honest answer: **no reputable API gives you full live minute-by-minute stats
 | **football-data.org** | 10 req/min, PL + 12 comps, **current season** | Yes — live scores/status (slight delay) | Fixtures, results, standings, scorers. No possession/xG. | Low — reputable, stable. **Best free choice.** |
 | **API-Football free** | 100 req/day | ❌ no live, seasons 2021–23 only | (historical only) | Useless for a live bot |
 | **TheSportsDB** | Free key | Livescores are Patreon-only (~$10/mo) | Basic | Low |
+| **Understat** (integrated — `packages/tools/understat.ts`) | Free | Post-match xG updates | Player xG/npxG/xA/xGChain, team xG tables — current season | Medium — unofficial JSON endpoints, can change; everything degrades gracefully when it does |
 | **OpenLigaDB** | Free | Yes | German comps only | N/A for the PL |
 | Sofascore / FotMob / Flashscore (unofficial) | Free scraping | Yes, rich (xG!) | Deep | **High** — against ToS, endpoints break without notice, IP blocks. Not production-safe. |
 | **ESPN hidden JSON API** | Free, undocumented | Yes | Scores, events, some stats | Medium — unofficial, can change silently |

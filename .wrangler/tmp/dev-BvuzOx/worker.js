@@ -10547,8 +10547,8 @@ var init_dialect = __esm({
       escapeName(name) {
         return `"${name.replace(/"/g, '""')}"`;
       }
-      escapeParam(num) {
-        return `$${num + 1}`;
+      escapeParam(num2) {
+        return `$${num2 + 1}`;
       }
       escapeString(str2) {
         return `'${str2.replace(/'/g, "''")}'`;
@@ -14923,11 +14923,11 @@ async function publishTweet(token, text3, mediaIds) {
     },
     body: JSON.stringify(body)
   });
-  const json10 = await res.json().catch(() => ({}));
-  if (!res.ok || !json10?.data?.id) {
-    throw new Error(`x_tweet_failed_${res.status}: ${JSON.stringify(json10).slice(0, 500)}`);
+  const json11 = await res.json().catch(() => ({}));
+  if (!res.ok || !json11?.data?.id) {
+    throw new Error(`x_tweet_failed_${res.status}: ${JSON.stringify(json11).slice(0, 500)}`);
   }
-  return { id: json10.data.id };
+  return { id: json11.data.id };
 }
 __name(publishTweet, "publishTweet");
 async function uploadMedia(token, bytes, mimeType = "image/png") {
@@ -14940,10 +14940,10 @@ async function uploadMedia(token, bytes, mimeType = "image/png") {
     headers: { Authorization: `Bearer ${token}` },
     body: form
   });
-  const json10 = await res.json().catch(() => ({}));
-  const id = json10?.data?.id || json10?.media_id_string || "";
+  const json11 = await res.json().catch(() => ({}));
+  const id = json11?.data?.id || json11?.media_id_string || "";
   if (!res.ok || !id) {
-    throw new Error(`x_media_upload_failed_${res.status}: ${JSON.stringify(json10).slice(0, 500)}`);
+    throw new Error(`x_media_upload_failed_${res.status}: ${JSON.stringify(json11).slice(0, 500)}`);
   }
   return String(id);
 }
@@ -14973,13 +14973,13 @@ async function completeOAuth(state, code) {
     headers,
     body
   });
-  const json10 = await res.json().catch(() => ({}));
-  const accessToken = json10?.access_token || "";
+  const json11 = await res.json().catch(() => ({}));
+  const accessToken = json11?.access_token || "";
   if (!res.ok || !accessToken) {
-    throw new Error(`x_oauth_exchange_failed_${res.status}: ${JSON.stringify(json10).slice(0, 300)}`);
+    throw new Error(`x_oauth_exchange_failed_${res.status}: ${JSON.stringify(json11).slice(0, 300)}`);
   }
-  const refreshToken = json10?.refresh_token || void 0;
-  const expiresIn = json10?.expires_in || 0;
+  const refreshToken = json11?.refresh_token || void 0;
+  const expiresIn = json11?.expires_in || 0;
   const expiresAt = new Date(Date.now() + Number(expiresIn || 0) * 1e3);
   await db.insert(oauthTokens).values({ platform: "x", accessToken, refreshToken: refreshToken || null, expiresAt });
   return { accessToken, refreshToken, expiresAt };
@@ -15008,13 +15008,13 @@ async function refreshAccessToken(rt) {
     headers,
     body
   });
-  const json10 = await res.json().catch(() => ({}));
-  const accessToken = json10?.access_token || "";
+  const json11 = await res.json().catch(() => ({}));
+  const accessToken = json11?.access_token || "";
   if (!res.ok || !accessToken) {
-    throw new Error(`x_token_refresh_failed_${res.status}: ${JSON.stringify(json10).slice(0, 300)}`);
+    throw new Error(`x_token_refresh_failed_${res.status}: ${JSON.stringify(json11).slice(0, 300)}`);
   }
-  const refreshToken = json10?.refresh_token || void 0;
-  const expiresIn = json10?.expires_in || 0;
+  const refreshToken = json11?.refresh_token || void 0;
+  const expiresIn = json11?.expires_in || 0;
   const expiresAt = new Date(Date.now() + Number(expiresIn || 0) * 1e3);
   await db.insert(oauthTokens).values({ platform: "x", accessToken, refreshToken: refreshToken || null, expiresAt });
   return { accessToken, refreshToken, expiresAt };
@@ -15060,7 +15060,7 @@ var public_default = `<!doctype html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>BlueBot \u2014 Control Room</title>
+    <title>bluebot \u2014 Control Room</title>
     <script src="https://cdn.tailwindcss.com"><\/script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
@@ -15102,83 +15102,52 @@ var public_default = `<!doctype html>
         </div>
       </section>
 
-      <!-- Compose -->
-      <section class="card rounded-xl p-5 space-y-4">
-        <h2 class="display text-xl">COMPOSE</h2>
-        <div class="grid md:grid-cols-4 gap-3 text-sm">
-          <label>
-            <span class="label">Kind</span>
-            <select id="kind" class="w-full mt-1 p-2">
-              <option value="match_preview">Match preview</option>
-              <option value="live_update">Live update</option>
-              <option value="post_match">Post-match</option>
-              <option value="player_stat">Player stat</option>
-              <option value="transfer_news">Transfer news</option>
-              <option value="weekly_deep_dive">Weekly deep-dive</option>
-              <option value="long_read">Long-form read</option>
-            </select>
-          </label>
-          <label>
-            <span class="label">Tone</span>
-            <select id="tone" class="w-full mt-1 p-2">
-              <option value="professional">Professional</option>
-              <option value="savage">Savage</option>
-            </select>
-          </label>
-          <label>
-            <span class="label">Card (image)</span>
-            <select id="cardKind" class="w-full mt-1 p-2">
-              <option value="">No image</option>
-              <option value="match_preview">Match preview</option>
-              <option value="score">Score</option>
-              <option value="post_match">Post-match</option>
-              <option value="player_stat">Player stat</option>
-              <option value="transfer">Transfer</option>
-              <option value="form">Form</option>
-              <option value="editorial">Editorial</option>
-            </select>
-          </label>
-          <label class="flex items-end gap-2 pb-1">
-            <input type="checkbox" id="longform" class="w-4 h-4" />
-            <span class="dim">Long-form</span>
-          </label>
-        </div>
-        <label class="block text-sm">
-          <span class="label">Tweet data (JSON \u2014 grounds the LLM copy)</span>
-          <textarea id="data" rows="3" class="w-full mt-1 p-2 font-mono text-xs">
-{"opponent":"Arsenal","competition":"Premier League","date":"Sat 3 PM","venue":"Stamford Bridge"}</textarea>
-        </label>
-        <label class="block text-sm">
-          <span class="label">Card data (JSON \u2014 leave empty to use demo data)</span>
-          <textarea id="cardData" rows="2" class="w-full mt-1 p-2 font-mono text-xs"></textarea>
-        </label>
-        <button id="compose" class="btn px-4 py-2 text-sm">Generate \u2192 queue</button>
-        <p id="composeMeta" class="muted text-xs"></p>
-      </section>
-
-      <!-- Health -->
-      <section class="card rounded-xl p-5">
-        <h2 class="display text-xl mb-3">READINESS</h2>
-        <div id="health" class="flex flex-wrap gap-2 text-xs">
-          <span class="muted">Loading\u2026</span>
-        </div>
-        <ul id="healthHints" class="muted text-xs mt-3 list-disc ml-5 space-y-1"></ul>
-      </section>
-
-      <!-- Design studio -->
+      <!-- Compose \u2014 agentic chat -->
       <section class="card rounded-xl p-5 space-y-3">
-        <h2 class="display text-xl">DESIGN STUDIO</h2>
-        <p class="label">Card templates with demo data</p>
-        <div class="flex flex-wrap gap-2" id="cardKinds">
-          <button data-kind="match_preview" class="btn-ghost px-3 py-1.5 text-xs">Match preview</button>
-          <button data-kind="score" class="btn-ghost px-3 py-1.5 text-xs">Live score</button>
-          <button data-kind="post_match" class="btn-ghost px-3 py-1.5 text-xs">Post-match</button>
-          <button data-kind="player_stat" class="btn-ghost px-3 py-1.5 text-xs">Player stat</button>
-          <button data-kind="transfer" class="btn-ghost px-3 py-1.5 text-xs">Transfer</button>
-          <button data-kind="form" class="btn-ghost px-3 py-1.5 text-xs">Weekly form</button>
-          <button data-kind="editorial" class="btn-ghost px-3 py-1.5 text-xs">Editorial</button>
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <h2 class="display text-xl">COMPOSE</h2>
+          <span class="label">chat with the agent \u2014 it pulls live data, drafts land in the queue</span>
         </div>
-        <div id="studioPreview" class="max-w-xl"></div>
+        <div id="chatLog" class="space-y-3 max-h-[26rem] overflow-y-auto pr-1"></div>
+        <div class="flex flex-wrap gap-2" id="chatSuggestions">
+          <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Create a match preview post for the next fixture, with a card and the head-to-head record.">Preview next fixture</button>
+          <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Make a weekly form review post with a form card from the last 5 results and our league position.">Weekly form post</button>
+          <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Who are our top performers this season? Draft a player spotlight for the best one with a stat card.">Player spotlight</button>
+        </div>
+        <form id="chatForm" class="flex gap-2">
+          <input
+            id="chatInput"
+            class="flex-1 p-2.5 text-sm"
+            placeholder='e.g. "Draft a preview for the next game with a card"'
+            autocomplete="off"
+          />
+          <button id="chatSend" class="btn px-5 py-2 text-sm" type="submit">Send</button>
+        </form>
+      </section>
+
+      <!-- System: readiness + design studio -->
+      <section class="card rounded-xl p-5 space-y-4">
+        <h2 class="display text-xl">SYSTEM</h2>
+        <div>
+          <p class="label mb-2">Readiness</p>
+          <div id="health" class="flex flex-wrap gap-2 text-xs">
+            <span class="muted">Loading\u2026</span>
+          </div>
+          <ul id="healthHints" class="muted text-xs mt-3 list-disc ml-5 space-y-1"></ul>
+        </div>
+        <div class="hairline pt-4">
+          <p class="label mb-2">Design studio \u2014 card templates with demo data</p>
+          <div class="flex flex-wrap gap-2" id="cardKinds">
+            <button data-kind="match_preview" class="btn-ghost px-3 py-1.5 text-xs">Match preview</button>
+            <button data-kind="score" class="btn-ghost px-3 py-1.5 text-xs">Live score</button>
+            <button data-kind="post_match" class="btn-ghost px-3 py-1.5 text-xs">Post-match</button>
+            <button data-kind="player_stat" class="btn-ghost px-3 py-1.5 text-xs">Player stat</button>
+            <button data-kind="transfer" class="btn-ghost px-3 py-1.5 text-xs">Transfer</button>
+            <button data-kind="form" class="btn-ghost px-3 py-1.5 text-xs">Weekly form</button>
+            <button data-kind="editorial" class="btn-ghost px-3 py-1.5 text-xs">Editorial</button>
+          </div>
+          <div id="studioPreview" class="max-w-xl mt-3"></div>
+        </div>
       </section>
 
       <!-- Fixtures + recent -->
@@ -15391,49 +15360,74 @@ var public_default = `<!doctype html>
           });
       }
 
-      // ---------- compose ----------
-      document.getElementById("compose").addEventListener("click", async () => {
-        const meta = document.getElementById("composeMeta");
-        let data, cardData;
+      // ---------- compose chat (agent) ----------
+      const chatHistory = [];
+      const chatLog = document.getElementById("chatLog");
+      const chatInput = document.getElementById("chatInput");
+      const chatSend = document.getElementById("chatSend");
+
+      function chatBubble(role, text) {
+        const wrap = document.createElement("div");
+        wrap.className = role === "user" ? "flex justify-end" : "flex justify-start";
+        const b = document.createElement("div");
+        b.className =
+          role === "user"
+            ? "chip rounded-2xl px-4 py-2.5 text-sm max-w-[85%] whitespace-pre-wrap"
+            : "card rounded-2xl px-4 py-2.5 text-sm max-w-[85%] whitespace-pre-wrap dim";
+        b.textContent = text;
+        wrap.appendChild(b);
+        chatLog.appendChild(wrap);
+        chatLog.scrollTop = chatLog.scrollHeight;
+        return b;
+      }
+
+      function chatToolLine(t) {
+        const el = document.createElement("div");
+        el.className = "label ml-1";
+        el.textContent = (t.ok ? "\u2713 " : "\u2717 ") + t.tool.replace(/_/g, " ") + (t.note ? " \u2014 " + t.note : "");
+        chatLog.appendChild(el);
+        chatLog.scrollTop = chatLog.scrollHeight;
+      }
+
+      async function sendChat(text) {
+        const msg = (text || "").trim();
+        if (!msg) return;
+        chatInput.value = "";
+        chatSend.disabled = true;
+        chatBubble("user", msg);
+        chatHistory.push({ role: "user", content: msg });
+        const thinking = chatBubble("assistant", "\u2026");
         try {
-          data = JSON.parse(document.getElementById("data").value || "{}");
-        } catch {
-          meta.textContent = "Tweet data is not valid JSON.";
-          return;
-        }
-        const cardDataRaw = document.getElementById("cardData").value.trim();
-        if (cardDataRaw) {
-          try {
-            cardData = JSON.parse(cardDataRaw);
-          } catch {
-            meta.textContent = "Card data is not valid JSON.";
-            return;
-          }
-        }
-        const cardKind = document.getElementById("cardKind").value;
-        meta.textContent = "Generating\u2026";
-        try {
-          const res = await fetch("/api/drafts", {
+          const res = await fetch("/api/chat", {
             method: "POST",
             headers: authHeaders({ "Content-Type": "application/json" }),
-            body: JSON.stringify({
-              action: "compose",
-              kind: document.getElementById("kind").value,
-              tone: document.getElementById("tone").value,
-              longform: document.getElementById("longform").checked,
-              data: data,
-              card: cardKind ? { kind: cardKind, data: cardData } : undefined,
-            }),
+            body: JSON.stringify({ messages: chatHistory }),
           });
           const j = await res.json();
-          if (!res.ok || j.error) throw new Error(j.error?.message || j.error || "compose failed");
-          meta.textContent = j.skipped === "queued for approval" ? "Queued \u2014 see the approval queue above." : j.skipped || "Queued.";
-          queueStatus = "pending";
-          loadQueue();
+          if (!res.ok || j.error) throw new Error(j.error?.message || j.error || "chat failed (" + res.status + ")");
+          thinking.remove();
+          (j.toolLog || []).forEach(chatToolLine);
+          chatBubble("assistant", j.reply || "(no reply)");
+          chatHistory.push({ role: "assistant", content: j.reply || "" });
+          if ((j.draftIds || []).length) {
+            queueStatus = "pending";
+            loadQueue();
+          }
         } catch (e) {
-          meta.textContent = "Error: " + e.message;
+          thinking.textContent = "Error: " + e.message + (e.message.includes("401") || e.message.includes("503") ? " \u2014 check the admin key." : "");
+        } finally {
+          chatSend.disabled = false;
+          chatInput.focus();
         }
+      }
+
+      document.getElementById("chatForm").addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        sendChat(chatInput.value);
       });
+      document.querySelectorAll("#chatSuggestions button").forEach((b) =>
+        b.addEventListener("click", () => sendChat(b.dataset.q))
+      );
 
       // ---------- design studio ----------
       document.querySelectorAll("#cardKinds button").forEach((btn) =>
@@ -16704,9 +16698,9 @@ async function defaultParseResponse(props) {
   const mediaType = contentType?.split(";")[0]?.trim();
   const isJSON = mediaType?.includes("application/json") || mediaType?.endsWith("+json");
   if (isJSON) {
-    const json10 = await response.json();
-    debug("response", response.status, response.url, response.headers, json10);
-    return _addRequestID(json10, response);
+    const json11 = await response.json();
+    debug("response", response.status, response.url, response.headers, json11);
+    return _addRequestID(json11, response);
   }
   const text3 = await response.text();
   debug("response", response.status, response.url, response.headers, text3);
@@ -18584,8 +18578,8 @@ function isAutoParsableResponseFormat(response_format) {
   return response_format?.["$brand"] === "auto-parseable-response-format";
 }
 __name(isAutoParsableResponseFormat, "isAutoParsableResponseFormat");
-function isAutoParsableTool(tool) {
-  return tool?.["$brand"] === "auto-parseable-tool";
+function isAutoParsableTool(tool2) {
+  return tool2?.["$brand"] === "auto-parseable-tool";
 }
 __name(isAutoParsableTool, "isAutoParsableTool");
 function maybeParseChatCompletion(completion, params) {
@@ -18670,12 +18664,12 @@ function hasAutoParseableInput(params) {
 }
 __name(hasAutoParseableInput, "hasAutoParseableInput");
 function validateInputTools(tools) {
-  for (const tool of tools ?? []) {
-    if (tool.type !== "function") {
-      throw new OpenAIError(`Currently only \`function\` tool types support auto-parsing; Received \`${tool.type}\``);
+  for (const tool2 of tools ?? []) {
+    if (tool2.type !== "function") {
+      throw new OpenAIError(`Currently only \`function\` tool types support auto-parsing; Received \`${tool2.type}\``);
     }
-    if (tool.function.strict !== true) {
-      throw new OpenAIError(`The \`${tool.function.name}\` tool is not marked with \`strict: true\`. Only strict function tools can be auto-parsed`);
+    if (tool2.function.strict !== true) {
+      throw new OpenAIError(`The \`${tool2.function.name}\` tool is not marked with \`strict: true\`. Only strict function tools can be auto-parsed`);
     }
   }
 }
@@ -18879,24 +18873,24 @@ var AbstractChatCompletionRunner = class extends EventStream {
     const { tool_choice = "auto", stream, ...restParams } = params;
     const singleFunctionToCall = typeof tool_choice !== "string" && tool_choice?.function?.name;
     const { maxChatCompletions = DEFAULT_MAX_CHAT_COMPLETIONS } = options || {};
-    const inputTools = params.tools.map((tool) => {
-      if (isAutoParsableTool(tool)) {
-        if (!tool.$callback) {
+    const inputTools = params.tools.map((tool2) => {
+      if (isAutoParsableTool(tool2)) {
+        if (!tool2.$callback) {
           throw new OpenAIError("Tool given to `.runTools()` that does not have an associated function");
         }
         return {
           type: "function",
           function: {
-            function: tool.$callback,
-            name: tool.function.name,
-            description: tool.function.description || "",
-            parameters: tool.function.parameters,
-            parse: tool.$parseRaw,
+            function: tool2.$callback,
+            name: tool2.function.name,
+            description: tool2.function.description || "",
+            parameters: tool2.function.parameters,
+            parse: tool2.$parseRaw,
             strict: true
           }
         };
       }
-      return tool;
+      return tool2;
     });
     const functionsByName = {};
     for (const f of inputTools) {
@@ -19471,7 +19465,7 @@ var ChatCompletionStream = class _ChatCompletionStream extends AbstractChatCompl
       throw new Error("tool call snapshot missing `type`");
     }
     if (toolCallSnapshot.type === "function") {
-      const inputTool = __classPrivateFieldGet6(this, _ChatCompletionStream_params, "f")?.tools?.find((tool) => tool.type === "function" && tool.function.name === toolCallSnapshot.function.name);
+      const inputTool = __classPrivateFieldGet6(this, _ChatCompletionStream_params, "f")?.tools?.find((tool2) => tool2.type === "function" && tool2.function.name === toolCallSnapshot.function.name);
       this._emit("tool_calls.function.arguments.done", {
         name: toolCallSnapshot.function.name,
         index: toolCallIndex,
@@ -21125,12 +21119,12 @@ function hasAutoParseableInput2(params) {
   return false;
 }
 __name(hasAutoParseableInput2, "hasAutoParseableInput2");
-function isAutoParsableTool2(tool) {
-  return tool?.["$brand"] === "auto-parseable-tool";
+function isAutoParsableTool2(tool2) {
+  return tool2?.["$brand"] === "auto-parseable-tool";
 }
 __name(isAutoParsableTool2, "isAutoParsableTool2");
 function getInputToolByName(input_tools, name) {
-  return input_tools.find((tool) => tool.type === "function" && tool.name === name);
+  return input_tools.find((tool2) => tool2.type === "function" && tool2.name === name);
 }
 __name(getInputToolByName, "getInputToolByName");
 function parseToolCall2(params, toolCall) {
@@ -22056,7 +22050,8 @@ OpenAI.ContainerListResponsesPage = ContainerListResponsesPage;
 var openai_default = OpenAI;
 init_env();
 var models = [
-  { id: "x-ai/grok-4.1-fast", maxOutputTokens: 1200, priceRank: 1 },
+  // grok-4.1-fast was deprecated by xAI (OpenRouter 404s it) — 4.3 is the successor.
+  { id: "x-ai/grok-4.3", maxOutputTokens: 1200, priceRank: 1 },
   { id: "anthropic/claude-3-5-sonnet-20241022", maxOutputTokens: 1200, priceRank: 2 },
   { id: "meta/llama-3.1-405b", maxOutputTokens: 1200, priceRank: 3 },
   { id: "qwen/qwen-2.5-110b", maxOutputTokens: 1200, priceRank: 4 }
@@ -22081,6 +22076,17 @@ async function routeAndChat(input) {
   return { id: res.id || "", model: model.id, content };
 }
 __name(routeAndChat, "routeAndChat");
+async function chatWithTools(input) {
+  const model = pickModel();
+  const res = await getClient().chat.completions.create({
+    model: model.id,
+    messages: input.messages,
+    tools: input.tools,
+    max_tokens: model.maxOutputTokens
+  });
+  return { message: res.choices?.[0]?.message ?? null, model: model.id };
+}
+__name(chatWithTools, "chatWithTools");
 async function routeAndStream(input) {
   const model = pickModel();
   const enc = new TextEncoder();
@@ -22130,10 +22136,10 @@ function errorId() {
   return `${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 }
 __name(errorId, "errorId");
-function withErrorLogging(handler17) {
+function withErrorLogging(handler18) {
   return async (req) => {
     try {
-      return await handler17(req);
+      return await handler18(req);
     } catch (e) {
       const id = errorId();
       const url = req.url;
@@ -28052,11 +28058,11 @@ async function af(path) {
     console.error("api_football_http_error", { path, status: res.status });
     return { response: [], errors: [`http_${res.status}`] };
   }
-  const json10 = await res.json();
-  if (json10.errors && !Array.isArray(json10.errors) && Object.keys(json10.errors).length) {
-    console.error("api_football_api_error", { path, errors: json10.errors });
+  const json11 = await res.json();
+  if (json11.errors && !Array.isArray(json11.errors) && Object.keys(json11.errors).length) {
+    console.error("api_football_api_error", { path, errors: json11.errors });
   }
-  return json10;
+  return json11;
 }
 __name(af, "af");
 function mapFixture(r) {
@@ -28130,8 +28136,8 @@ var apiFootballProvider = {
     const key = `fixtures:chelsea:${params.toString()}`;
     const cached = await getCache(key);
     if (cached) return cached;
-    const json10 = await af(path);
-    const fixtures = (json10.response || []).map(mapFixture);
+    const json11 = await af(path);
+    const fixtures = (json11.response || []).map(mapFixture);
     const data = { fixtures, citation: `${BASE}${path}` };
     await setCache(key, data, 15 * 60 * 1e3);
     return data;
@@ -28140,8 +28146,8 @@ var apiFootballProvider = {
     const key = `fixture:${id}`;
     const cached = await getCache(key);
     if (cached) return cached;
-    const json10 = await af(`/fixtures?id=${id}`);
-    const row = (json10.response || [])[0];
+    const json11 = await af(`/fixtures?id=${id}`);
+    const row = (json11.response || [])[0];
     if (!row) return null;
     const fixture = mapFixture(row);
     await setCache(key, fixture, 60 * 1e3);
@@ -28152,8 +28158,8 @@ var apiFootballProvider = {
     const cached = await getCache(key);
     if (cached) return cached === "none" ? null : cached;
     const path = `/fixtures?live=all`;
-    const json10 = await af(path);
-    const game = (json10.response || []).find(
+    const json11 = await af(path);
+    const game = (json11.response || []).find(
       (e) => e?.teams?.home?.id === CHELSEA_TEAM_ID || e?.teams?.away?.id === CHELSEA_TEAM_ID
     );
     if (!game) {
@@ -28179,8 +28185,8 @@ var apiFootballProvider = {
     const cached = await getCache(key);
     if (cached) return cached;
     const path = `/fixtures/statistics?fixture=${fixtureId}`;
-    const json10 = await af(path);
-    const chelseaEntry = (json10.response || []).find((e) => e?.team?.id === CHELSEA_TEAM_ID);
+    const json11 = await af(path);
+    const chelseaEntry = (json11.response || []).find((e) => e?.team?.id === CHELSEA_TEAM_ID);
     const stats = chelseaEntry?.statistics || [];
     const data = {
       fixtureId,
@@ -28202,8 +28208,8 @@ var apiFootballProvider = {
     const key = `events:${fixtureId}`;
     const cached = await getCache(key);
     if (cached) return cached;
-    const json10 = await af(path);
-    const goals = (json10.response || []).filter((e) => e?.type === "Goal" && e?.detail !== "Missed Penalty").map((e) => ({
+    const json11 = await af(path);
+    const goals = (json11.response || []).filter((e) => e?.type === "Goal" && e?.detail !== "Missed Penalty").map((e) => ({
       minute: e?.time?.elapsed ?? null,
       player: e?.player?.name || "Unknown",
       assist: e?.assist?.name || null,
@@ -28220,9 +28226,9 @@ var apiFootballProvider = {
     const key = `transfers:chelsea`;
     let all = await getCache(key);
     if (!all) {
-      const json10 = await af(path);
+      const json11 = await af(path);
       all = [];
-      for (const row of json10.response || []) {
+      for (const row of json11.response || []) {
         const player = row?.player?.name || "";
         const playerId = row?.player?.id || 0;
         for (const t of row?.transfers || []) {
@@ -28250,8 +28256,8 @@ var apiFootballProvider = {
     const key = `standings:${season}`;
     const cached = await getCache(key);
     if (cached) return cached;
-    const json10 = await af(path);
-    const rows = json10.response?.[0]?.league?.standings?.[0] || [];
+    const json11 = await af(path);
+    const rows = json11.response?.[0]?.league?.standings?.[0] || [];
     const table = rows.map((r) => ({
       rank: r?.rank ?? 0,
       team: r?.team?.name || "",
@@ -28274,8 +28280,8 @@ var apiFootballProvider = {
     const key = `teamstats:${season}`;
     const cached = await getCache(key);
     if (cached) return cached;
-    const json10 = await af(path);
-    const r = json10.response || {};
+    const json11 = await af(path);
+    const r = json11.response || {};
     const data = {
       season,
       form: r?.form || "",
@@ -28301,8 +28307,8 @@ var apiFootballProvider = {
     for (let page = 1; page <= 3; page++) {
       const path = `/players?team=${CHELSEA_TEAM_ID}&season=${season}&page=${page}`;
       citation = `${BASE}${path}`;
-      const json10 = await af(path);
-      const rows = json10.response || [];
+      const json11 = await af(path);
+      const rows = json11.response || [];
       for (const row of rows) {
         const s = (row.statistics || []).find((st) => st?.league?.id === PREMIER_LEAGUE_ID) || (row.statistics || [])[0] || {};
         players.push({
@@ -28334,9 +28340,9 @@ var apiFootballProvider = {
     const key = `h2h:${opponentId}:${last}`;
     const cached = await getCache(key);
     if (cached) return cached;
-    const json10 = await af(path);
+    const json11 = await af(path);
     let wins = 0, draws = 0, losses = 0;
-    for (const r of json10.response || []) {
+    for (const r of json11.response || []) {
       const status = r?.fixture?.status?.short;
       if (!["FT", "AET", "PEN"].includes(status)) continue;
       const chelseaHome = r?.teams?.home?.id === CHELSEA_TEAM_ID;
@@ -28364,23 +28370,59 @@ init_env();
 var BASE2 = "https://api.football-data.org/v4";
 var FD_CHELSEA_TEAM_ID = 61;
 var FD_PL_CODE = "PL";
-async function underRateLimit() {
-  if (!redis) return true;
-  const minute = Math.floor(Date.now() / 6e4);
-  const key = `fd:rate:${minute}`;
-  const n = await redis.incr(key);
-  if (n === 1) await redis.expire(key, 120);
-  return n <= 8;
+var RATE_KEY = "fd:ratestate";
+var RATE_RESERVE = 1;
+var MAX_WAIT_MS = 15e3;
+function parseRateHeaders(headers) {
+  const remaining = parseInt(headers.get("X-Requests-Available-Minute") || "", 10);
+  const reset = parseInt(headers.get("X-RequestCounter-Reset") || "", 10);
+  return {
+    remaining: Number.isNaN(remaining) ? null : remaining,
+    resetSec: Number.isNaN(reset) || reset <= 0 ? 60 : reset
+  };
 }
-__name(underRateLimit, "underRateLimit");
-async function fd(path) {
-  if (!await underRateLimit()) {
-    console.error("football_data_rate_limited", { path });
-    return null;
+__name(parseRateHeaders, "parseRateHeaders");
+function sleep2(ms2) {
+  return new Promise((r) => setTimeout(r, ms2));
+}
+__name(sleep2, "sleep2");
+async function getRateState() {
+  const s = await getCache(RATE_KEY);
+  return s && s.resetAtMs > Date.now() ? s : null;
+}
+__name(getRateState, "getRateState");
+async function saveRateState(remaining, resetSec) {
+  const state = { remaining, resetAtMs: Date.now() + resetSec * 1e3 };
+  await setCache(RATE_KEY, state, resetSec * 1e3 + 5e3);
+}
+__name(saveRateState, "saveRateState");
+async function fd(path, attempt = 0) {
+  const state = await getRateState();
+  if (state && state.remaining <= RATE_RESERVE) {
+    const waitMs = state.resetAtMs - Date.now();
+    if (waitMs > 0 && waitMs <= MAX_WAIT_MS) {
+      await sleep2(waitMs + 250);
+    } else if (waitMs > MAX_WAIT_MS) {
+      console.error("football_data_throttled_skip", { path, waitMs });
+      return null;
+    }
   }
   const res = await fetch(`${BASE2}${path}`, {
     headers: { "X-Auth-Token": env.FOOTBALL_DATA_KEY || "" }
   });
+  const rate = parseRateHeaders(res.headers);
+  if (rate.remaining != null) {
+    await saveRateState(rate.remaining, rate.resetSec);
+  }
+  if (res.status === 429) {
+    await saveRateState(0, rate.resetSec);
+    if (attempt === 0 && rate.resetSec * 1e3 <= MAX_WAIT_MS) {
+      await sleep2(rate.resetSec * 1e3 + 250);
+      return fd(path, 1);
+    }
+    console.error("football_data_rate_limited", { path, retryAfterSec: rate.resetSec });
+    return null;
+  }
   if (!res.ok) {
     console.error("football_data_http_error", { path, status: res.status });
     return null;
@@ -28512,8 +28554,8 @@ var footballDataProvider = {
     const key = `fd:fixtures:${status}:${limit2}`;
     const cached = await getCache(key);
     if (cached) return cached;
-    const json10 = await fd(path);
-    let fixtures = (json10?.matches || []).map(mapFdMatch);
+    const json11 = await fd(path);
+    let fixtures = (json11?.matches || []).map(mapFdMatch);
     if (opts.last) fixtures = fixtures.sort((a2, b) => a2.date < b.date ? 1 : -1).slice(0, limit2);
     const data = { fixtures, citation: `${BASE2}${path}` };
     await setCache(key, data, 15 * 60 * 1e3);
@@ -28523,9 +28565,9 @@ var footballDataProvider = {
     const key = `fd:fixture:${id}`;
     const cached = await getCache(key);
     if (cached) return cached;
-    const json10 = await fd(`/matches/${id}`);
-    if (!json10) return null;
-    const fixture = mapFdMatch(json10);
+    const json11 = await fd(`/matches/${id}`);
+    if (!json11) return null;
+    const fixture = mapFdMatch(json11);
     await setCache(key, fixture, 60 * 1e3);
     return fixture;
   },
@@ -28534,8 +28576,8 @@ var footballDataProvider = {
     const cached = await getCache(key);
     if (cached) return cached === "none" ? null : cached;
     const path = `/teams/${FD_CHELSEA_TEAM_ID}/matches?status=IN_PLAY,PAUSED`;
-    const json10 = await fd(path);
-    const m2 = (json10?.matches || [])[0];
+    const json11 = await fd(path);
+    const m2 = (json11?.matches || [])[0];
     if (!m2) {
       await setCache(key, "none", 30 * 1e3);
       return null;
@@ -28563,8 +28605,8 @@ var footballDataProvider = {
     const key = `fd:events:${fixtureId}`;
     const cached = await getCache(key);
     if (cached) return cached;
-    const json10 = await fd(path);
-    const goals = mapFdGoals(json10?.goals || []);
+    const json11 = await fd(path);
+    const goals = mapFdGoals(json11?.goals || []);
     const data = { goals, citation: `${BASE2}${path}` };
     await setCache(key, data, opts?.ttlMs ?? 60 * 1e3);
     return data;
@@ -28577,8 +28619,8 @@ var footballDataProvider = {
     const key = `fd:standings:${season}`;
     const cached = await getCache(key);
     if (cached) return cached;
-    const json10 = await fd(path);
-    const total = (json10?.standings || []).find((s) => s?.type === "TOTAL");
+    const json11 = await fd(path);
+    const total = (json11?.standings || []).find((s) => s?.type === "TOTAL");
     const table = (total?.table || []).map(mapFdStandingRow);
     const chelsea = (total?.table || []).filter((r) => r?.team?.id === FD_CHELSEA_TEAM_ID).map(mapFdStandingRow)[0] || null;
     const data = { chelsea, table, citation: `${BASE2}${path}` };
@@ -28599,8 +28641,8 @@ var footballDataProvider = {
     const key = `fd:topperformers:${season}`;
     const cached = await getCache(key);
     if (cached) return cached;
-    const json10 = await fd(path);
-    const players = (json10?.scorers || []).filter((s) => s?.team?.id === FD_CHELSEA_TEAM_ID).map(mapFdScorer).sort((a2, b) => b.goals * 2 + b.assists - (a2.goals * 2 + a2.assists));
+    const json11 = await fd(path);
+    const players = (json11?.scorers || []).filter((s) => s?.team?.id === FD_CHELSEA_TEAM_ID).map(mapFdScorer).sort((a2, b) => b.goals * 2 + b.assists - (a2.goals * 2 + a2.assists));
     const data = { players, citation: `${BASE2}${path}` };
     await setCache(key, data, 12 * 60 * 60 * 1e3);
     return data;
@@ -28613,9 +28655,9 @@ var footballDataProvider = {
     const key = `fd:h2h:${ref.fixtureId}`;
     const cached = await getCache(key);
     if (cached) return cached;
-    const json10 = await fd(path);
+    const json11 = await fd(path);
     let wins = 0, draws = 0, losses = 0;
-    for (const m2 of json10?.matches || []) {
+    for (const m2 of json11?.matches || []) {
       if (m2?.status !== "FINISHED") continue;
       const f = mapFdMatch(m2);
       if (f.outcome === "W") wins++;
@@ -28933,7 +28975,7 @@ async function handler4() {
   );
 }
 __name(handler4, "handler4");
-var BRAND = "BLUEBOT.";
+var BRAND = "bluebot.";
 var color = {
   bg: "#0B0C0F",
   // near-black canvas
@@ -30265,24 +30307,452 @@ function json4(obj, status = 200) {
   });
 }
 __name(json4, "json4");
-var prewarm_default = withErrorLogging(/* @__PURE__ */ __name(async function handler7() {
+var BASE3 = "https://understat.com";
+var UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
+var TTL_MS = 12 * 60 * 60 * 1e3;
+function parseUnderstatVar(html, name) {
+  const re = new RegExp(`var\\s+${name}\\s*=\\s*JSON\\.parse\\('([^']+)'\\)`);
+  const m2 = html.match(re);
+  if (!m2) return null;
+  const decoded = m2[1].replace(
+    /\\x([0-9A-Fa-f]{2})/g,
+    (_s2, h) => String.fromCharCode(parseInt(h, 16))
+  );
+  try {
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+__name(parseUnderstatVar, "parseUnderstatVar");
+function num(v2) {
+  const n = parseFloat(String(v2 ?? "0"));
+  return Number.isFinite(n) ? n : 0;
+}
+__name(num, "num");
+function round2(n) {
+  return Math.round(n * 100) / 100;
+}
+__name(round2, "round2");
+function mapUnderstatPlayer(r) {
+  const minutes = num(r?.time);
+  const per90 = /* @__PURE__ */ __name((v2) => minutes > 0 ? round2(v2 * 90 / minutes) : 0, "per90");
+  const xG = num(r?.xG);
+  const xA = num(r?.xA);
+  const shots = num(r?.shots);
+  const keyPasses = num(r?.key_passes);
+  return {
+    player: r?.player_name || "",
+    position: r?.position || "",
+    matches: num(r?.games),
+    minutes,
+    goals: num(r?.goals),
+    xG: round2(xG),
+    npg: num(r?.npg),
+    npxG: round2(num(r?.npxG)),
+    assists: num(r?.assists),
+    xA: round2(xA),
+    shots,
+    keyPasses,
+    xGChain: round2(num(r?.xGChain)),
+    xGBuildup: round2(num(r?.xGBuildup)),
+    per90: { xG: per90(xG), xA: per90(xA), shots: per90(shots), keyPasses: per90(keyPasses) }
+  };
+}
+__name(mapUnderstatPlayer, "mapUnderstatPlayer");
+function mapUnderstatTeams(teamsData) {
+  const rows = [];
+  for (const key of Object.keys(teamsData || {})) {
+    const t = teamsData[key];
+    const history = Array.isArray(t?.history) ? t.history : [];
+    const sum = /* @__PURE__ */ __name((field) => round2(history.reduce((acc, h) => acc + num(h?.[field]), 0)), "sum");
+    rows.push({
+      team: t?.title || key,
+      matches: history.length,
+      xG: sum("xG"),
+      xGA: sum("xGA"),
+      npxG: sum("npxG"),
+      npxGA: sum("npxGA"),
+      xPts: sum("xpts")
+    });
+  }
+  return rows.sort((a2, b) => b.xG - a2.xG);
+}
+__name(mapUnderstatTeams, "mapUnderstatTeams");
+async function fetchJson(path, referer) {
+  const res = await fetch(`${BASE3}${path}`, {
+    headers: {
+      "User-Agent": UA,
+      "X-Requested-With": "XMLHttpRequest",
+      Referer: referer,
+      Accept: "application/json"
+    }
+  });
+  if (!res.ok) {
+    console.error("understat_http_error", { path, status: res.status });
+    return null;
+  }
+  return res.json().catch(() => null);
+}
+__name(fetchJson, "fetchJson");
+async function fetchPage(path) {
+  const res = await fetch(`${BASE3}${path}`, { headers: { "User-Agent": UA } });
+  if (!res.ok) return null;
+  return res.text();
+}
+__name(fetchPage, "fetchPage");
+async function getChelseaAdvancedStats(season) {
+  const key = `understat:chelsea:${season}`;
+  const cached = await getCache(key);
+  if (cached) return cached;
+  const source = `${BASE3}/team/Chelsea/${season}`;
+  let players = [];
+  try {
+    const json11 = await fetchJson(`/getTeamData/Chelsea/${season}`, source);
+    let raw = Array.isArray(json11?.players) ? json11.players : null;
+    if (!raw) {
+      const html = await fetchPage(`/team/Chelsea/${season}`);
+      const parsed = html ? parseUnderstatVar(html, "playersData") : null;
+      raw = Array.isArray(parsed) ? parsed : null;
+    }
+    players = (raw || []).map(mapUnderstatPlayer).filter((p2) => p2.minutes > 0);
+    players.sort((a2, b) => b.xG + b.xA - (a2.xG + a2.xA));
+  } catch (e) {
+    console.error("understat_parse_error", { error: String(e) });
+  }
+  const data = { players, source };
+  await setCache(key, data, players.length ? TTL_MS : 60 * 60 * 1e3);
+  return data;
+}
+__name(getChelseaAdvancedStats, "getChelseaAdvancedStats");
+async function getLeagueXgTable(season) {
+  const key = `understat:epl:${season}`;
+  const cached = await getCache(key);
+  if (cached) return cached;
+  const source = `${BASE3}/league/EPL/${season}`;
+  let table = [];
+  try {
+    const json11 = await fetchJson(`/getLeagueData/EPL/${season}`, source);
+    let raw = json11?.teams && typeof json11.teams === "object" ? json11.teams : null;
+    if (!raw) {
+      const html = await fetchPage(`/league/EPL/${season}`);
+      raw = html ? parseUnderstatVar(html, "teamsData") : null;
+    }
+    table = raw ? mapUnderstatTeams(raw) : [];
+  } catch (e) {
+    console.error("understat_parse_error", { error: String(e) });
+  }
+  const data = { table, source };
+  await setCache(key, data, table.length ? TTL_MS : 60 * 60 * 1e3);
+  return data;
+}
+__name(getLeagueXgTable, "getLeagueXgTable");
+init_client();
+init_schema2();
+init_drizzle_orm();
+var MAX_STEPS = 6;
+var MAX_HISTORY = 24;
+var TWEET_KINDS = [
+  "match_preview",
+  "live_update",
+  "post_match",
+  "player_stat",
+  "transfer_news",
+  "weekly_deep_dive",
+  "long_read"
+];
+var CARD_KINDS = [
+  "match_preview",
+  "score",
+  "post_match",
+  "player_stat",
+  "transfer",
+  "form",
+  "editorial"
+];
+function systemPrompt() {
+  const caps = provider().capabilities;
+  return `You are the control-room agent for a Chelsea FC X (Twitter) account.
+Today: ${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}. Season: ${seasonLabel(currentSeason())}. Data provider: ${activeProviderName()}${caps.xg ? "" : " (no possession/xG/transfer data on this tier \u2014 never invent those numbers)"}.
+
+You help the operator create posts. Rules:
+- ALWAYS fetch real data with tools before creating a draft. Never invent stats, dates, or opponents.
+- create_draft composes tweet copy + an infographic spec into the APPROVAL QUEUE. It never posts to X; the operator reviews and posts from the dashboard.
+- Prefer attaching a card. Card kinds and their data shapes:
+  - match_preview {home, away, competition, dateLabel, venue?, footnote?}   (landscape; footnote for H2H)
+  - score {home, away, homeGoals, awayGoals, competition, statusLabel, scorers?[], statLine?}
+  - post_match {home, away, homeGoals, awayGoals, competition, statusLabel, seasonLabel?, scorers?[], stats:{possession?, xg?, shotsTotal?, shotsOnTarget?, corners?, passAccuracy?, fouls?}}
+  - player_stat {player, season, competition?, context?, stats:[{label, value}] (max 6)}
+  - transfer {player, direction:"in"|"out", counterparty, transferType?, dateLabel?}
+  - form {seasonLabel, results:[{opponent, score, outcome:"W"|"D"|"L"}] (max 5), position?, points?, goalsFor?, goalsAgainst?, competition?}
+  - editorial {eyebrow, lines:[{text, em?}] (max 7 short lines), dateLabel?}
+- The "data" argument of create_draft grounds the tweet copy \u2014 put the real numbers/facts there. It must never be empty.
+- When the user asks for a post, you MUST actually call create_draft \u2014 never say a draft was created unless the create_draft tool returned a draftId in this conversation.
+- Dates shown to fans: convert to Africa/Lagos time (WAT, UTC+1) like "Sat 24 Aug, 20:00 WAT".
+- Advanced stats (get_advanced_player_stats / get_league_xg_table) come from Understat's xG model \u2014 when a post leans on them, credit "xG: Understat" in the copy or card. Great for over/under-performance takes (goals vs xG), profiling (xGChain/xGBuildup), and transfer arguments. NEVER produce Opta-style historical trivia ("first player since\u2026") \u2014 no tool can verify it.
+- Be brief in replies: one or two sentences on what you did or found. Plain text, no markdown.`;
+}
+__name(systemPrompt, "systemPrompt");
+var TOOLS = [
+  tool("get_upcoming_fixtures", "Next Chelsea fixtures (date ISO, opponent, competition, venue, home/away).", {
+    count: { type: "number", description: "1-10, default 3" }
+  }),
+  tool("get_recent_results", "Chelsea's most recent finished matches with scores and W/D/L outcomes.", {
+    count: { type: "number", description: "1-10, default 5" }
+  }),
+  tool("get_standings", "Premier League table: Chelsea's row plus the top of the table.", {}),
+  tool("get_top_performers", "Chelsea's top players this season by goal involvements.", {}),
+  tool(
+    "get_advanced_player_stats",
+    "Advanced xG-model stats for the Chelsea squad this season (source: Understat): xG, npxG, xA, shots, key passes, xGChain, xGBuildup, per-90 rates. Use for player profiling, transfer arguments, over/under-performance takes.",
+    { player: { type: "string", description: "Optional player name filter (partial match)" } }
+  ),
+  tool(
+    "get_league_xg_table",
+    "Premier League team xG table this season (source: Understat): xG, xGA, npxG, npxGA, xPts per team. Use for 'only N teams have a better xGA'-style arguments.",
+    {}
+  ),
+  tool("get_head_to_head", "Head-to-head record vs the next opponent (last ~10 meetings).", {}),
+  tool("list_pending_drafts", "Drafts currently waiting in the approval queue.", {}),
+  tool(
+    "create_draft",
+    "Compose a post (tweet copy via the house style + optional infographic card) into the approval queue.",
+    {
+      kind: { type: "string", enum: TWEET_KINDS, description: "Tweet kind" },
+      tone: { type: "string", enum: ["professional", "savage"] },
+      longform: { type: "boolean", description: "Long-form post (X premium)" },
+      data_json: {
+        type: "string",
+        description: 'JSON object string with the real facts that ground the tweet, e.g. "{\\"opponent\\":\\"Fulham\\",\\"competition\\":\\"Premier League\\",\\"date\\":\\"Mon 24 Aug, 20:00 WAT\\",\\"venue\\":\\"Craven Cottage\\",\\"hook\\":\\"H2H W6 D1 L3\\"}"'
+      },
+      card_kind: { type: "string", enum: CARD_KINDS, description: "Optional infographic kind" },
+      card_data_json: {
+        type: "string",
+        description: "JSON object string with the card data (shapes in the system prompt). Required if card_kind is set."
+      }
+    },
+    ["kind", "data_json"]
+  )
+];
+function tool(name, description, props, required = []) {
+  return {
+    type: "function",
+    function: {
+      name,
+      description,
+      parameters: { type: "object", properties: props, required }
+    }
+  };
+}
+__name(tool, "tool");
+function clamp(n, lo, hi, dflt) {
+  const v2 = Number(n);
+  return Number.isFinite(v2) ? Math.min(hi, Math.max(lo, Math.floor(v2))) : dflt;
+}
+__name(clamp, "clamp");
+function coerceObject(v2) {
+  if (v2 && typeof v2 === "object") return v2;
+  if (typeof v2 === "string" && v2.trim().startsWith("{")) {
+    try {
+      const parsed = JSON.parse(v2);
+      return parsed && typeof parsed === "object" ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+__name(coerceObject, "coerceObject");
+async function execTool(name, args) {
+  switch (name) {
+    case "get_upcoming_fixtures": {
+      const { fixtures } = await getChelseaFixtures({ next: clamp(args?.count, 1, 10, 3) });
+      return fixtures.map((f) => ({
+        fixtureId: f.id,
+        dateUtc: f.date,
+        home: f.home,
+        away: f.away,
+        opponent: f.opponent,
+        competition: f.competition,
+        venue: f.venue || null,
+        chelseaHome: f.isChelseaHome
+      }));
+    }
+    case "get_recent_results": {
+      const { fixtures } = await getChelseaFixtures({ last: clamp(args?.count, 1, 10, 5) });
+      return fixtures.map((f) => ({
+        dateUtc: f.date,
+        opponent: f.opponent,
+        score: `${f.goalsHome ?? "?"}-${f.goalsAway ?? "?"}`,
+        home: f.home,
+        away: f.away,
+        outcome: f.outcome,
+        competition: f.competition
+      }));
+    }
+    case "get_standings": {
+      const { chelsea, table } = await getLeagueStandings(currentSeason());
+      return { chelsea, topSix: table.slice(0, 6) };
+    }
+    case "get_top_performers": {
+      const { players } = await getChelseaTopPerformers(currentSeason());
+      return players.slice(0, 8);
+    }
+    case "get_advanced_player_stats": {
+      const { players, source } = await getChelseaAdvancedStats(currentSeason());
+      if (!players.length) {
+        return { error: "no advanced stats available yet (early season or Understat unreachable)" };
+      }
+      const fold = /* @__PURE__ */ __name((s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(), "fold");
+      const filter = fold(String(args?.player || "").trim());
+      let picked = filter ? players.filter((p2) => fold(p2.player).includes(filter)) : players.slice(0, 12);
+      let note;
+      if (filter && !picked.length) {
+        const last = filter.split(/\s+/).pop() || filter;
+        picked = players.filter((p2) => fold(p2.player).includes(last));
+        if (!picked.length) {
+          picked = players.slice(0, 12);
+          note = `no player matched "${args?.player}" \u2014 full squad list returned, check the spelling against player names`;
+        }
+      }
+      return { players: picked, note, source: "Understat", url: source };
+    }
+    case "get_league_xg_table": {
+      const { table, source } = await getLeagueXgTable(currentSeason());
+      if (!table.length) {
+        return { error: "no league xG data available yet (early season or Understat unreachable)" };
+      }
+      return { table, source: "Understat", url: source };
+    }
+    case "get_head_to_head": {
+      const { fixtures } = await getChelseaFixtures({ next: 1 });
+      const next = fixtures[0];
+      if (!next) return { error: "no upcoming fixture" };
+      const h2h = await getHeadToHead({ opponentId: next.opponentId, fixtureId: next.id });
+      return { opponent: next.opponent, ...h2h, citation: void 0 };
+    }
+    case "list_pending_drafts": {
+      const rows = await db.select().from(drafts).where(eq(drafts.status, "pending")).orderBy(desc(drafts.createdAt)).limit(10);
+      return rows.map((r) => ({
+        id: r.id,
+        kind: r.kind,
+        card: r.cardKind,
+        preview: (r.content || "").slice(0, 90)
+      }));
+    }
+    case "create_draft": {
+      if (!TWEET_KINDS.includes(args?.kind)) throw new Error(`invalid kind: ${args?.kind}`);
+      const data = coerceObject(args?.data_json ?? args?.data);
+      if (!data || !Object.keys(data).length) {
+        throw new Error(
+          `'data_json' is empty or invalid (received: ${JSON.stringify(args?.data_json ?? args?.data).slice(0, 120)}) \u2014 pass a JSON object string with the real facts, e.g. "{\\"opponent\\":\\"Fulham\\",\\"date\\":\\"Mon 24 Aug, 20:00 WAT\\",\\"hook\\":\\"H2H W6 D1 L3\\"}"`
+        );
+      }
+      const cardKind = args?.card_kind || coerceObject(args?.card)?.kind;
+      const cardData = coerceObject(args?.card_data_json ?? coerceObject(args?.card)?.data);
+      if (cardKind && !CARD_KINDS.includes(cardKind)) {
+        throw new Error(`invalid card kind: ${cardKind}`);
+      }
+      if (cardKind && (!cardData || !Object.keys(cardData).length)) {
+        throw new Error("card_kind set but card_data_json is empty \u2014 pass the card data as a JSON object string");
+      }
+      const result = await composeAndPost({
+        kind: args.kind,
+        tone: args.tone === "savage" ? "savage" : "professional",
+        data,
+        card: cardKind && cardData ? { kind: cardKind, data: cardData } : void 0,
+        longform: Boolean(args.longform),
+        source: "chat",
+        forceQueue: true
+      });
+      if (!result.draftId) {
+        throw new Error(
+          `compose refused (${result.skipped || "no output"}) \u2014 the tweet writer needs concrete facts in 'data'; include the numbers you fetched`
+        );
+      }
+      return { draftId: result.draftId, tweet: result.tweet, queued: true };
+    }
+    default:
+      throw new Error(`unknown tool: ${name}`);
+  }
+}
+__name(execTool, "execTool");
+var chat_default = withErrorLogging(/* @__PURE__ */ __name(async function handler7(req) {
+  if (req.method !== "POST") return json5({ error: "POST only" }, 405);
+  const body = await req.json().catch(() => null);
+  const history = Array.isArray(body?.messages) ? body.messages.slice(-MAX_HISTORY) : [];
+  if (!history.length) return json5({ error: "messages required" }, 400);
+  const msgs = [
+    { role: "system", content: systemPrompt() },
+    ...history.map((m2) => ({
+      role: m2.role === "assistant" ? "assistant" : "user",
+      content: String(m2.content || "").slice(0, 4e3)
+    }))
+  ];
+  const toolLog = [];
+  const draftIds = [];
+  for (let step = 0; step < MAX_STEPS; step++) {
+    const { message } = await chatWithTools({ messages: msgs, tools: TOOLS });
+    if (!message) break;
+    msgs.push(message);
+    const calls = message.tool_calls || [];
+    if (!calls.length) {
+      return json5({ reply: message.content || "(no reply)", toolLog, draftIds });
+    }
+    for (const c of calls) {
+      const name = c?.function?.name || "unknown";
+      let result;
+      try {
+        const args = JSON.parse(c?.function?.arguments || "{}");
+        result = await execTool(name, args);
+        let note;
+        if (name === "create_draft" && result?.draftId) {
+          draftIds.push(result.draftId);
+          note = `\u201C${String(result.tweet || "").slice(0, 70)}\u2026\u201D`;
+        }
+        toolLog.push({ tool: name, ok: true, note });
+      } catch (e) {
+        result = { error: e?.message || String(e) };
+        toolLog.push({ tool: name, ok: false, note: e?.message });
+      }
+      msgs.push({
+        role: "tool",
+        tool_call_id: c.id,
+        content: JSON.stringify(result).slice(0, 6e3)
+      });
+    }
+  }
+  return json5({
+    reply: "I hit my tool-step limit for one message \u2014 ask again or narrow the request.",
+    toolLog,
+    draftIds
+  });
+}, "handler7"));
+function json5(obj, status = 200) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }
+  });
+}
+__name(json5, "json5");
+var prewarm_default = withErrorLogging(/* @__PURE__ */ __name(async function handler8() {
   const started = Date.now();
   const ms2 = Date.now() - started;
   return new Response("ok", { status: 200, headers: { "x-prewarm-ms": String(ms2), "Cache-Control": "no-store" } });
-}, "handler7"));
+}, "handler8"));
 function nextFixtureKey() {
   return `nextfixture:chelsea:${activeProviderName()}`;
 }
 __name(nextFixtureKey, "nextFixtureKey");
-var fixtures_default = withErrorLogging(/* @__PURE__ */ __name(async function handler8() {
+var fixtures_default = withErrorLogging(/* @__PURE__ */ __name(async function handler9() {
   const { fixtures } = await getChelseaFixtures({ next: 1 });
   const next = fixtures[0];
-  if (!next) return json5({ skipped: "no upcoming fixture" });
+  if (!next) return json6({ skipped: "no upcoming fixture" });
   await setCache(nextFixtureKey(), { id: next.id, date: next.date }, 24 * 60 * 60 * 1e3);
   const kickoff = new Date(next.date).getTime();
   const hoursAway = (kickoff - Date.now()) / 36e5;
   if (hoursAway > 48) {
-    return json5({ skipped: `next fixture ${Math.round(hoursAway)}h away \u2014 no preview yet`, fixtureId: next.id });
+    return json6({ skipped: `next fixture ${Math.round(hoursAway)}h away \u2014 no preview yet`, fixtureId: next.id });
   }
   const dateLabel = new Date(next.date).toLocaleString("en-GB", {
     timeZone: "Africa/Lagos",
@@ -30323,16 +30793,16 @@ var fixtures_default = withErrorLogging(/* @__PURE__ */ __name(async function ha
     },
     idKey: `tweet:fixtures:${next.id}:${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}`
   });
-  return json5({ fixtureId: next.id, opponent: next.opponent, date: next.date, ...result });
-}, "handler8"));
-function json5(obj, status = 200) {
+  return json6({ fixtureId: next.id, opponent: next.opponent, date: next.date, ...result });
+}, "handler9"));
+function json6(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }
   });
 }
-__name(json5, "json5");
-var weekly_default = withErrorLogging(/* @__PURE__ */ __name(async function handler9() {
+__name(json6, "json6");
+var weekly_default = withErrorLogging(/* @__PURE__ */ __name(async function handler10() {
   const season = currentSeason();
   const [{ fixtures }, standings, teamStats] = await Promise.all([
     getChelseaFixtures({ last: 5 }),
@@ -30340,7 +30810,7 @@ var weekly_default = withErrorLogging(/* @__PURE__ */ __name(async function hand
     getChelseaSeasonStats(season)
   ]);
   const finished = fixtures.filter((f) => f.outcome);
-  if (!finished.length) return json6({ skipped: "no recent finished fixtures" });
+  if (!finished.length) return json7({ skipped: "no recent finished fixtures" });
   const results = finished.map((f) => ({
     opponent: f.opponent,
     score: `${f.goalsHome ?? "?"}-${f.goalsAway ?? "?"}`,
@@ -30377,19 +30847,19 @@ var weekly_default = withErrorLogging(/* @__PURE__ */ __name(async function hand
     idKey: `tweet:weekly:${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}`,
     idTtlSec: 7 * 24 * 60 * 60
   });
-  return json6(result);
-}, "handler9"));
-function json6(obj, status = 200) {
+  return json7(result);
+}, "handler10"));
+function json7(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }
   });
 }
-__name(json6, "json6");
+__name(json7, "json7");
 var WINDOW_BEFORE_MS = 15 * 60 * 1e3;
 var WINDOW_AFTER_MS = 4 * 60 * 60 * 1e3;
 var FT_EARLIEST_MS = 100 * 60 * 1e3;
-var match_day_default = withErrorLogging(/* @__PURE__ */ __name(async function handler10() {
+var match_day_default = withErrorLogging(/* @__PURE__ */ __name(async function handler11() {
   let next = await getCache(nextFixtureKey());
   if (!next) {
     const { fixtures } = await getChelseaFixtures({ next: 1 });
@@ -30398,11 +30868,11 @@ var match_day_default = withErrorLogging(/* @__PURE__ */ __name(async function h
       await setCache(nextFixtureKey(), next, 6 * 60 * 60 * 1e3);
     }
   }
-  if (!next) return json7({ skipped: "no known upcoming fixture" });
+  if (!next) return json8({ skipped: "no known upcoming fixture" });
   const kickoff = new Date(next.date).getTime();
   const now = Date.now();
   if (now < kickoff - WINDOW_BEFORE_MS || now > kickoff + WINDOW_AFTER_MS) {
-    return json7({ skipped: "outside match window", kickoff: next.date });
+    return json8({ skipped: "outside match window", kickoff: next.date });
   }
   const live = await getLiveChelseaMatch();
   if (live && (live.phase === "live" || live.phase === "ht")) {
@@ -30445,18 +30915,18 @@ var match_day_default = withErrorLogging(/* @__PURE__ */ __name(async function h
       idKey: `tweet:live:${live.fixtureId}:${live.homeGoals}-${live.awayGoals}`,
       idTtlSec: 20 * 60
     });
-    return json7({ type: "live", phase: live.phase, ...result2 });
+    return json8({ type: "live", phase: live.phase, ...result2 });
   }
   if (now < kickoff + FT_EARLIEST_MS) {
-    return json7({ skipped: "in window, match not started or in early play" });
+    return json8({ skipped: "in window, match not started or in early play" });
   }
   if (await getCache(`ftdone:${next.id}`)) {
-    return json7({ skipped: "full-time recap already handled", fixtureId: next.id });
+    return json8({ skipped: "full-time recap already handled", fixtureId: next.id });
   }
   const fixture = await getFixtureById(next.id);
-  if (!fixture) return json7({ skipped: "fixture lookup failed", fixtureId: next.id });
+  if (!fixture) return json8({ skipped: "fixture lookup failed", fixtureId: next.id });
   if (fixture.outcome === null) {
-    return json7({ skipped: `not finished yet (status=${fixture.status})`, fixtureId: next.id });
+    return json8({ skipped: `not finished yet (status=${fixture.status})`, fixtureId: next.id });
   }
   const caps = provider().capabilities;
   const [stats, { goals }] = await Promise.all([
@@ -30502,24 +30972,24 @@ var match_day_default = withErrorLogging(/* @__PURE__ */ __name(async function h
     idTtlSec: 24 * 60 * 60
   });
   await setCache(`ftdone:${fixture.id}`, true, 24 * 60 * 60 * 1e3);
-  return json7({ type: "post_match", ...result });
-}, "handler10"));
-function json7(obj, status = 200) {
+  return json8({ type: "post_match", ...result });
+}, "handler11"));
+function json8(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }
   });
 }
-__name(json7, "json7");
+__name(json8, "json8");
 var MAX_POSTS_PER_RUN = 2;
-var transfers_default = withErrorLogging(/* @__PURE__ */ __name(async function handler11() {
+var transfers_default = withErrorLogging(/* @__PURE__ */ __name(async function handler12() {
   const { transfers, supported } = await getChelseaTransfers({ sinceDays: 14 });
   if (!supported) {
-    return json8({
+    return json9({
       skipped: "transfer data not available on the current provider (football-data.org) \u2014 add an API_FOOTBALL_KEY to enable, or post transfers manually via the dashboard Compose studio"
     });
   }
-  if (!transfers.length) return json8({ skipped: "no recent transfers" });
+  if (!transfers.length) return json9({ skipped: "no recent transfers" });
   const posted = [];
   for (const t of transfers) {
     if (posted.length >= MAX_POSTS_PER_RUN) break;
@@ -30552,16 +31022,16 @@ var transfers_default = withErrorLogging(/* @__PURE__ */ __name(async function h
     if (result.tweetId) await recordPostedTweet(key, result.tweetId);
     posted.push({ player: t.player, direction: t.direction, ...result });
   }
-  if (!posted.length) return json8({ skipped: "all recent transfers already posted" });
-  return json8({ posted });
-}, "handler11"));
-function json8(obj, status = 200) {
+  if (!posted.length) return json9({ skipped: "all recent transfers already posted" });
+  return json9({ posted });
+}, "handler12"));
+function json9(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }
   });
 }
-__name(json8, "json8");
+__name(json9, "json9");
 function isoWeek(d = /* @__PURE__ */ new Date()) {
   const date2 = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   date2.setUTCDate(date2.getUTCDate() + 4 - (date2.getUTCDay() || 7));
@@ -30570,14 +31040,14 @@ function isoWeek(d = /* @__PURE__ */ new Date()) {
   return `${date2.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
 }
 __name(isoWeek, "isoWeek");
-var spotlight_default = withErrorLogging(/* @__PURE__ */ __name(async function handler12() {
+var spotlight_default = withErrorLogging(/* @__PURE__ */ __name(async function handler13() {
   const season = currentSeason();
   const { players } = await getChelseaTopPerformers(season);
   const candidates = players.filter((p2) => p2.appearances > 0).slice(0, 6);
-  if (!candidates.length) return json9({ skipped: "no player data for this season yet" });
+  if (!candidates.length) return json10({ skipped: "no player data for this season yet" });
   const weekKey = `spotlight:week:${isoWeek()}`;
   if (!await claimPostedKey(weekKey, "spotlight")) {
-    return json9({ skipped: "spotlight already posted this week" });
+    return json10({ skipped: "spotlight already posted this week" });
   }
   const month = (/* @__PURE__ */ new Date()).toISOString().slice(0, 7);
   for (const p2 of candidates) {
@@ -30586,10 +31056,24 @@ var spotlight_default = withErrorLogging(/* @__PURE__ */ __name(async function h
     const stats = [
       { label: "Appearances", value: String(p2.appearances) },
       { label: "Goals", value: String(p2.goals) },
-      { label: "Assists", value: String(p2.assists) },
-      { label: "Minutes", value: String(p2.minutes) }
+      { label: "Assists", value: String(p2.assists) }
     ];
+    if (p2.minutes != null) stats.push({ label: "Minutes", value: String(p2.minutes) });
     if (p2.rating) stats.push({ label: "Avg rating", value: p2.rating });
+    let xgLine = "";
+    try {
+      const { players: adv } = await getChelseaAdvancedStats(season);
+      const lastName = p2.player.split(" ").slice(-1)[0].toLowerCase();
+      const a2 = adv.find((x2) => x2.player.toLowerCase().includes(lastName));
+      if (a2) {
+        stats.splice(3);
+        stats.push({ label: "Expected goals (xG)", value: a2.xG.toFixed(1) });
+        stats.push({ label: "Expected assists (xA)", value: a2.xA.toFixed(1) });
+        stats.push({ label: "xG per 90", value: a2.per90.xG.toFixed(2) });
+        xgLine = `xG ${a2.xG.toFixed(1)} (${a2.goals} goals), xA ${a2.xA.toFixed(1)} \u2014 xG: Understat`;
+      }
+    } catch {
+    }
     let photoDataUri;
     if (p2.photoUrl) {
       try {
@@ -30614,7 +31098,7 @@ var spotlight_default = withErrorLogging(/* @__PURE__ */ __name(async function h
         goals: p2.goals,
         assists: p2.assists,
         apps: p2.appearances,
-        extra: p2.rating ? `avg rating ${p2.rating}` : `position ${p2.position}`
+        extra: xgLine || (p2.rating ? `avg rating ${p2.rating}` : `position ${p2.position}`)
       },
       card: {
         kind: "player_stat",
@@ -30629,33 +31113,33 @@ var spotlight_default = withErrorLogging(/* @__PURE__ */ __name(async function h
       }
     });
     if (result.tweetId) await recordPostedTweet(playerKey, result.tweetId);
-    return json9({ player: p2.player, ...result });
+    return json10({ player: p2.player, ...result });
   }
-  return json9({ skipped: "all top performers featured recently" });
-}, "handler12"));
-function json9(obj, status = 200) {
+  return json10({ skipped: "all top performers featured recently" });
+}, "handler13"));
+function json10(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }
   });
 }
-__name(json9, "json9");
+__name(json10, "json10");
 init_x();
-var auth_default = withErrorLogging(/* @__PURE__ */ __name(async function handler13(req) {
+var auth_default = withErrorLogging(/* @__PURE__ */ __name(async function handler14(req) {
   const state = crypto.randomUUID();
   const { url } = await startOAuth(state);
   return Response.redirect(url, 302);
-}, "handler13"));
+}, "handler14"));
 init_x();
-var callback_default = withErrorLogging(/* @__PURE__ */ __name(async function handler14(req) {
+var callback_default = withErrorLogging(/* @__PURE__ */ __name(async function handler15(req) {
   const u = new URL(req.url);
   const state = u.searchParams.get("state") || "";
   const code = u.searchParams.get("code") || "";
   const t = await completeOAuth(state, code);
   return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "Content-Type": "application/json" } });
-}, "handler14"));
+}, "handler15"));
 init_x();
-var publish_default = withErrorLogging(/* @__PURE__ */ __name(async function handler15(req) {
+var publish_default = withErrorLogging(/* @__PURE__ */ __name(async function handler16(req) {
   const u = new URL(req.url);
   const text3 = u.searchParams.get("text") || "BlueBanter test post";
   const confirm = u.searchParams.get("confirm") || "0";
@@ -30664,7 +31148,7 @@ var publish_default = withErrorLogging(/* @__PURE__ */ __name(async function han
   }
   const res = await publishTweetForUser(text3);
   return new Response(JSON.stringify({ id: res.id || "" }), { status: 200, headers: { "Content-Type": "application/json" } });
-}, "handler15"));
+}, "handler16"));
 init_env();
 init_client();
 init_schema2();
@@ -30677,9 +31161,9 @@ async function getLiveEvents(input) {
   const res = await fetch(url, {
     headers: { "x-apisports-key": env.API_FOOTBALL_KEY || "" }
   });
-  const json10 = await res.json();
+  const json11 = await res.json();
   const data = {
-    events: json10.response || [],
+    events: json11.response || [],
     matchId: input.matchId,
     citation: url
   };
@@ -30703,11 +31187,11 @@ async function getPlayerStats(input) {
   const res = await fetch(url, {
     headers: { "x-apisports-key": env.API_FOOTBALL_KEY || "" }
   });
-  const json10 = await res.json();
+  const json11 = await res.json();
   const data = {
     name: input.name,
     season: input.season,
-    stats: json10.response || [],
+    stats: json11.response || [],
     citation: url
   };
   await setCache(key, data, 6 * 60 * 60 * 1e3);
@@ -30733,10 +31217,10 @@ async function fetchQuotes(input) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
   });
-  const json10 = await res.json();
+  const json11 = await res.json();
   const data = {
     player: input.player,
-    quotes: json10.results || [],
+    quotes: json11.results || [],
     citation: tavilyUrl
   };
   await setCache(key, data, 24 * 60 * 60 * 1e3);
@@ -30818,10 +31302,10 @@ async function fetchExpertCommentary(input) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
   });
-  const json10 = await res.json();
+  const json11 = await res.json();
   const data = {
     player: input.player,
-    items: json10.results || [],
+    items: json11.results || [],
     citation: tavilyUrl
   };
   await setCache(key, data, 48 * 60 * 60 * 1e3);
@@ -30846,7 +31330,7 @@ async function generateImage2(input) {
   return data;
 }
 __name(generateImage2, "generateImage2");
-var tools_default = withErrorLogging(/* @__PURE__ */ __name(async function handler16(req) {
+var tools_default = withErrorLogging(/* @__PURE__ */ __name(async function handler17(req) {
   const u = new URL(req.url);
   const player = u.searchParams.get("player") || "Chelsea";
   const matchId = u.searchParams.get("matchId") || void 0;
@@ -30879,7 +31363,7 @@ var tools_default = withErrorLogging(/* @__PURE__ */ __name(async function handl
     status: 200,
     headers: { "Content-Type": "application/json" }
   });
-}, "handler16"));
+}, "handler17"));
 function setProcessEnv(env2) {
   const g2 = globalThis;
   if (!g2.process) g2.process = {};
@@ -30913,9 +31397,9 @@ function serveDashboard() {
   });
 }
 __name(serveDashboard, "serveDashboard");
-async function callHandler(handler17, req) {
-  if (handler17.length === 0) return handler17();
-  return handler17(req);
+async function callHandler(handler18, req) {
+  if (handler18.length === 0) return handler18();
+  return handler18(req);
 }
 __name(callHandler, "callHandler");
 var routes = {
@@ -30926,6 +31410,7 @@ var routes = {
   "/api/render": { handler: render_default },
   // does its own auth check
   "/api/drafts": { handler: drafts_default, protected: true },
+  "/api/chat": { handler: chat_default, protected: true },
   "/api/cron/prewarm": { handler: prewarm_default, protected: true },
   "/api/cron/fixtures": { handler: fixtures_default, protected: true },
   "/api/cron/weekly": { handler: weekly_default, protected: true },
@@ -31031,7 +31516,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env2, _ctx, middlewareCtx
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-KpczPS/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-8fLYDF/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -31063,7 +31548,7 @@ function __facade_invoke__(request, env2, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-KpczPS/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-8fLYDF/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

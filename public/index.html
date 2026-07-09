@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>BRIDGWAYS — Control Room</title>
+    <title>bluebot — Control Room</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
@@ -16,7 +16,7 @@
     <main class="max-w-6xl mx-auto p-6 space-y-8">
       <header class="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 class="brand text-2xl">BRIDGWAYS.</h1>
+          <h1 class="brand text-2xl">bluebot.</h1>
           <p class="label mt-1">Chelsea FC · Control Room</p>
         </div>
         <div class="flex gap-2 items-center">
@@ -45,83 +45,52 @@
         </div>
       </section>
 
-      <!-- Compose -->
-      <section class="card rounded-xl p-5 space-y-4">
-        <h2 class="display text-xl">COMPOSE</h2>
-        <div class="grid md:grid-cols-4 gap-3 text-sm">
-          <label>
-            <span class="label">Kind</span>
-            <select id="kind" class="w-full mt-1 p-2">
-              <option value="match_preview">Match preview</option>
-              <option value="live_update">Live update</option>
-              <option value="post_match">Post-match</option>
-              <option value="player_stat">Player stat</option>
-              <option value="transfer_news">Transfer news</option>
-              <option value="weekly_deep_dive">Weekly deep-dive</option>
-              <option value="long_read">Long-form read</option>
-            </select>
-          </label>
-          <label>
-            <span class="label">Tone</span>
-            <select id="tone" class="w-full mt-1 p-2">
-              <option value="professional">Professional</option>
-              <option value="savage">Savage</option>
-            </select>
-          </label>
-          <label>
-            <span class="label">Card (image)</span>
-            <select id="cardKind" class="w-full mt-1 p-2">
-              <option value="">No image</option>
-              <option value="match_preview">Match preview</option>
-              <option value="score">Score</option>
-              <option value="post_match">Post-match</option>
-              <option value="player_stat">Player stat</option>
-              <option value="transfer">Transfer</option>
-              <option value="form">Form</option>
-              <option value="editorial">Editorial</option>
-            </select>
-          </label>
-          <label class="flex items-end gap-2 pb-1">
-            <input type="checkbox" id="longform" class="w-4 h-4" />
-            <span class="dim">Long-form</span>
-          </label>
-        </div>
-        <label class="block text-sm">
-          <span class="label">Tweet data (JSON — grounds the LLM copy)</span>
-          <textarea id="data" rows="3" class="w-full mt-1 p-2 font-mono text-xs">
-{"opponent":"Arsenal","competition":"Premier League","date":"Sat 3 PM","venue":"Stamford Bridge"}</textarea>
-        </label>
-        <label class="block text-sm">
-          <span class="label">Card data (JSON — leave empty to use demo data)</span>
-          <textarea id="cardData" rows="2" class="w-full mt-1 p-2 font-mono text-xs"></textarea>
-        </label>
-        <button id="compose" class="btn px-4 py-2 text-sm">Generate → queue</button>
-        <p id="composeMeta" class="muted text-xs"></p>
-      </section>
-
-      <!-- Health -->
-      <section class="card rounded-xl p-5">
-        <h2 class="display text-xl mb-3">READINESS</h2>
-        <div id="health" class="flex flex-wrap gap-2 text-xs">
-          <span class="muted">Loading…</span>
-        </div>
-        <ul id="healthHints" class="muted text-xs mt-3 list-disc ml-5 space-y-1"></ul>
-      </section>
-
-      <!-- Design studio -->
+      <!-- Compose — agentic chat -->
       <section class="card rounded-xl p-5 space-y-3">
-        <h2 class="display text-xl">DESIGN STUDIO</h2>
-        <p class="label">Card templates with demo data</p>
-        <div class="flex flex-wrap gap-2" id="cardKinds">
-          <button data-kind="match_preview" class="btn-ghost px-3 py-1.5 text-xs">Match preview</button>
-          <button data-kind="score" class="btn-ghost px-3 py-1.5 text-xs">Live score</button>
-          <button data-kind="post_match" class="btn-ghost px-3 py-1.5 text-xs">Post-match</button>
-          <button data-kind="player_stat" class="btn-ghost px-3 py-1.5 text-xs">Player stat</button>
-          <button data-kind="transfer" class="btn-ghost px-3 py-1.5 text-xs">Transfer</button>
-          <button data-kind="form" class="btn-ghost px-3 py-1.5 text-xs">Weekly form</button>
-          <button data-kind="editorial" class="btn-ghost px-3 py-1.5 text-xs">Editorial</button>
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <h2 class="display text-xl">COMPOSE</h2>
+          <span class="label">chat with the agent — it pulls live data, drafts land in the queue</span>
         </div>
-        <div id="studioPreview" class="max-w-xl"></div>
+        <div id="chatLog" class="space-y-3 max-h-[26rem] overflow-y-auto pr-1"></div>
+        <div class="flex flex-wrap gap-2" id="chatSuggestions">
+          <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Create a match preview post for the next fixture, with a card and the head-to-head record.">Preview next fixture</button>
+          <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Make a weekly form review post with a form card from the last 5 results and our league position.">Weekly form post</button>
+          <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Who are our top performers this season? Draft a player spotlight for the best one with a stat card.">Player spotlight</button>
+        </div>
+        <form id="chatForm" class="flex gap-2">
+          <input
+            id="chatInput"
+            class="flex-1 p-2.5 text-sm"
+            placeholder='e.g. "Draft a preview for the next game with a card"'
+            autocomplete="off"
+          />
+          <button id="chatSend" class="btn px-5 py-2 text-sm" type="submit">Send</button>
+        </form>
+      </section>
+
+      <!-- System: readiness + design studio -->
+      <section class="card rounded-xl p-5 space-y-4">
+        <h2 class="display text-xl">SYSTEM</h2>
+        <div>
+          <p class="label mb-2">Readiness</p>
+          <div id="health" class="flex flex-wrap gap-2 text-xs">
+            <span class="muted">Loading…</span>
+          </div>
+          <ul id="healthHints" class="muted text-xs mt-3 list-disc ml-5 space-y-1"></ul>
+        </div>
+        <div class="hairline pt-4">
+          <p class="label mb-2">Design studio — card templates with demo data</p>
+          <div class="flex flex-wrap gap-2" id="cardKinds">
+            <button data-kind="match_preview" class="btn-ghost px-3 py-1.5 text-xs">Match preview</button>
+            <button data-kind="score" class="btn-ghost px-3 py-1.5 text-xs">Live score</button>
+            <button data-kind="post_match" class="btn-ghost px-3 py-1.5 text-xs">Post-match</button>
+            <button data-kind="player_stat" class="btn-ghost px-3 py-1.5 text-xs">Player stat</button>
+            <button data-kind="transfer" class="btn-ghost px-3 py-1.5 text-xs">Transfer</button>
+            <button data-kind="form" class="btn-ghost px-3 py-1.5 text-xs">Weekly form</button>
+            <button data-kind="editorial" class="btn-ghost px-3 py-1.5 text-xs">Editorial</button>
+          </div>
+          <div id="studioPreview" class="max-w-xl mt-3"></div>
+        </div>
       </section>
 
       <!-- Fixtures + recent -->
@@ -334,49 +303,74 @@
           });
       }
 
-      // ---------- compose ----------
-      document.getElementById("compose").addEventListener("click", async () => {
-        const meta = document.getElementById("composeMeta");
-        let data, cardData;
+      // ---------- compose chat (agent) ----------
+      const chatHistory = [];
+      const chatLog = document.getElementById("chatLog");
+      const chatInput = document.getElementById("chatInput");
+      const chatSend = document.getElementById("chatSend");
+
+      function chatBubble(role, text) {
+        const wrap = document.createElement("div");
+        wrap.className = role === "user" ? "flex justify-end" : "flex justify-start";
+        const b = document.createElement("div");
+        b.className =
+          role === "user"
+            ? "chip rounded-2xl px-4 py-2.5 text-sm max-w-[85%] whitespace-pre-wrap"
+            : "card rounded-2xl px-4 py-2.5 text-sm max-w-[85%] whitespace-pre-wrap dim";
+        b.textContent = text;
+        wrap.appendChild(b);
+        chatLog.appendChild(wrap);
+        chatLog.scrollTop = chatLog.scrollHeight;
+        return b;
+      }
+
+      function chatToolLine(t) {
+        const el = document.createElement("div");
+        el.className = "label ml-1";
+        el.textContent = (t.ok ? "✓ " : "✗ ") + t.tool.replace(/_/g, " ") + (t.note ? " — " + t.note : "");
+        chatLog.appendChild(el);
+        chatLog.scrollTop = chatLog.scrollHeight;
+      }
+
+      async function sendChat(text) {
+        const msg = (text || "").trim();
+        if (!msg) return;
+        chatInput.value = "";
+        chatSend.disabled = true;
+        chatBubble("user", msg);
+        chatHistory.push({ role: "user", content: msg });
+        const thinking = chatBubble("assistant", "…");
         try {
-          data = JSON.parse(document.getElementById("data").value || "{}");
-        } catch {
-          meta.textContent = "Tweet data is not valid JSON.";
-          return;
-        }
-        const cardDataRaw = document.getElementById("cardData").value.trim();
-        if (cardDataRaw) {
-          try {
-            cardData = JSON.parse(cardDataRaw);
-          } catch {
-            meta.textContent = "Card data is not valid JSON.";
-            return;
-          }
-        }
-        const cardKind = document.getElementById("cardKind").value;
-        meta.textContent = "Generating…";
-        try {
-          const res = await fetch("/api/drafts", {
+          const res = await fetch("/api/chat", {
             method: "POST",
             headers: authHeaders({ "Content-Type": "application/json" }),
-            body: JSON.stringify({
-              action: "compose",
-              kind: document.getElementById("kind").value,
-              tone: document.getElementById("tone").value,
-              longform: document.getElementById("longform").checked,
-              data: data,
-              card: cardKind ? { kind: cardKind, data: cardData } : undefined,
-            }),
+            body: JSON.stringify({ messages: chatHistory }),
           });
           const j = await res.json();
-          if (!res.ok || j.error) throw new Error(j.error?.message || j.error || "compose failed");
-          meta.textContent = j.skipped === "queued for approval" ? "Queued — see the approval queue above." : j.skipped || "Queued.";
-          queueStatus = "pending";
-          loadQueue();
+          if (!res.ok || j.error) throw new Error(j.error?.message || j.error || "chat failed (" + res.status + ")");
+          thinking.remove();
+          (j.toolLog || []).forEach(chatToolLine);
+          chatBubble("assistant", j.reply || "(no reply)");
+          chatHistory.push({ role: "assistant", content: j.reply || "" });
+          if ((j.draftIds || []).length) {
+            queueStatus = "pending";
+            loadQueue();
+          }
         } catch (e) {
-          meta.textContent = "Error: " + e.message;
+          thinking.textContent = "Error: " + e.message + (e.message.includes("401") || e.message.includes("503") ? " — check the admin key." : "");
+        } finally {
+          chatSend.disabled = false;
+          chatInput.focus();
         }
+      }
+
+      document.getElementById("chatForm").addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        sendChat(chatInput.value);
       });
+      document.querySelectorAll("#chatSuggestions button").forEach((b) =>
+        b.addEventListener("click", () => sendChat(b.dataset.q))
+      );
 
       // ---------- design studio ----------
       document.querySelectorAll("#cardKinds button").forEach((btn) =>

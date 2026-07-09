@@ -15,6 +15,7 @@ import {
   mapFdGoals,
   mapFdScorer,
   teamStatsFromStanding,
+  parseRateHeaders,
   FD_CHELSEA_TEAM_ID,
 } from "../../packages/tools/providers/football-data";
 
@@ -129,6 +130,19 @@ check("phase POSTPONED → other", mapFdPhase("POSTPONED") === "other");
   });
   check("fd scorer maps", p.player === "Cole Palmer" && p.goals === 18 && p.assists === 12);
   check("fd scorer has no photo/rating (free tier)", p.photoUrl === null && p.rating === null);
+}
+
+console.log("parseRateHeaders() — football-data throttling");
+{
+  const h = (map: Record<string, string>) => ({ get: (n: string) => map[n] ?? null });
+  const normal = parseRateHeaders(h({ "X-Requests-Available-Minute": "7", "X-RequestCounter-Reset": "42" }));
+  check("reads remaining + reset", normal.remaining === 7 && normal.resetSec === 42);
+  const exhausted = parseRateHeaders(h({ "X-Requests-Available-Minute": "0", "X-RequestCounter-Reset": "13" }));
+  check("zero remaining is preserved (not treated as missing)", exhausted.remaining === 0 && exhausted.resetSec === 13);
+  const absent = parseRateHeaders(h({}));
+  check("missing headers → null remaining, 60s default reset", absent.remaining === null && absent.resetSec === 60);
+  const garbage = parseRateHeaders(h({ "X-Requests-Available-Minute": "nope", "X-RequestCounter-Reset": "-5" }));
+  check("garbage headers fall back safely", garbage.remaining === null && garbage.resetSec === 60);
 }
 
 if (failures) {

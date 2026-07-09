@@ -4,7 +4,8 @@ import { env } from "./env";
 type Model = { id: string; maxOutputTokens: number; priceRank: number };
 
 export const models: Model[] = [
-  { id: "x-ai/grok-4.1-fast", maxOutputTokens: 1200, priceRank: 1 },
+  // grok-4.1-fast was deprecated by xAI (OpenRouter 404s it) — 4.3 is the successor.
+  { id: "x-ai/grok-4.3", maxOutputTokens: 1200, priceRank: 1 },
   { id: "anthropic/claude-3-5-sonnet-20241022", maxOutputTokens: 1200, priceRank: 2 },
   { id: "meta/llama-3.1-405b", maxOutputTokens: 1200, priceRank: 3 },
   { id: "qwen/qwen-2.5-110b", maxOutputTokens: 1200, priceRank: 4 }
@@ -34,6 +35,25 @@ export async function routeAndChat(input: ChatInput): Promise<ChatOutput> {
   const res = await getClient().chat.completions.create({ model: model.id, messages: input.messages as OpenAI.ChatCompletionMessageParam[], max_tokens: model.maxOutputTokens });
   const content = res.choices?.[0]?.message?.content || "";
   return { id: res.id || "", model: model.id, content };
+}
+
+/**
+ * One agent step with function-calling. Returns the raw assistant message —
+ * the caller inspects `message.tool_calls`, executes them, appends `tool`
+ * results, and calls again (see api/chat.ts for the loop).
+ */
+export async function chatWithTools(input: {
+  messages: any[];
+  tools: any[];
+}): Promise<{ message: any; model: string }> {
+  const model = pickModel();
+  const res = await getClient().chat.completions.create({
+    model: model.id,
+    messages: input.messages as OpenAI.ChatCompletionMessageParam[],
+    tools: input.tools as OpenAI.ChatCompletionTool[],
+    max_tokens: model.maxOutputTokens,
+  });
+  return { message: res.choices?.[0]?.message ?? null, model: model.id };
 }
 
 export async function routeAndStream(input: ChatInput): Promise<{ stream: ReadableStream<Uint8Array>; usage: Promise<number> }> {
