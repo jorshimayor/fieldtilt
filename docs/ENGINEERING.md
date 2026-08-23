@@ -1,4 +1,4 @@
-# Engineering Notes — bluebot
+# Engineering Notes — fieldtilt
 
 An honest account of how this system is built, what it costs, what the
 numbers are, and what it doesn't do. Written for an engineer or hiring

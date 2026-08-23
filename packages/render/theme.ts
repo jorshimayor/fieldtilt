@@ -12,7 +12,7 @@
  */
 
 /** Wordmark stamped on every card and the app header. */
-export const BRAND = "bluebot.";
+export const BRAND = "fieldtilt.";
 
 export const color = {
   bg: "#0B0C0F", // near-black canvas

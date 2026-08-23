@@ -1,4 +1,4 @@
-name = "chelsea-bot"
+name = "fieldtilt"
 main = "dist/worker.mjs"
 compatibility_date = "2026-04-22"
 

@@ -1,4 +1,4 @@
-# bluebot — football intelligence, published
+# fieldtilt — football intelligence, published
 
 A club-agnostic football data & publishing platform, run for one club at a
 time and switchable with a single environment variable. It turns live
