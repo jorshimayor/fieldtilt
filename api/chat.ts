@@ -66,7 +66,7 @@ You help the operator create posts. Rules:
   - match_preview {home, away, competition, dateLabel, venue?, footnote?}   (landscape; footnote for H2H)
   - score {home, away, homeGoals, awayGoals, competition, statusLabel, scorers?[], statLine?}
   - post_match {home, away, homeGoals, awayGoals, competition, statusLabel, seasonLabel?, scorers?[], stats:{possession?, xg?, shotsTotal?, shotsOnTarget?, corners?, passAccuracy?, fouls?}}
-  - player_stat {player, season, competition?, context?, stats:[{label, value}] (max 6)}
+  - player_stat {player, season, competition?, context?, stats:[{label, value}] (max 6), formPills?: ["W"|"D"|"L"] (max 5, newest first — use recent results), remark?: one scout-style line grounded in the stats (e.g. "The underlying numbers say the goals are coming")}
   - transfer {player, direction:"in"|"out", counterparty, transferType?, dateLabel?}
   - form {seasonLabel, results:[{opponent, score, outcome:"W"|"D"|"L"}] (max 5), position?, points?, goalsFor?, goalsAgainst?, competition?}
   - editorial {eyebrow, lines:[{text, em?}] (max 7 short lines), dateLabel?}

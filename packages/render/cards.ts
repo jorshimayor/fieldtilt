@@ -71,6 +71,25 @@ function fitFont(text: string, base: number, maxChars: number): number {
   return Math.max(Math.floor((base * maxChars) / len), Math.floor(base * 0.45));
 }
 
+/** Wrap sentence text into ≤maxChars lines, capped at maxLines (ellipsis). */
+function wrapText(textIn: string, maxChars: number, maxLines: number): string[] {
+  const words = (textIn || "").split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let cur = "";
+  for (const w of words) {
+    if ((cur + " " + w).trim().length > maxChars && cur) {
+      lines.push(cur);
+      cur = w;
+      if (lines.length === maxLines) break;
+    } else {
+      cur = (cur + " " + w).trim();
+    }
+  }
+  if (cur && lines.length < maxLines) lines.push(cur);
+  else if (lines.length === maxLines && cur) lines[maxLines - 1] += "…";
+  return lines;
+}
+
 /** Split an UPPERCASE label into ≤maxChars lines (stat labels stack, ref-style). */
 function wrapLabel(label: string, maxChars = 15): string[] {
   const words = label.toUpperCase().split(/\s+/).filter(Boolean);
@@ -112,10 +131,15 @@ function text(
 // ------------------------------------------------------------------ chrome
 
 function frame(w: number, h: number, photoDataUri?: string): string {
+  // Photo treatment — the "poster" look: full-bleed image, a light overall
+  // darken so color survives, then a cinematic Y-gradient scrim (heavy at
+  // top and bottom where headlines/stats live, breathing room mid-frame).
+  // Type must ALWAYS win: stats are the point of attention, photo the mood.
   const photo = photoDataUri
     ? `<image href="${photoDataUri}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice"/>
-<rect width="${w}" height="${h}" fill="${color.scrim}" opacity="${PHOTO_SCRIM_OPACITY}"/>
-<rect width="${w}" height="${h}" fill="url(#vig)"/>`
+<rect width="${w}" height="${h}" fill="${color.scrim}" opacity="0.38"/>
+<rect width="${w}" height="${h}" fill="url(#scrimY)"/>
+<rect width="${w}" height="${h}" fill="url(#scrimX)"/>`
     : `<rect width="${w}" height="${h}" fill="url(#vig)"/>`;
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
 <defs>
@@ -124,6 +148,19 @@ function frame(w: number, h: number, photoDataUri?: string): string {
     <stop offset="0.55" stop-color="${color.bg}"/>
     <stop offset="1" stop-color="#060709"/>
   </radialGradient>
+  <linearGradient id="scrimY" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="${color.scrim}" stop-opacity="0.72"/>
+    <stop offset="0.28" stop-color="${color.scrim}" stop-opacity="0.18"/>
+    <stop offset="0.52" stop-color="${color.scrim}" stop-opacity="0.22"/>
+    <stop offset="0.78" stop-color="${color.scrim}" stop-opacity="0.68"/>
+    <stop offset="1" stop-color="${color.scrim}" stop-opacity="0.94"/>
+  </linearGradient>
+  <linearGradient id="scrimX" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="${color.scrim}" stop-opacity="0.5"/>
+    <stop offset="0.3" stop-color="${color.scrim}" stop-opacity="0.06"/>
+    <stop offset="0.68" stop-color="${color.scrim}" stop-opacity="0.06"/>
+    <stop offset="1" stop-color="${color.scrim}" stop-opacity="0.55"/>
+  </linearGradient>
 </defs>
 <rect width="${w}" height="${h}" fill="${color.bg}"/>
 ${photo}`;
@@ -231,6 +268,10 @@ export type PlayerStatData = {
   /** e.g. "vs Germany", "Premier League 25/26" — small context under the name */
   context?: string;
   stats: { label: string; value: string }[]; // up to 6, rendered as a right rail
+  /** Recent form as W/D/L pills (team results while featuring, newest first). */
+  formPills?: ("W" | "D" | "L")[];
+  /** One scout-style line, e.g. "Underlying numbers say the goals are coming." */
+  remark?: string;
   /** Optional full-bleed background photo (data: URI). Rendered under a scrim. */
   photoDataUri?: string;
 };
@@ -244,12 +285,39 @@ export function playerStatCard(d: PlayerStatData): string {
   const rail = stats
     .map((s, i) => bigStat(railX, railTop + i * step, s.value, s.label))
     .join("");
+
+  // Recent form: W/D/L pills under the name block (newest first).
+  const pills = (d.formPills || []).slice(0, 5);
+  const pillsSvg = pills.length
+    ? pills.map((o, i) => outcomeSquare(M + i * 58, 486, 42, o)).join("") +
+      text(M, 566, "FORM · MOST RECENT FIRST", {
+        size: 13,
+        weight: 700,
+        tracking: 2,
+        fill: color.inkMute,
+      })
+    : "";
+
+  // Scout remark: italic, quote-like, bottom-left above the wordmark.
+  const remarkLines = d.remark ? wrapText(d.remark, 34, 3) : [];
+  const remarkSvg = remarkLines
+    .map((l, i) =>
+      text(M, h - 118 - (remarkLines.length - 1 - i) * 44, l, {
+        size: 29,
+        italic: true,
+        fill: color.inkDim,
+      })
+    )
+    .join("");
+
   return `${frame(w, h, d.photoDataUri)}
 ${d.photoDataUri ? "" : watermark(w, h, initials(d.player))}
 ${stackedName(M, 190, d.player.toUpperCase(), type.h1.size)}
 ${d.context ? text(M, 400, d.context.toUpperCase(), { size: type.label.size, weight: 700, tracking: type.label.tracking, fill: color.inkMute }) : ""}
 ${text(M, 440, `SEASON ${d.season}`, { size: type.label.size, weight: 700, tracking: type.label.tracking, fill: color.inkMute })}
+${pillsSvg}
 ${rail}
+${remarkSvg}
 ${brandMark(M, h - 64)}
 ${d.competition ? text(w - M, h - 64, d.competition.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: color.inkMute, anchor: "end" }) : ""}
 </svg>`;
@@ -266,6 +334,7 @@ export type PostMatchData = {
   seasonLabel?: string; // "Premier League 25/26" footer
   statusLabel: string; // "FULL TIME"
   scorers?: string[];
+  photoDataUri?: string;
   stats: {
     possession?: number | null;
     xg?: number | null;
@@ -310,7 +379,7 @@ ${text(w - M, listTop + i * 66, value, { size: 30, weight: 800, anchor: "end" })
       })
     : "";
 
-  return `${frame(w, h)}
+  return `${frame(w, h, d.photoDataUri)}
 ${eyebrow(M, 106, d.statusLabel)}
 ${text(w - M, 110, truncate(d.competition, 34).toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: color.inkMute, anchor: "end" })}
 ${hero}
@@ -334,6 +403,8 @@ export type MatchPreviewData = {
   venue?: string;
   /** e.g. "H2H last 10: 4W 3D 3L" */
   footnote?: string;
+  /** Full-bleed background photo (stadium, fans…) under the cinematic scrim. */
+  photoDataUri?: string;
 };
 
 export function matchPreviewCard(d: MatchPreviewData): string {
@@ -341,7 +412,7 @@ export function matchPreviewCard(d: MatchPreviewData): string {
   const cx = w / 2;
   const homeFs = fitFont(d.home, 88, 13);
   const awayFs = fitFont(d.away, 88, 13);
-  return `${frame(w, h)}
+  return `${frame(w, h, d.photoDataUri)}
 ${eyebrow(cx, 116, "Match day", "middle")}
 ${text(cx, 268, d.home.toUpperCase(), { size: homeFs, weight: 800, tracking: -1.5, anchor: "middle" })}
 ${text(cx, 330, "vs", { size: 34, italic: true, fill: color.inkMute, anchor: "middle" })}
@@ -367,6 +438,7 @@ export type ScoreCardData = {
   scorers?: string[];
   /** e.g. "54% possession · 1.8 xG" */
   statLine?: string;
+  photoDataUri?: string;
 };
 
 export function scoreCard(d: ScoreCardData): string {
@@ -375,7 +447,7 @@ export function scoreCard(d: ScoreCardData): string {
   const isLive = /live/i.test(d.statusLabel);
   const dot = isLive ? `<circle cx="${cx - 74}" cy="98" r="9" fill="${color.loss}"/>` : "";
   const scorers = (d.scorers || []).slice(0, 4);
-  return `${frame(w, h)}
+  return `${frame(w, h, d.photoDataUri)}
 ${dot}${text(cx + (isLive ? 14 : 0), 106, d.statusLabel.toUpperCase(), { size: type.micro.size + 3, weight: 700, tracking: type.micro.tracking, fill: color.inkDim, anchor: "middle" })}
 ${text(cx, 330, `${d.homeGoals}-${d.awayGoals}`, { size: 210, weight: 800, tracking: -6, anchor: "middle" })}
 ${text(cx - 330, 300, truncate(d.home, 14).toUpperCase(), { size: fitFont(d.home, 34, 12), weight: 700, tracking: 1, fill: color.inkDim, anchor: "middle" })}
@@ -396,6 +468,7 @@ export type TransferCardData = {
   counterparty: string;
   transferType?: string; // "€ 45M" | "Loan" | "Free"
   dateLabel?: string;
+  photoDataUri?: string;
 };
 
 export function transferCard(d: TransferCardData): string {
@@ -404,8 +477,8 @@ export function transferCard(d: TransferCardData): string {
   const from = isIn ? d.counterparty : "Chelsea";
   const to = isIn ? "Chelsea" : d.counterparty;
   const tag = isIn ? "INCOMING" : "OUTGOING";
-  return `${frame(w, h)}
-${watermark(w, h, initials(d.player))}
+  return `${frame(w, h, d.photoDataUri)}
+${d.photoDataUri ? "" : watermark(w, h, initials(d.player))}
 ${eyebrow(M, 106, "Transfer news")}
 ${brandMark(w - M, 110, "end")}
 ${stackedName(M, 320, d.player.toUpperCase(), 84)}
@@ -430,6 +503,7 @@ export type FormCardData = {
   goalsFor?: number | null;
   goalsAgainst?: number | null;
   competition?: string;
+  photoDataUri?: string;
 };
 
 function outcomeSquare(x: number, y: number, size: number, outcome: "W" | "D" | "L"): string {
@@ -444,6 +518,7 @@ export function formCard(d: FormCardData): string {
   const results = (d.results || []).slice(0, 5);
   const pills = results.map((r, i) => outcomeSquare(M + i * 78, 196, 56, r.outcome)).join("");
   const rowTop = 356;
+  const bg = frame(w, h, d.photoDataUri);
   const rows = results
     .map(
       (r, i) => `
@@ -462,7 +537,7 @@ ${outcomeSquare(w - M - 44, rowTop + i * 62 - 30, 40, r.outcome)}`
     .slice(0, 4)
     .map(([v, l], i) => bigStat(M + (i % 2) * ((w - 2 * M) / 2) , tileTop + Math.floor(i / 2) * 168, v, l, { anchor: "start", size: 60 }))
     .join("");
-  return `${frame(w, h)}
+  return `${bg}
 ${eyebrow(M, 106, "Weekly review")}
 ${brandMark(w - M, 110, "end")}
 ${text(M, 172, "FORM.", { size: 58, weight: 800, tracking: -1 })}

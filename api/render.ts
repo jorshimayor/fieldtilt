@@ -54,6 +54,8 @@ const DEMO: Record<CardKind, unknown> = {
     season: "2025/26",
     competition: "Premier League",
     context: "vs Arsenal",
+    formPills: ["W", "W", "D", "L", "W"],
+    remark: "The midfield metronome — quietly dictating everything.",
     stats: [
       { label: "Pass accuracy", value: "89%" },
       { label: "Passes completed", value: "56" },
@@ -120,6 +122,11 @@ export default withErrorLogging(async function handler(req: Request): Promise<Re
     data = body.data ?? DEMO[kind];
     if (body.format) format = body.format;
     if (body.fonts) embedFonts = true;
+    // Dashboard photo uploads: merge a data-URI photo into whichever data
+    // (demo or supplied) is being rendered.
+    if (typeof (body as any).photoDataUri === "string" && (body as any).photoDataUri.startsWith("data:image/")) {
+      data = { ...(data as Record<string, unknown>), photoDataUri: (body as any).photoDataUri };
+    }
   } else {
     kind = (url.searchParams.get("kind") || "post_match") as CardKind;
     if (!KINDS.includes(kind)) return jsonErr(`invalid kind; allowed: ${KINDS.join(", ")}`);

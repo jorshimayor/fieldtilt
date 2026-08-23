@@ -68,6 +68,10 @@
           <h2 class="display text-xl">COMPOSE</h2>
           <span class="label">chat with the agent — grounded in live football data; drafts land in the queue</span>
         </div>
+        <div>
+          <p class="label mb-2">Suggested — computed from today's numbers</p>
+          <div id="suggestList" class="flex flex-wrap gap-2"><span class="muted text-xs">Loading suggestions…</span></div>
+        </div>
         <div id="chatLog" class="space-y-3 max-h-[26rem] overflow-y-auto pr-1"></div>
         <div class="flex flex-wrap gap-2" id="chatSuggestions">
           <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Create a match preview post for the next fixture, with a card and the head-to-head record.">Preview next fixture</button>
@@ -105,6 +109,10 @@
             <button data-kind="transfer" class="btn-ghost px-3 py-1.5 text-xs">Transfer</button>
             <button data-kind="form" class="btn-ghost px-3 py-1.5 text-xs">Weekly form</button>
             <button data-kind="editorial" class="btn-ghost px-3 py-1.5 text-xs">Editorial</button>
+            <label class="btn-ghost px-3 py-1.5 text-xs" style="cursor: pointer" title="Try any template over your own photo — stadium, player, fans, trophy">
+              📷 use photo<input type="file" id="studioPhoto" accept="image/*" style="display: none" />
+            </label>
+            <button id="studioPhotoClear" class="btn-ghost px-3 py-1.5 text-xs" style="display: none">clear photo</button>
           </div>
           <div id="studioPreview" class="max-w-xl mt-3"></div>
         </div>
@@ -194,14 +202,39 @@
 
       // ---------- client-side rasterization (free-plan path) ----------
       // Fetch the card as SVG with fonts embedded, draw to canvas, get a PNG.
-      async function fetchCardSvg(cardKind, cardData) {
+      async function fetchCardSvg(cardKind, cardData, photoDataUri) {
         const res = await fetch("/api/render", {
           method: "POST",
           headers: authHeaders({ "Content-Type": "application/json" }),
-          body: JSON.stringify({ kind: cardKind, data: cardData || undefined, format: "svg", fonts: true }),
+          body: JSON.stringify({
+            kind: cardKind,
+            data: cardData || undefined,
+            format: "svg",
+            fonts: true,
+            photoDataUri: photoDataUri || undefined,
+          }),
         });
         if (!res.ok) throw new Error("render failed (" + res.status + ")");
         return res.text();
+      }
+
+      // Downscale an uploaded photo to a compact JPEG data URI (max 1600px).
+      function readPhotoFile(file) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          const url = URL.createObjectURL(file);
+          img.onload = () => {
+            const scale = Math.min(1, 1600 / Math.max(img.width, img.height));
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+            URL.revokeObjectURL(url);
+            resolve(canvas.toDataURL("image/jpeg", 0.85));
+          };
+          img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("could not read image")); };
+          img.src = url;
+        });
       }
 
       function svgSize(svgText) {
@@ -286,8 +319,11 @@
           (d.cardKind ? '<div class="muted text-xs">Loading preview…</div>' : '<div class="muted text-xs">No image for this draft.</div>') +
           "</div></div>" +
           (isPending
-            ? '<div class="flex gap-2">' +
+            ? '<div class="flex gap-2 flex-wrap">' +
               '<button data-role="post" class="btn px-4 py-2 text-sm">Post to X</button>' +
+              (d.cardKind
+                ? '<label class="btn-ghost px-3 py-2 text-sm" style="cursor:pointer">📷 add photo<input type="file" data-role="photo" accept="image/*" style="display:none"></label>'
+                : "") +
               '<button data-role="reject" class="btn-danger px-4 py-2 text-sm">Reject</button>' +
               '<span data-role="meta" class="muted text-xs self-center"></span>' +
               "</div>"
@@ -303,8 +339,10 @@
         if (!root) return;
         const previewEl = root.querySelector('[data-role="preview"]');
         let svgText = null;
-        if (d.cardKind) {
-          fetchCardSvg(d.cardKind, d.cardData)
+        let draftPhoto = null; // uploaded data URI — baked into preview + posted PNG
+        function renderPreview() {
+          if (!d.cardKind) return Promise.resolve();
+          return fetchCardSvg(d.cardKind, d.cardData, draftPhoto)
             .then((svg) => {
               svgText = svg;
               const blob = new Blob([svg], { type: "image/svg+xml" });
@@ -313,6 +351,19 @@
             })
             .catch((e) => (previewEl.innerHTML = '<div class="muted text-xs">Preview failed: ' + escapeHtml(e.message) + "</div>"));
         }
+        renderPreview();
+        const photoInput = root.querySelector('[data-role="photo"]');
+        if (photoInput)
+          photoInput.addEventListener("change", async () => {
+            const f = photoInput.files && photoInput.files[0];
+            if (!f) return;
+            try {
+              draftPhoto = await readPhotoFile(f);
+              await renderPreview();
+            } catch (e) {
+              alert("Photo failed: " + e.message);
+            }
+          });
         const meta = root.querySelector('[data-role="meta"]');
         const postBtn = root.querySelector('[data-role="post"]');
         if (postBtn)
@@ -323,7 +374,7 @@
               let pngBase64;
               if (d.cardKind) {
                 meta.textContent = "Rendering image in browser…";
-                if (!svgText) svgText = await fetchCardSvg(d.cardKind, d.cardData);
+                if (!svgText) svgText = await fetchCardSvg(d.cardKind, d.cardData, draftPhoto);
                 pngBase64 = await svgToPngBase64(svgText);
               }
               meta.textContent = "Uploading to X…";
@@ -438,20 +489,38 @@
       );
 
       // ---------- design studio ----------
-      document.querySelectorAll("#cardKinds button").forEach((btn) =>
-        btn.addEventListener("click", async () => {
-          const box = document.getElementById("studioPreview");
-          box.innerHTML = '<div class="muted text-xs">Rendering…</div>';
-          try {
-            const svg = await fetchCardSvg(btn.dataset.kind, null);
-            const blob = new Blob([svg], { type: "image/svg+xml" });
-            box.innerHTML = '<img class="rounded-lg border border-[#2a2e37] max-w-full" />';
-            box.querySelector("img").src = URL.createObjectURL(blob);
-          } catch (e) {
-            box.innerHTML = '<div class="muted text-xs">' + escapeHtml(e.message) + " — check the admin key.</div>";
-          }
+      let studioPhoto = null;
+      let studioKind = "player_stat";
+      async function renderStudio() {
+        const box = document.getElementById("studioPreview");
+        box.innerHTML = '<div class="muted text-xs">Rendering…</div>';
+        try {
+          const svg = await fetchCardSvg(studioKind, null, studioPhoto);
+          const blob = new Blob([svg], { type: "image/svg+xml" });
+          box.innerHTML = '<img class="rounded-lg border border-[#2a2e37] max-w-full" />';
+          box.querySelector("img").src = URL.createObjectURL(blob);
+        } catch (e) {
+          box.innerHTML = '<div class="muted text-xs">' + escapeHtml(e.message) + " — check the admin key.</div>";
+        }
+      }
+      document.querySelectorAll("#cardKinds button[data-kind]").forEach((btn) =>
+        btn.addEventListener("click", () => {
+          studioKind = btn.dataset.kind;
+          renderStudio();
         })
       );
+      document.getElementById("studioPhoto").addEventListener("change", async (ev) => {
+        const f = ev.target.files && ev.target.files[0];
+        if (!f) return;
+        studioPhoto = await readPhotoFile(f);
+        document.getElementById("studioPhotoClear").style.display = "";
+        renderStudio();
+      });
+      document.getElementById("studioPhotoClear").addEventListener("click", () => {
+        studioPhoto = null;
+        document.getElementById("studioPhotoClear").style.display = "none";
+        renderStudio();
+      });
 
       // ---------- health / fixtures / posts ----------
       async function loadHealth() {
@@ -521,10 +590,39 @@
         }
       }
 
+      async function loadSuggestions() {
+        const el = document.getElementById("suggestList");
+        try {
+          const res = await fetch("/api/suggest", { headers: authHeaders() });
+          if (!res.ok) {
+            el.innerHTML = '<span class="muted text-xs">Suggestions unavailable (' + res.status + ")</span>";
+            return;
+          }
+          const j = await res.json();
+          const list = j.suggestions || [];
+          if (!list.length) {
+            el.innerHTML = '<span class="muted text-xs">No angles today — ask the agent anything.</span>';
+            return;
+          }
+          el.innerHTML = "";
+          list.forEach((sg) => {
+            const b = document.createElement("button");
+            b.className = "btn-ghost px-3 py-1.5 text-xs";
+            b.textContent = "✦ " + sg.label;
+            b.title = sg.prompt;
+            b.addEventListener("click", () => sendChat(sg.prompt));
+            el.appendChild(b);
+          });
+        } catch (e) {
+          el.innerHTML = '<span class="muted text-xs">Suggestions error</span>';
+        }
+      }
+
       function loadAll() {
         loadHealth();
         loadQueue();
         loadDashboard();
+        loadSuggestions();
       }
       document.getElementById("refresh").addEventListener("click", loadAll);
       loadAll();

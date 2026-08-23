@@ -46,6 +46,14 @@ console.log("matchPreviewCard (landscape)");
   check("escapes injected markup", !svg.includes("<FC>") && svg.includes("&lt;FC&gt;"));
   check("brand wordmark present", svg.includes(BRAND));
   check("H2H footnote present", svg.includes("H2H"));
+  const withPhoto = matchPreviewCard({
+    home: "Chelsea",
+    away: "Arsenal",
+    competition: "PL",
+    dateLabel: "Sat",
+    photoDataUri: "data:image/jpeg;base64,AAAA",
+  });
+  check("photo goes full-bleed with cinematic scrims", withPhoto.includes("<image") && withPhoto.includes("scrimY") && withPhoto.includes("scrimX"));
 }
 
 console.log("scoreCard (landscape)");
@@ -99,6 +107,16 @@ console.log("playerStatCard (portrait)");
   check("stat rail values", svg.includes("89%") && svg.includes("14"));
   check("labels wrap + uppercase", svg.includes("PASSES INTO") && svg.includes("FINAL THIRD"));
   check("watermark when no photo", svg.includes('opacity="0.05"'));
+  const enriched = playerStatCard({
+    player: "Cole Palmer",
+    season: "2025/26",
+    stats: [{ label: "Goals", value: "18" }],
+    formPills: ["W", "D", "L", "W", "W"],
+    remark: "Underlying numbers say the goals are coming back soon.",
+  });
+  check("form pills render", enriched.includes("FORM · MOST RECENT FIRST"));
+  // remark wraps across lines, so assert a fragment that stays intact
+  check("remark renders italic", enriched.includes('font-style="italic"') && enriched.includes("Underlying numbers"));
   const withPhoto = playerStatCard({
     player: "X Y",
     season: "2025/26",

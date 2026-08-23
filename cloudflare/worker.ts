@@ -8,6 +8,7 @@ import apiHealth from "../api/health";
 import apiRender from "../api/render";
 import apiDrafts from "../api/drafts";
 import apiChat from "../api/chat";
+import apiSuggest from "../api/suggest";
 import cronPrewarm from "../api/cron/prewarm";
 import cronFixtures from "../api/cron/fixtures";
 import cronWeekly from "../api/cron/weekly";
@@ -75,6 +76,7 @@ const routes: Record<string, Route> = {
   "/api/render": { handler: apiRender as any }, // does its own auth check
   "/api/drafts": { handler: apiDrafts as any, protected: true },
   "/api/chat": { handler: apiChat as any, protected: true },
+  "/api/suggest": { handler: apiSuggest as any, protected: true },
 
   "/api/cron/prewarm": { handler: cronPrewarm as any, protected: true },
   "/api/cron/fixtures": { handler: cronFixtures as any, protected: true },
