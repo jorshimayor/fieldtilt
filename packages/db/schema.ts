@@ -77,6 +77,24 @@ export const drafts = pgTable("drafts", {
 }));
 
 /**
+ * Outputs from the Python analytics service (analytics/) — the contract
+ * between "models in Python" and "delivery in TypeScript". The service
+ * writes one row per (model, subject, gameweek); the Worker reads the
+ * latest rows to publish weekly model calls and score last week's.
+ */
+export const modelOutputs = pgTable("model_outputs", {
+  id: bigserial("id", { mode: "bigint" }).primaryKey(),
+  model: text("model").notNull(), // e.g. "xg-v1", "season-forecast-v1"
+  subject: text("subject"), // team/player/fixture the row is about
+  season: integer("season"), // start year, e.g. 2026
+  gameweek: integer("gameweek"),
+  payload: jsonb("payload").notNull(), // model-specific: prediction, features, score
+  createdAt: timestamp("created_at").defaultNow()
+}, (table) => ({
+  modelIdx: index("model_outputs_idx").on(table.model, table.season, table.gameweek)
+}));
+
+/**
  * Durable idempotency for posted content (transfers, spotlights, …).
  * Redis `once()` handles short-window dedup; this survives Redis eviction.
  */

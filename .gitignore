@@ -16,3 +16,11 @@ coverage
 .DS_Store
 *.log
 .env*.local
+.env*
+
+# wrangler auth/config home (contains OAuth tokens — never commit)
+.wrangler-xdg/
+
+# Private source-of-truth docs (career plan, season calendar) — NEVER commit
+docs/private/
+.wrangler/
