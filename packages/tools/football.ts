@@ -1,5 +1,6 @@
 /**
  * Football data facade — the only module crons/routes import from.
+ * Club-agnostic: the tracked club comes from @shared/club (env CLUB).
  *
  * Delegates to whichever provider is configured, so the cost tiers are an
  * env-var switch, not a rewrite:
@@ -13,12 +14,13 @@
  */
 
 import { env } from "@shared/env";
+import { club } from "@shared/club";
 import { FootballProvider, ProviderName, NormalizedGoalEvent } from "./types";
-import { apiFootballProvider, CHELSEA_TEAM_ID, PREMIER_LEAGUE_ID } from "./providers/api-football";
+import { apiFootballProvider } from "./providers/api-football";
 import { footballDataProvider } from "./providers/football-data";
 
 export * from "./types";
-export { CHELSEA_TEAM_ID, PREMIER_LEAGUE_ID };
+export { club } from "@shared/club";
 
 export function activeProviderName(): ProviderName {
   const explicit = env.FOOTBALL_PROVIDER;
@@ -58,13 +60,13 @@ export function formatScorers(goals: NormalizedGoalEvent[], teamFilter?: string)
 
 // ---------- delegating API (same names the crons always used) ----------
 
-export const getChelseaFixtures: FootballProvider["getFixtures"] = (opts) =>
+export const getTeamFixtures: FootballProvider["getFixtures"] = (opts) =>
   provider().getFixtures(opts);
 
 export const getFixtureById: FootballProvider["getFixtureById"] = (id) =>
   provider().getFixtureById(id);
 
-export const getLiveChelseaMatch: FootballProvider["getLiveMatch"] = () =>
+export const getLiveTeamMatch: FootballProvider["getLiveMatch"] = () =>
   provider().getLiveMatch();
 
 export const getMatchStats: FootballProvider["getMatchStats"] = (fixtureId) =>
@@ -73,16 +75,16 @@ export const getMatchStats: FootballProvider["getMatchStats"] = (fixtureId) =>
 export const getFixtureGoalEvents: FootballProvider["getGoalEvents"] = (fixtureId, opts) =>
   provider().getGoalEvents(fixtureId, opts);
 
-export const getChelseaTransfers: FootballProvider["getTransfers"] = (opts) =>
+export const getTeamTransfers: FootballProvider["getTransfers"] = (opts) =>
   provider().getTransfers(opts);
 
 export const getLeagueStandings: FootballProvider["getStandings"] = (season) =>
   provider().getStandings(season);
 
-export const getChelseaSeasonStats: FootballProvider["getSeasonStats"] = (season) =>
+export const getTeamSeasonStats: FootballProvider["getSeasonStats"] = (season) =>
   provider().getSeasonStats(season);
 
-export const getChelseaTopPerformers: FootballProvider["getTopPerformers"] = (season) =>
+export const getTeamTopPerformers: FootballProvider["getTopPerformers"] = (season) =>
   provider().getTopPerformers(season);
 
 export const getHeadToHead: FootballProvider["getHeadToHead"] = (ref) =>

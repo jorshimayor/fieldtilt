@@ -18,6 +18,7 @@
  */
 
 import { setCache, getCache } from "./cache";
+import { club } from "@shared/club";
 
 const BASE = "https://understat.com";
 const UA =
@@ -154,24 +155,24 @@ async function fetchPage(path: string): Promise<string | null> {
 }
 
 /**
- * Chelsea squad advanced stats for a season (Understat uses the start year,
- * same convention as our currentSeason()).
+ * Tracked-club squad advanced stats for a season (Understat uses the start
+ * year, same convention as our currentSeason()).
  */
-export async function getChelseaAdvancedStats(
+export async function getTeamAdvancedStats(
   season: number
 ): Promise<{ players: AdvancedPlayerStats[]; source: string }> {
-  const key = `understat:chelsea:${season}`;
+  const key = `understat:${club().slug}:${season}`;
   const cached = await getCache<{ players: AdvancedPlayerStats[]; source: string }>(key);
   if (cached) return cached;
 
-  const source = `${BASE}/team/Chelsea/${season}`;
+  const source = `${BASE}/team/${club().ids.understat}/${season}`;
   let players: AdvancedPlayerStats[] = [];
   try {
-    const json = await fetchJson(`/getTeamData/Chelsea/${season}`, source);
+    const json = await fetchJson(`/getTeamData/${club().ids.understat}/${season}`, source);
     let raw: any[] | null = Array.isArray(json?.players) ? json.players : null;
     if (!raw) {
       // Legacy fallback: data embedded in the page HTML.
-      const html = await fetchPage(`/team/Chelsea/${season}`);
+      const html = await fetchPage(`/team/${club().ids.understat}/${season}`);
       const parsed = html ? parseUnderstatVar(html, "playersData") : null;
       raw = Array.isArray(parsed) ? parsed : null;
     }
@@ -190,17 +191,17 @@ export async function getChelseaAdvancedStats(
 export async function getLeagueXgTable(
   season: number
 ): Promise<{ table: TeamXgRow[]; source: string }> {
-  const key = `understat:epl:${season}`;
+  const key = `understat:${club().league.understat.toLowerCase()}:${season}`;
   const cached = await getCache<{ table: TeamXgRow[]; source: string }>(key);
   if (cached) return cached;
 
-  const source = `${BASE}/league/EPL/${season}`;
+  const source = `${BASE}/league/${club().league.understat}/${season}`;
   let table: TeamXgRow[] = [];
   try {
-    const json = await fetchJson(`/getLeagueData/EPL/${season}`, source);
+    const json = await fetchJson(`/getLeagueData/${club().league.understat}/${season}`, source);
     let raw: unknown = json?.teams && typeof json.teams === "object" ? json.teams : null;
     if (!raw) {
-      const html = await fetchPage(`/league/EPL/${season}`);
+      const html = await fetchPage(`/league/${club().league.understat}/${season}`);
       raw = html ? parseUnderstatVar(html, "teamsData") : null;
     }
     table = raw ? mapUnderstatTeams(raw) : [];

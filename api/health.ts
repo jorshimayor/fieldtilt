@@ -6,7 +6,7 @@ export const config = { runtime: "edge" };
  */
 
 import flags from "../config/flags.json";
-import { currentSeason, seasonLabel, activeProviderName, provider } from "../packages/tools/football";
+import { currentSeason, seasonLabel, activeProviderName, provider, club } from "../packages/tools/football";
 
 function has(key: string): boolean {
   const v = (globalThis as any).process?.env?.[key];
@@ -47,6 +47,7 @@ export default async function handler(): Promise<Response> {
         readyToPost: ready && !flags.publish_draft_only,
         draftMode: flags.publish_draft_only,
         season: seasonLabel(currentSeason()),
+        club: { name: club().fullName, slug: club().slug, league: club().league.name },
         dataProvider: activeProviderName(),
         dataCapabilities: provider().capabilities,
         checks,

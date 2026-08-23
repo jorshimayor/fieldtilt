@@ -9,7 +9,7 @@ export const config = { runtime: "edge" };
  * All calls are cached upstream; this route is safe to poll.
  */
 
-import { getChelseaFixtures, getMatchStats } from "../packages/tools/football";
+import { getTeamFixtures, getMatchStats } from "../packages/tools/football";
 import { db } from "../packages/db/client";
 import { messages } from "../packages/db/schema";
 import { desc, eq } from "drizzle-orm";
@@ -17,8 +17,8 @@ import { withErrorLogging } from "../packages/observability/index";
 
 export default withErrorLogging(async function handler(): Promise<Response> {
   const [upcomingRes, recentRes, recentPosts] = await Promise.all([
-    getChelseaFixtures({ next: 5 }),
-    getChelseaFixtures({ last: 1 }),
+    getTeamFixtures({ next: 5 }),
+    getTeamFixtures({ last: 1 }),
     db
       .select()
       .from(messages)

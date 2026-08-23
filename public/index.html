@@ -24,7 +24,7 @@
       <header class="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 class="brand text-2xl">bluebot.</h1>
-          <p class="label mt-1">Football intelligence · Control Room</p>
+          <p class="label mt-1" id="headerSub">Football intelligence · Control Room</p>
         </div>
         <div class="flex gap-2 items-center">
           <span id="authChip" class="chip px-2.5 py-1 text-xs" style="display: none">● authorized</span>
@@ -93,7 +93,7 @@
       <section class="card rounded-xl p-5 space-y-4">
         <h2 class="display text-xl">SYSTEM</h2>
         <div>
-          <p class="label mb-2">Readiness · tracked club: Chelsea FC (configuration, not identity — league-wide is on the roadmap)</p>
+          <p class="label mb-2" id="readinessLabel">Readiness</p>
           <div id="health" class="flex flex-wrap gap-2 text-xs">
             <span class="muted">Loading…</span>
           </div>
@@ -113,8 +113,31 @@
               📷 use photo<input type="file" id="studioPhoto" accept="image/*" style="display: none" />
             </label>
             <button id="studioPhotoClear" class="btn-ghost px-3 py-1.5 text-xs" style="display: none">clear photo</button>
+            <button id="studioDownload" class="btn-ghost px-3 py-1.5 text-xs">⬇ download PNG</button>
           </div>
           <div id="studioPreview" class="max-w-xl mt-3"></div>
+        </div>
+      </section>
+
+      <!-- Analytics — Dune/Flipside-style panels -->
+      <section class="card rounded-xl p-5 space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <h2 class="display text-xl">ANALYTICS</h2>
+          <span id="analyticsMeta" class="label">xG: Understat · refreshed with the page</span>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <p class="label mb-2">League map — xG created vs conceded</p>
+            <div id="chartLeague" class="w-full"><span class="muted text-xs">Loading…</span></div>
+          </div>
+          <div>
+            <p class="label mb-2">Squad — goals vs expected goals</p>
+            <div id="chartSquad" class="w-full"><span class="muted text-xs">Loading…</span></div>
+          </div>
+        </div>
+        <div class="hairline pt-4">
+          <p class="label mb-2">Form timeline — last 10</p>
+          <div id="chartForm" class="w-full"><span class="muted text-xs">Loading…</span></div>
         </div>
       </section>
 
@@ -315,6 +338,7 @@
           '<textarea data-role="content" rows="6" class="w-full p-3 text-sm" ' + (isPending ? "" : "readonly") + ">" +
           escapeHtml(d.content) +
           "</textarea>" +
+          '<textarea data-role="cardjson" rows="5" class="w-full p-2 font-mono text-xs" style="display:none"></textarea>' +
           '<div data-role="preview" class="min-h-[80px]">' +
           (d.cardKind ? '<div class="muted text-xs">Loading preview…</div>' : '<div class="muted text-xs">No image for this draft.</div>') +
           "</div></div>" +
@@ -322,7 +346,9 @@
             ? '<div class="flex gap-2 flex-wrap">' +
               '<button data-role="post" class="btn px-4 py-2 text-sm">Post to X</button>' +
               (d.cardKind
-                ? '<label class="btn-ghost px-3 py-2 text-sm" style="cursor:pointer">📷 add photo<input type="file" data-role="photo" accept="image/*" style="display:none"></label>'
+                ? '<label class="btn-ghost px-3 py-2 text-sm" style="cursor:pointer">📷 add photo<input type="file" data-role="photo" accept="image/*" style="display:none"></label>' +
+                  '<button data-role="editcard" class="btn-ghost px-3 py-2 text-sm">✎ edit card</button>' +
+                  '<button data-role="download" class="btn-ghost px-3 py-2 text-sm">⬇ download</button>'
                 : "") +
               '<button data-role="reject" class="btn-danger px-4 py-2 text-sm">Reject</button>' +
               '<span data-role="meta" class="muted text-xs self-center"></span>' +
@@ -340,9 +366,10 @@
         const previewEl = root.querySelector('[data-role="preview"]');
         let svgText = null;
         let draftPhoto = null; // uploaded data URI — baked into preview + posted PNG
+        let cardData = d.cardData; // editable copy — posted PNG renders from this
         function renderPreview() {
           if (!d.cardKind) return Promise.resolve();
-          return fetchCardSvg(d.cardKind, d.cardData, draftPhoto)
+          return fetchCardSvg(d.cardKind, cardData, draftPhoto)
             .then((svg) => {
               svgText = svg;
               const blob = new Blob([svg], { type: "image/svg+xml" });
@@ -352,6 +379,32 @@
             .catch((e) => (previewEl.innerHTML = '<div class="muted text-xs">Preview failed: ' + escapeHtml(e.message) + "</div>"));
         }
         renderPreview();
+        const editBtn = root.querySelector('[data-role="editcard"]');
+        const cardJsonEl = root.querySelector('[data-role="cardjson"]');
+        if (editBtn && cardJsonEl)
+          editBtn.addEventListener("click", () => {
+            const open = cardJsonEl.style.display !== "none";
+            if (!open) {
+              cardJsonEl.value = JSON.stringify(cardData || {}, null, 2);
+              cardJsonEl.style.display = "";
+              editBtn.textContent = "✓ apply card";
+            } else {
+              try {
+                cardData = JSON.parse(cardJsonEl.value);
+                cardJsonEl.style.display = "none";
+                editBtn.textContent = "✎ edit card";
+                renderPreview();
+              } catch (e) {
+                alert("Card JSON invalid: " + e.message);
+              }
+            }
+          });
+        const dlBtn = root.querySelector('[data-role="download"]');
+        if (dlBtn)
+          dlBtn.addEventListener("click", async () => {
+            if (!svgText) svgText = await fetchCardSvg(d.cardKind, cardData, draftPhoto);
+            await downloadCardPng(svgText, d.cardKind + "-" + d.id.slice(0, 8) + ".png");
+          });
         const photoInput = root.querySelector('[data-role="photo"]');
         if (photoInput)
           photoInput.addEventListener("change", async () => {
@@ -374,7 +427,7 @@
               let pngBase64;
               if (d.cardKind) {
                 meta.textContent = "Rendering image in browser…";
-                if (!svgText) svgText = await fetchCardSvg(d.cardKind, d.cardData, draftPhoto);
+                if (!svgText) svgText = await fetchCardSvg(d.cardKind, cardData, draftPhoto);
                 pngBase64 = await svgToPngBase64(svgText);
               }
               meta.textContent = "Uploading to X…";
@@ -516,6 +569,10 @@
         document.getElementById("studioPhotoClear").style.display = "";
         renderStudio();
       });
+      document.getElementById("studioDownload").addEventListener("click", async () => {
+        const svg = await fetchCardSvg(studioKind, null, studioPhoto);
+        await downloadCardPng(svg, studioKind + "-demo.png");
+      });
       document.getElementById("studioPhotoClear").addEventListener("click", () => {
         studioPhoto = null;
         document.getElementById("studioPhotoClear").style.display = "none";
@@ -523,12 +580,19 @@
       });
 
       // ---------- health / fixtures / posts ----------
+      let clubInfo = { name: "Club", fullName: "Club", league: "" };
       async function loadHealth() {
         const el = document.getElementById("health");
         const hints = document.getElementById("healthHints");
         try {
           const res = await fetch("/api/health");
           const h = await res.json();
+          if (h.club) {
+            clubInfo = { name: h.club.name.replace(/ FC$/, ""), fullName: h.club.name, league: h.club.league };
+            document.getElementById("headerSub").textContent = "Football intelligence · " + h.club.name;
+            document.getElementById("readinessLabel").textContent =
+              "Readiness · tracked club: " + h.club.name + " · " + h.club.league + " (configuration, not identity)";
+          }
           const items = Object.entries(h.checks || {}).concat([
             ["x_account_connected", h.xAccountConnected === true],
             ["auto_post", !h.draftMode],
@@ -559,7 +623,7 @@
                   hour: "2-digit",
                   minute: "2-digit",
                 });
-                const matchup = f.isChelseaHome ? "Chelsea vs " + f.opponent : f.opponent + " vs Chelsea";
+                const matchup = f.isHome ? clubInfo.name + " vs " + f.opponent : f.opponent + " vs " + clubInfo.name;
                 return (
                   '<div class="hairline pt-2"><div class="label">' +
                   escapeHtml(f.competition) +
@@ -618,11 +682,96 @@
         }
       }
 
+      // ---------- analytics (hand-rolled SVG, design-system themed) ----------
+      const CH = { ink: "#fff", dim: "#c7cbd4", mute: "#878d99", line: "#2a2e37", accent: "#3d6bff", win: "#8fe3a1", loss: "#e5484d", draw: "#9aa0ac" };
+      function svgWrap(w, h, inner) {
+        return '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;height:auto;font-family:Montserrat,Arial" xmlns="http://www.w3.org/2000/svg">' + inner + "</svg>";
+      }
+      function scatterChart(rows, opts) {
+        // rows: {x, y, label, mine} — generic scatter with parity/quadrant hints
+        const W = 520, H = 320, P = 44;
+        if (!rows.length) return '<span class="muted text-xs">No data yet this season.</span>';
+        const xs = rows.map(r => r.x), ys = rows.map(r => r.y);
+        const xMax = Math.max(...xs) * 1.12 + 0.01, yMax = Math.max(...ys) * 1.12 + 0.01;
+        const X = v => P + (v / xMax) * (W - P - 16);
+        const Y = v => H - P - (v / yMax) * (H - P - 20);
+        let g = "";
+        for (let i = 1; i <= 4; i++) {
+          const gx = P + (i / 4) * (W - P - 16), gy = H - P - (i / 4) * (H - P - 20);
+          g += '<line x1="' + gx + '" y1="16" x2="' + gx + '" y2="' + (H - P) + '" stroke="' + CH.line + '" stroke-width="1"/>';
+          g += '<line x1="' + P + '" y1="' + gy + '" x2="' + (W - 16) + '" y2="' + gy + '" stroke="' + CH.line + '" stroke-width="1"/>';
+          g += '<text x="' + gx + '" y="' + (H - P + 18) + '" fill="' + CH.mute + '" font-size="11" text-anchor="middle">' + (xMax * i / 4).toFixed(1) + "</text>";
+          g += '<text x="' + (P - 8) + '" y="' + (gy + 4) + '" fill="' + CH.mute + '" font-size="11" text-anchor="end">' + (yMax * i / 4).toFixed(1) + "</text>";
+        }
+        if (opts.parity) {
+          const m = Math.min(xMax, yMax);
+          g += '<line x1="' + X(0) + '" y1="' + Y(0) + '" x2="' + X(m) + '" y2="' + Y(m) + '" stroke="' + CH.mute + '" stroke-width="1.5" stroke-dasharray="5 5" opacity="0.6"/>';
+        }
+        rows.forEach(r => {
+          const cx = X(r.x), cy = Y(r.y);
+          const col = r.mine ? CH.accent : CH.dim;
+          g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r.mine ? 7 : 4.5) + '" fill="' + col + '" opacity="' + (r.mine ? 1 : 0.65) + '"/>';
+          if (r.mine || r.labelAlways) g += '<text x="' + (cx + 10) + '" y="' + (cy + 4) + '" fill="' + (r.mine ? CH.ink : CH.mute) + '" font-size="12" font-weight="' + (r.mine ? 800 : 400) + '">' + escapeHtml(r.label) + "</text>";
+        });
+        g += '<text x="' + (W - 16) + '" y="' + (H - 8) + '" fill="' + CH.mute + '" font-size="11" text-anchor="end" letter-spacing="1">' + escapeHtml(opts.xLabel) + " →</text>";
+        g += '<text x="14" y="24" fill="' + CH.mute + '" font-size="11" letter-spacing="1">↑ ' + escapeHtml(opts.yLabel) + "</text>";
+        return svgWrap(W, H, g);
+      }
+      function formStrip(rows) {
+        if (!rows.length) return '<span class="muted text-xs">No finished matches yet.</span>';
+        const W = 1040, H = 96, box = Math.min(88, (W - 20) / rows.length - 10);
+        let g = "";
+        rows.forEach((r, i) => {
+          const x = 10 + i * (box + 10);
+          const col = r.outcome === "W" ? CH.win : r.outcome === "L" ? CH.loss : CH.draw;
+          g += '<rect x="' + x + '" y="10" width="' + box + '" height="46" rx="9" fill="' + (r.outcome === "W" ? col : "none") + '" stroke="' + col + '" stroke-width="2"/>';
+          g += '<text x="' + (x + box / 2) + '" y="40" fill="' + (r.outcome === "W" ? "#0b0c0f" : col) + '" font-size="22" font-weight="800" text-anchor="middle">' + r.outcome + "</text>";
+          g += '<text x="' + (x + box / 2) + '" y="74" fill="' + CH.dim + '" font-size="12" text-anchor="middle">' + escapeHtml(r.score) + "</text>";
+          g += '<text x="' + (x + box / 2) + '" y="90" fill="' + CH.mute + '" font-size="10" text-anchor="middle">' + escapeHtml(r.opponent.slice(0, 12)) + "</text>";
+        });
+        return svgWrap(W, H, g);
+      }
+      async function loadAnalytics() {
+        try {
+          const res = await fetch("/api/analytics", { headers: authHeaders() });
+          if (!res.ok) throw new Error("analytics " + res.status);
+          const a = await res.json();
+          document.getElementById("analyticsMeta").textContent =
+            a.club.fullName + " · " + a.season + " · xG: Understat";
+          const myName = (a.club.name || "").toLowerCase();
+          document.getElementById("chartLeague").innerHTML = scatterChart(
+            (a.leagueXg || []).map(t => ({ x: t.xG, y: t.xGA, label: t.team, mine: t.team.toLowerCase().includes(myName) })),
+            { xLabel: "xG created", yLabel: "xG conceded" }
+          );
+          document.getElementById("chartSquad").innerHTML = scatterChart(
+            (a.squad || []).filter(p => p.minutes >= 200).slice(0, 20).map(p => ({
+              x: p.xG, y: p.goals, label: p.player.split(" ").slice(-1)[0], mine: p.goals >= Math.max(...(a.squad || []).map(q => q.goals)) && p.goals > 0, labelAlways: p.xG > 1 || p.goals > 1,
+            })),
+            { xLabel: "expected goals (xG)", yLabel: "goals", parity: true }
+          );
+          document.getElementById("chartForm").innerHTML = formStrip((a.recentForm || []).slice(0, 10));
+        } catch (e) {
+          document.getElementById("chartLeague").innerHTML = '<span class="muted text-xs">' + escapeHtml(e.message) + " — check the admin key.</span>";
+          document.getElementById("chartSquad").innerHTML = "";
+          document.getElementById("chartForm").innerHTML = "";
+        }
+      }
+
+      // ---------- PNG download helper ----------
+      async function downloadCardPng(svgText, filename) {
+        const dataUri = await svgToPngBase64(svgText);
+        const aEl = document.createElement("a");
+        aEl.href = dataUri;
+        aEl.download = filename;
+        aEl.click();
+      }
+
       function loadAll() {
         loadHealth();
         loadQueue();
         loadDashboard();
         loadSuggestions();
+        loadAnalytics();
       }
       document.getElementById("refresh").addEventListener("click", loadAll);
       loadAll();

@@ -3,7 +3,7 @@
  *
  * Docs: https://docs.football-data.org (API v4)
  * Auth: header X-Auth-Token
- * Chelsea team id: 61 · Premier League code: PL
+ * Team/league ids come from @shared/club — this file is club-agnostic.
  * Free tier: current season, live scores/status, standings, scorers, H2H.
  * Rate limit: 10 requests/minute, obeyed via the API's response headers.
  *
@@ -23,6 +23,7 @@
 
 import { setCache, getCache } from "../cache";
 import { env } from "@shared/env";
+import { club } from "@shared/club";
 import {
   FootballProvider,
   NormalizedFixture,
@@ -37,8 +38,11 @@ import {
 } from "../types";
 
 const BASE = "https://api.football-data.org/v4";
-export const FD_CHELSEA_TEAM_ID = 61;
-export const FD_PL_CODE = "PL";
+const teamId = () => club().ids.footballData;
+const leagueCode = () => club().league.footballData;
+const slug = () => club().slug;
+// Exported for tests (mappers are pure but need a reference id).
+export const FD_TEST_TEAM_ID = 61;
 
 // ---------------------------------------------------------------- rate limit
 // The free tier allows 10 req/min. Instead of guessing locally, we obey the
@@ -130,14 +134,14 @@ export function mapFdPhase(status: string): MatchPhase {
 export function mapFdMatch(m: any): NormalizedFixture {
   const home = m?.homeTeam?.name || m?.homeTeam?.shortName || "Home";
   const away = m?.awayTeam?.name || m?.awayTeam?.shortName || "Away";
-  const isChelseaHome = m?.homeTeam?.id === FD_CHELSEA_TEAM_ID;
+  const isHome = m?.homeTeam?.id === teamId();
   const status = m?.status || "SCHEDULED";
   const goalsHome = m?.score?.fullTime?.home ?? null;
   const goalsAway = m?.score?.fullTime?.away ?? null;
   let outcome: "W" | "D" | "L" | null = null;
   if (status === "FINISHED" && goalsHome != null && goalsAway != null) {
-    const ours = isChelseaHome ? goalsHome : goalsAway;
-    const theirs = isChelseaHome ? goalsAway : goalsHome;
+    const ours = isHome ? goalsHome : goalsAway;
+    const theirs = isHome ? goalsAway : goalsHome;
     outcome = ours > theirs ? "W" : ours < theirs ? "L" : "D";
   }
   return {
@@ -147,9 +151,9 @@ export function mapFdMatch(m: any): NormalizedFixture {
     venue: m?.venue || "",
     home,
     away,
-    isChelseaHome,
-    opponent: isChelseaHome ? away : home,
-    opponentId: (isChelseaHome ? m?.awayTeam?.id : m?.homeTeam?.id) ?? null,
+    isHome,
+    opponent: isHome ? away : home,
+    opponentId: (isHome ? m?.awayTeam?.id : m?.homeTeam?.id) ?? null,
     status,
     goalsHome,
     goalsAway,
@@ -247,8 +251,8 @@ export const footballDataProvider: FootballProvider = {
   async getFixtures(opts) {
     const status = opts.last ? "FINISHED" : "SCHEDULED";
     const limit = opts.next || opts.last || 5;
-    const path = `/teams/${FD_CHELSEA_TEAM_ID}/matches?status=${status}&limit=${limit}`;
-    const key = `fd:fixtures:${status}:${limit}`;
+    const path = `/teams/${teamId()}/matches?status=${status}&limit=${limit}`;
+    const key = `fd:fixtures:${slug()}:${status}:${limit}`;
     const cached = await getCache<{ fixtures: NormalizedFixture[]; citation: string }>(key);
     if (cached) return cached;
 
@@ -262,7 +266,7 @@ export const footballDataProvider: FootballProvider = {
   },
 
   async getFixtureById(id) {
-    const key = `fd:fixture:${id}`;
+    const key = `fd:fixture:${slug()}:${id}`;
     const cached = await getCache<NormalizedFixture>(key);
     if (cached) return cached;
     const json = await fd(`/matches/${id}`);
@@ -273,10 +277,10 @@ export const footballDataProvider: FootballProvider = {
   },
 
   async getLiveMatch() {
-    const key = `fd:live:chelsea`;
+    const key = `fd:live:${slug()}`;
     const cached = await getCache<NormalizedLiveMatch | "none">(key);
     if (cached) return cached === "none" ? null : cached;
-    const path = `/teams/${FD_CHELSEA_TEAM_ID}/matches?status=IN_PLAY,PAUSED`;
+    const path = `/teams/${teamId()}/matches?status=IN_PLAY,PAUSED`;
     const json = await fd(path);
     const m = ((json?.matches as any[]) || [])[0];
     if (!m) {
@@ -306,7 +310,7 @@ export const footballDataProvider: FootballProvider = {
 
   async getGoalEvents(fixtureId, opts) {
     const path = `/matches/${fixtureId}`;
-    const key = `fd:events:${fixtureId}`;
+    const key = `fd:events:${slug()}:${fixtureId}`;
     const cached = await getCache<{ goals: NormalizedGoalEvent[]; citation: string }>(key);
     if (cached) return cached;
     const json = await fd(path);
@@ -322,10 +326,10 @@ export const footballDataProvider: FootballProvider = {
   },
 
   async getStandings(season) {
-    const path = `/competitions/${FD_PL_CODE}/standings?season=${season}`;
-    const key = `fd:standings:${season}`;
+    const path = `/competitions/${leagueCode()}/standings?season=${season}`;
+    const key = `fd:standings:${slug()}:${season}`;
     const cached = await getCache<{
-      chelsea: NormalizedStanding | null;
+      team: NormalizedStanding | null;
       table: NormalizedStanding[];
       citation: string;
     }>(key);
@@ -334,34 +338,34 @@ export const footballDataProvider: FootballProvider = {
     const json = await fd(path);
     const total = ((json?.standings as any[]) || []).find((s: any) => s?.type === "TOTAL");
     const table: NormalizedStanding[] = (total?.table || []).map(mapFdStandingRow);
-    const chelsea =
+    const ours =
       (total?.table || [])
-        .filter((r: any) => r?.team?.id === FD_CHELSEA_TEAM_ID)
+        .filter((r: any) => r?.team?.id === teamId())
         .map(mapFdStandingRow)[0] || null;
-    const data = { chelsea, table, citation: `${BASE}${path}` };
+    const data = { team: ours, table, citation: `${BASE}${path}` };
     await setCache(key, data, 60 * 60 * 1000);
     return data;
   },
 
   async getSeasonStats(season) {
-    const key = `fd:teamstats:${season}`;
+    const key = `fd:teamstats:${slug()}:${season}`;
     const cached = await getCache<NormalizedTeamStats>(key);
     if (cached) return cached;
-    const { chelsea, citation } = await this.getStandings(season);
-    const data = teamStatsFromStanding(season, chelsea, citation);
+    const { team: ours, citation } = await this.getStandings(season);
+    const data = teamStatsFromStanding(season, ours, citation);
     await setCache(key, data, 60 * 60 * 1000);
     return data;
   },
 
   async getTopPerformers(season) {
-    const path = `/competitions/${FD_PL_CODE}/scorers?limit=100&season=${season}`;
-    const key = `fd:topperformers:${season}`;
+    const path = `/competitions/${leagueCode()}/scorers?limit=100&season=${season}`;
+    const key = `fd:topperformers:${slug()}:${season}`;
     const cached = await getCache<{ players: NormalizedTopPlayer[]; citation: string }>(key);
     if (cached) return cached;
 
     const json = await fd(path);
     const players = ((json?.scorers as any[]) || [])
-      .filter((s: any) => s?.team?.id === FD_CHELSEA_TEAM_ID)
+      .filter((s: any) => s?.team?.id === teamId())
       .map(mapFdScorer)
       .sort((a, b) => b.goals * 2 + b.assists - (a.goals * 2 + a.assists));
     const data = { players, citation: `${BASE}${path}` };
@@ -374,7 +378,7 @@ export const footballDataProvider: FootballProvider = {
       return { wins: 0, draws: 0, losses: 0, played: 0, summary: "", citation: "" };
     }
     const path = `/matches/${ref.fixtureId}/head2head?limit=10`;
-    const key = `fd:h2h:${ref.fixtureId}`;
+    const key = `fd:h2h:${slug()}:${ref.fixtureId}`;
     const cached = await getCache<HeadToHead>(key);
     if (cached) return cached;
 

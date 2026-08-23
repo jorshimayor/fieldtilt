@@ -12,11 +12,12 @@ export const config = { runtime: "edge" };
  */
 
 import {
-  getChelseaFixtures,
+  getTeamFixtures,
   getLeagueStandings,
   currentSeason,
+  club,
 } from "../packages/tools/football";
-import { getChelseaAdvancedStats, getLeagueXgTable } from "../packages/tools/understat";
+import { getTeamAdvancedStats, getLeagueXgTable } from "../packages/tools/understat";
 import { withErrorLogging } from "../packages/observability/index";
 
 type Suggestion = { label: string; prompt: string; kind: string };
@@ -26,10 +27,10 @@ export default withErrorLogging(async function handler(): Promise<Response> {
   const suggestions: Suggestion[] = [];
 
   const [nextRes, lastRes, standings, adv, xgTable] = await Promise.all([
-    getChelseaFixtures({ next: 1 }).catch(() => ({ fixtures: [] as any[] })),
-    getChelseaFixtures({ last: 1 }).catch(() => ({ fixtures: [] as any[] })),
+    getTeamFixtures({ next: 1 }).catch(() => ({ fixtures: [] as any[] })),
+    getTeamFixtures({ last: 1 }).catch(() => ({ fixtures: [] as any[] })),
     getLeagueStandings(season).catch(() => null),
-    getChelseaAdvancedStats(season).catch(() => ({ players: [] as any[] })),
+    getTeamAdvancedStats(season).catch(() => ({ players: [] as any[] })),
     getLeagueXgTable(season).catch(() => ({ table: [] as any[] })),
   ]);
 
@@ -90,17 +91,17 @@ export default withErrorLogging(async function handler(): Promise<Response> {
   }
 
   // ── team-level claims ─────────────────────────────────────────────────
-  const che = (xgTable.table || []).find((t: any) => /chelsea/i.test(t.team));
-  if (che && che.matches >= 3 && xgTable.table.length >= 10) {
-    const betterXga = xgTable.table.filter((t: any) => t.xGA < che.xGA).length;
+  const ours = (xgTable.table || []).find((t: any) => t.team.toLowerCase().includes(club().name.toLowerCase()));
+  if (ours && ours.matches >= 3 && xgTable.table.length >= 10) {
+    const betterXga = xgTable.table.filter((t: any) => t.xGA < ours.xGA).length;
     suggestions.push({
       kind: "weekly_deep_dive",
       label: `Defensive claim: ${betterXga} team(s) with better xGA`,
-      prompt: `Write a post arguing about our defensive underlying numbers: only ${betterXga} Premier League team(s) have conceded fewer expected goals (xGA ${che.xGA}). Use the league xG table, credit Understat.`,
+      prompt: `Write a post arguing about our defensive underlying numbers: only ${betterXga} ${club().league.name} team(s) have conceded fewer expected goals (xGA ${ours.xGA}). Use the league xG table, credit Understat.`,
     });
   }
-  if (standings?.chelsea && standings.chelsea.played > 0) {
-    const c = standings.chelsea;
+  if (standings?.team && standings.team.played > 0) {
+    const c = standings.team;
     suggestions.push({
       kind: "form",
       label: `Form check: #${c.rank}, ${c.points} pts after ${c.played}`,

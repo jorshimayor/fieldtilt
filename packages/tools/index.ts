@@ -6,11 +6,11 @@ import { eq } from "drizzle-orm";
 import { generateImage as orGenerateImage } from "../shared/openrouter";
 
 export {
-  CHELSEA_TEAM_ID,
-  getChelseaFixtures,
+  getTeamFixtures,
   getMatchStats,
-  getLiveChelseaMatch,
+  getLiveTeamMatch,
   activeProviderName,
+  club,
 } from "./football";
 export type { NormalizedFixture, NormalizedMatchStats } from "./football";
 

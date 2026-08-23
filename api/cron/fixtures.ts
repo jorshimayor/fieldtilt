@@ -10,9 +10,10 @@ export const config = { runtime: "edge" };
  */
 
 import {
-  getChelseaFixtures,
+  getTeamFixtures,
   getHeadToHead,
   activeProviderName,
+  club,
 } from "../../packages/tools/football";
 import { setCache } from "../../packages/tools/cache";
 import { composeAndPost } from "../../packages/shared/poster";
@@ -20,11 +21,11 @@ import { withErrorLogging } from "../../packages/observability/index";
 
 /** Fixture ids are provider-scoped, so the warm cache is too. */
 export function nextFixtureKey(): string {
-  return `nextfixture:chelsea:${activeProviderName()}`;
+  return `nextfixture:${club().slug}:${activeProviderName()}`;
 }
 
 export default withErrorLogging(async function handler(): Promise<Response> {
-  const { fixtures } = await getChelseaFixtures({ next: 1 });
+  const { fixtures } = await getTeamFixtures({ next: 1 });
   const next = fixtures[0];
   if (!next) return json({ skipped: "no upcoming fixture" });
 
@@ -38,7 +39,7 @@ export default withErrorLogging(async function handler(): Promise<Response> {
   }
 
   const dateLabel = new Date(next.date).toLocaleString("en-GB", {
-    timeZone: "Africa/Lagos",
+    timeZone: club().timezone,
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -60,10 +61,10 @@ export default withErrorLogging(async function handler(): Promise<Response> {
     data: {
       opponent: next.opponent,
       competition: next.competition,
-      date: `${dateLabel} WAT`,
+      date: `${dateLabel} ${club().tzLabel}`,
       venue: next.venue,
       hook: [
-        next.isChelseaHome ? "Home fixture at the Bridge." : "Away day.",
+        next.isHome ? club().homeHook : club().awayHook,
         h2hSummary ? `H2H: ${h2hSummary}.` : "",
       ]
         .filter(Boolean)
@@ -75,7 +76,7 @@ export default withErrorLogging(async function handler(): Promise<Response> {
         home: next.home,
         away: next.away,
         competition: next.competition,
-        dateLabel: `${dateLabel} WAT`,
+        dateLabel: `${dateLabel} ${club().tzLabel}`,
         venue: next.venue,
         footnote: h2hSummary ? `H2H · ${h2hSummary}` : undefined,
       },

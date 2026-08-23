@@ -8,11 +8,12 @@ export const config = { runtime: "edge" };
  */
 
 import {
-  getChelseaFixtures,
+  getTeamFixtures,
   getLeagueStandings,
-  getChelseaSeasonStats,
+  getTeamSeasonStats,
   seasonLabel,
   currentSeason,
+  club,
 } from "../../packages/tools/football";
 import { composeAndPost } from "../../packages/shared/poster";
 import { withErrorLogging } from "../../packages/observability/index";
@@ -20,9 +21,9 @@ import { withErrorLogging } from "../../packages/observability/index";
 export default withErrorLogging(async function handler(): Promise<Response> {
   const season = currentSeason();
   const [{ fixtures }, standings, teamStats] = await Promise.all([
-    getChelseaFixtures({ last: 5 }),
+    getTeamFixtures({ last: 5 }),
     getLeagueStandings(season),
-    getChelseaSeasonStats(season),
+    getTeamSeasonStats(season),
   ]);
   const finished = fixtures.filter((f) => f.outcome);
   if (!finished.length) return json({ skipped: "no recent finished fixtures" });
@@ -33,11 +34,11 @@ export default withErrorLogging(async function handler(): Promise<Response> {
     outcome: f.outcome as "W" | "D" | "L",
   }));
 
-  const c = standings.chelsea;
+  const c = standings.team;
   const record = `${results.map((r) => r.outcome).join("")}`;
   const numbers = [
     `Last 5: ${record}`,
-    c ? `P${c.played} • ${c.points}pts • #${c.rank} in the PL` : "",
+    c ? `P${c.played} • ${c.points}pts • #${c.rank} in the ${club().league.name}` : "",
     teamStats.goalsFor ? `${teamStats.goalsFor} scored / ${teamStats.goalsAgainst} conceded this season` : "",
   ]
     .filter(Boolean)
@@ -61,7 +62,7 @@ export default withErrorLogging(async function handler(): Promise<Response> {
         played: c?.played ?? null,
         goalsFor: c?.goalsFor ?? null,
         goalsAgainst: c?.goalsAgainst ?? null,
-        competition: "Premier League",
+        competition: club().league.name,
       },
     },
     idKey: `tweet:weekly:${new Date().toISOString().slice(0, 10)}`,

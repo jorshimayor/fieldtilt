@@ -97,9 +97,11 @@ documents its risk posture instead.
 2. **TypeScript-only** while football data science runs on Python. Same
    fix: models in Python, delivery in TS — polyglot by design, not
    confusion.
-3. **Single-club coupling.** Team ids are constants; a Chelsea bot reads as
-   fandom. League-wide config is scheduled (calendar week 15) to make it
-   read as infrastructure.
+3. ~~**Single-club coupling.**~~ Fixed ahead of schedule: every club fact
+   (provider ids, league mappings, hashtag, voice hooks) lives in
+   `packages/shared/club.ts`; switching club — or spinning up the BlueCo
+   sibling — is `CLUB=strasbourg` on the Worker. Prompts, cards, crons,
+   agent and dashboard all derive from it.
 4. **No tracking data, no video linkage.** Event-level and aggregate data
    only. Club-grade tooling links every number back to video; this doesn't.
 5. **Small-N testing.** 75 assertions cover parsers, mappers, templates and

@@ -1,9 +1,11 @@
+import { club } from "./club";
+
 /**
- * Chelsea FC tweet prompt library.
+ * Club tweet prompt library (club identity from @shared/club).
  *
  * Every prompt MUST:
  *  - stay under 280 characters (Twitter hard limit)
- *  - end with #CFC and the 💙 emoji
+ *  - end with the club hashtag and emoji (from @shared/club)
  *  - stay factual (never invent stats) — the LLM is given raw data in the user message
  *  - match the tone: "professional" (calm, analytical) or "savage" (confident, SecretScout-style banter)
  *
@@ -29,18 +31,18 @@ type PromptSpec = {
 };
 
 const BASE_VOICE = (tone: Tone) => `
-You are the Chelsea FC tweet writer for the BlueBanter bot.
+You are the ${club().fullName} tweet writer for this club account.
 Voice: ${tone === "savage"
     ? "confident, witty, SecretScout-style banter. Never cruel. Never hateful. Never about race, gender, or protected traits. Keep it football."
     : "calm, analytical, fan-friendly, enthusiastic but measured."}
 Hard rules:
 - Output ONE tweet only. Plain text. No quotes around it.
 - MAX 270 characters (leave room for safety).
-- Always end with "#CFC 💙".
+- Always end with "${club().hashtag} ${club().emoji}".
 - Never invent stats. Only use numbers explicitly provided in the user message.
 - If the user message contains no usable facts, output exactly: SKIP
 - Never mention other clubs in a derogatory, discriminatory way. Banter about football only.
-- No hashtag spam. One or two hashtags max, with #CFC always last.
+- No hashtag spam. One or two hashtags max, with ${club().hashtag} always last.
 `.trim();
 
 export const tweetPrompts: Record<TweetKind, PromptSpec> = {
@@ -118,7 +120,7 @@ OVERRIDE for this task only: this is a LONG-FORM post (X premium long post),
 not a 280-character tweet. Target 600–1500 characters. Structure:
 - A sharp one-line hook.
 - 2–4 short paragraphs of analysis grounded ONLY in the numbers provided.
-- A closing line, ending with "#CFC 💙".
+- A closing line, ending with the club hashtag and emoji.
 Blank line between paragraphs. No markdown, no headers, no bullet lists.
 Everything else in the rules above still applies (factual, one output, no invented stats).`,
     user: (d) => `Topic: ${d.topic}
@@ -130,7 +132,7 @@ Window: ${d.window ?? "this season"}`,
 };
 
 /** Hard safety: always enforce the suffix + length. */
-const SUFFIX = "#CFC 💙";
+const SUFFIX = () => `${club().hashtag} ${club().emoji}`;
 
 export function normalizeTweet(raw: string): string {
   let t = (raw || "").trim();
@@ -139,16 +141,17 @@ export function normalizeTweet(raw: string): string {
   t = t.replace(/^["“'`]+|["”'`]+$/g, "");
   // Collapse whitespace
   t = t.replace(/\s+/g, " ").trim();
-  // Append #CFC 💙 if missing
-  if (!/#CFC/i.test(t)) t = `${t} ${SUFFIX}`.trim();
-  if (!t.includes("💙")) t = `${t} 💙`.trim();
+  // Append the club suffix if missing
+  const c = club();
+  if (!t.toLowerCase().includes(c.hashtag.toLowerCase())) t = `${t} ${SUFFIX()}`.trim();
+  if (!t.includes(c.emoji)) t = `${t} ${c.emoji}`.trim();
   // Enforce 280-char budget by trimming from the end *before* the suffix
   if (t.length > 280) {
-    const suffixRe = /\s*#CFC\s*💙\s*$/i;
+    const suffixRe = new RegExp(`\\s*${c.hashtag}\\s*${c.emoji}\\s*$`, "i");
     const body = t.replace(suffixRe, "").trim();
-    const maxBody = 280 - (SUFFIX.length + 1); // 1 for space
+    const maxBody = 280 - (SUFFIX().length + 1); // 1 for space
     const trimmed = body.slice(0, maxBody - 1).replace(/\s+\S*$/, "") + "…";
-    t = `${trimmed} ${SUFFIX}`;
+    t = `${trimmed} ${SUFFIX()}`;
   }
   return t;
 }
@@ -158,7 +161,7 @@ export function normalizeLongform(raw: string): string {
   let t = (raw || "").trim();
   if (t === "SKIP") return "";
   t = t.replace(/^["“'`]+|["”'`]+$/g, "").trim();
-  if (!/#CFC/i.test(t)) t = `${t}\n\n${SUFFIX}`;
+  if (!t.toLowerCase().includes(club().hashtag.toLowerCase())) t = `${t}\n\n${SUFFIX()}`;
   if (t.length > 4000) t = t.slice(0, 3999).replace(/\s+\S*$/, "") + "…";
   return t;
 }

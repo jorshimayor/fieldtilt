@@ -8,14 +8,14 @@ export const config = { runtime: "edge" };
  * announced exactly once), and posts up to 2 per run with a transfer card.
  */
 
-import { getChelseaTransfers } from "../../packages/tools/football";
+import { getTeamTransfers } from "../../packages/tools/football";
 import { composeAndPost, claimPostedKey, recordPostedTweet } from "../../packages/shared/poster";
 import { withErrorLogging } from "../../packages/observability/index";
 
 const MAX_POSTS_PER_RUN = 2;
 
 export default withErrorLogging(async function handler(): Promise<Response> {
-  const { transfers, supported } = await getChelseaTransfers({ sinceDays: 14 });
+  const { transfers, supported } = await getTeamTransfers({ sinceDays: 14 });
   if (!supported) {
     return json({
       skipped:

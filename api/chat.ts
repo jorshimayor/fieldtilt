@@ -15,16 +15,17 @@ export const config = { runtime: "edge" };
 import { chatWithTools } from "../packages/shared/openrouter";
 import { composeAndPost } from "../packages/shared/poster";
 import {
-  getChelseaFixtures,
+  getTeamFixtures,
   getLeagueStandings,
-  getChelseaTopPerformers,
+  getTeamTopPerformers,
   getHeadToHead,
   currentSeason,
   seasonLabel,
   activeProviderName,
   provider,
+  club,
 } from "../packages/tools/football";
-import { getChelseaAdvancedStats, getLeagueXgTable } from "../packages/tools/understat";
+import { getTeamAdvancedStats, getLeagueXgTable } from "../packages/tools/understat";
 import { db } from "../packages/db/client";
 import { drafts } from "../packages/db/schema";
 import { desc, eq } from "drizzle-orm";
@@ -56,7 +57,8 @@ const CARD_KINDS: CardKind[] = [
 
 function systemPrompt(): string {
   const caps = provider().capabilities;
-  return `You are the control-room agent for a Chelsea FC X (Twitter) account.
+  const c = club();
+  return `You are the control-room agent for the ${c.fullName} X (Twitter) account.
 Today: ${new Date().toISOString().slice(0, 10)}. Season: ${seasonLabel(currentSeason())}. Data provider: ${activeProviderName()}${caps.xg ? "" : " (no possession/xG/transfer data on this tier — never invent those numbers)"}.
 
 You help the operator create posts. Rules:
@@ -72,28 +74,28 @@ You help the operator create posts. Rules:
   - editorial {eyebrow, lines:[{text, em?}] (max 7 short lines), dateLabel?}
 - The "data" argument of create_draft grounds the tweet copy — put the real numbers/facts there. It must never be empty.
 - When the user asks for a post, you MUST actually call create_draft — never say a draft was created unless the create_draft tool returned a draftId in this conversation.
-- Dates shown to fans: convert to Africa/Lagos time (WAT, UTC+1) like "Sat 24 Aug, 20:00 WAT".
+- Dates shown to fans: convert to ${c.timezone} time (${c.tzLabel}) like "Sat 24 Aug, 20:00 ${c.tzLabel}".
 - Advanced stats (get_advanced_player_stats / get_league_xg_table) come from Understat's xG model — when a post leans on them, credit "xG: Understat" in the copy or card. Great for over/under-performance takes (goals vs xG), profiling (xGChain/xGBuildup), and transfer arguments. NEVER produce Opta-style historical trivia ("first player since…") — no tool can verify it.
 - Be brief in replies: one or two sentences on what you did or found. Plain text, no markdown.`;
 }
 
 const TOOLS = [
-  tool("get_upcoming_fixtures", "Next Chelsea fixtures (date ISO, opponent, competition, venue, home/away).", {
+  tool("get_upcoming_fixtures", "Next fixtures for the tracked club (date ISO, opponent, competition, venue, home/away).", {
     count: { type: "number", description: "1-10, default 3" },
   }),
-  tool("get_recent_results", "Chelsea's most recent finished matches with scores and W/D/L outcomes.", {
+  tool("get_recent_results", "The tracked club's most recent finished matches with scores and W/D/L outcomes.", {
     count: { type: "number", description: "1-10, default 5" },
   }),
-  tool("get_standings", "Premier League table: Chelsea's row plus the top of the table.", {}),
-  tool("get_top_performers", "Chelsea's top players this season by goal involvements.", {}),
+  tool("get_standings", "League table: the tracked club's row plus the top of the table.", {}),
+  tool("get_top_performers", "The tracked club's top players this season by goal involvements.", {}),
   tool(
     "get_advanced_player_stats",
-    "Advanced xG-model stats for the Chelsea squad this season (source: Understat): xG, npxG, xA, shots, key passes, xGChain, xGBuildup, per-90 rates. Use for player profiling, transfer arguments, over/under-performance takes.",
+    "Advanced xG-model stats for the tracked club's squad this season (source: Understat): xG, npxG, xA, shots, key passes, xGChain, xGBuildup, per-90 rates. Use for player profiling, transfer arguments, over/under-performance takes.",
     { player: { type: "string", description: "Optional player name filter (partial match)" } }
   ),
   tool(
     "get_league_xg_table",
-    "Premier League team xG table this season (source: Understat): xG, xGA, npxG, npxGA, xPts per team. Use for 'only N teams have a better xGA'-style arguments.",
+    "League-wide team xG table this season (source: Understat): xG, xGA, npxG, npxGA, xPts per team. Use for 'only N teams have a better xGA'-style arguments.",
     {}
   ),
   tool("get_head_to_head", "Head-to-head record vs the next opponent (last ~10 meetings).", {}),
@@ -153,7 +155,7 @@ function coerceObject(v: unknown): Record<string, unknown> | null {
 async function execTool(name: string, args: any): Promise<any> {
   switch (name) {
     case "get_upcoming_fixtures": {
-      const { fixtures } = await getChelseaFixtures({ next: clamp(args?.count, 1, 10, 3) });
+      const { fixtures } = await getTeamFixtures({ next: clamp(args?.count, 1, 10, 3) });
       return fixtures.map((f) => ({
         fixtureId: f.id,
         dateUtc: f.date,
@@ -162,11 +164,11 @@ async function execTool(name: string, args: any): Promise<any> {
         opponent: f.opponent,
         competition: f.competition,
         venue: f.venue || null,
-        chelseaHome: f.isChelseaHome,
+        isHome: f.isHome,
       }));
     }
     case "get_recent_results": {
-      const { fixtures } = await getChelseaFixtures({ last: clamp(args?.count, 1, 10, 5) });
+      const { fixtures } = await getTeamFixtures({ last: clamp(args?.count, 1, 10, 5) });
       return fixtures.map((f) => ({
         dateUtc: f.date,
         opponent: f.opponent,
@@ -178,15 +180,15 @@ async function execTool(name: string, args: any): Promise<any> {
       }));
     }
     case "get_standings": {
-      const { chelsea, table } = await getLeagueStandings(currentSeason());
-      return { chelsea, topSix: table.slice(0, 6) };
+      const { team, table } = await getLeagueStandings(currentSeason());
+      return { team, topSix: table.slice(0, 6) };
     }
     case "get_top_performers": {
-      const { players } = await getChelseaTopPerformers(currentSeason());
+      const { players } = await getTeamTopPerformers(currentSeason());
       return players.slice(0, 8);
     }
     case "get_advanced_player_stats": {
-      const { players, source } = await getChelseaAdvancedStats(currentSeason());
+      const { players, source } = await getTeamAdvancedStats(currentSeason());
       if (!players.length) {
         return { error: "no advanced stats available yet (early season or Understat unreachable)" };
       }
@@ -215,7 +217,7 @@ async function execTool(name: string, args: any): Promise<any> {
       return { table, source: "Understat", url: source };
     }
     case "get_head_to_head": {
-      const { fixtures } = await getChelseaFixtures({ next: 1 });
+      const { fixtures } = await getTeamFixtures({ next: 1 });
       const next = fixtures[0];
       if (!next) return { error: "no upcoming fixture" };
       const h2h = await getHeadToHead({ opponentId: next.opponentId, fixtureId: next.id });

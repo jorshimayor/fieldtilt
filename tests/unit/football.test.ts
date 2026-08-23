@@ -16,7 +16,7 @@ import {
   mapFdScorer,
   teamStatsFromStanding,
   parseRateHeaders,
-  FD_CHELSEA_TEAM_ID,
+  FD_TEST_TEAM_ID,
 } from "../../packages/tools/providers/football-data";
 
 let failures = 0;
@@ -72,14 +72,14 @@ const fdMatch = {
   status: "FINISHED",
   venue: "Stamford Bridge",
   competition: { name: "Premier League" },
-  homeTeam: { id: FD_CHELSEA_TEAM_ID, name: "Chelsea FC" },
+  homeTeam: { id: FD_TEST_TEAM_ID, name: "Chelsea FC" },
   awayTeam: { id: 57, name: "Arsenal FC" },
   score: { fullTime: { home: 2, away: 1 } },
 };
 {
   const f = mapFdMatch(fdMatch);
   check("maps ids/teams", f.id === 498034 && f.home === "Chelsea FC" && f.opponent === "Arsenal FC");
-  check("detects chelsea home + opponent id", f.isChelseaHome && f.opponentId === 57);
+  check("detects home side + opponent id", f.isHome && f.opponentId === 57);
   check("scores + W outcome", f.goalsHome === 2 && f.goalsAway === 1 && f.outcome === "W");
   const loss = mapFdMatch({ ...fdMatch, score: { fullTime: { home: 0, away: 3 } } });
   check("L outcome", loss.outcome === "L");
@@ -96,7 +96,7 @@ check("phase POSTPONED → other", mapFdPhase("POSTPONED") === "other");
 {
   const row = mapFdStandingRow({
     position: 3,
-    team: { id: FD_CHELSEA_TEAM_ID, name: "Chelsea FC" },
+    team: { id: FD_TEST_TEAM_ID, name: "Chelsea FC" },
     playedGames: 31,
     won: 18,
     draw: 7,
@@ -123,7 +123,7 @@ check("phase POSTPONED → other", mapFdPhase("POSTPONED") === "other");
 {
   const p = mapFdScorer({
     player: { id: 129, name: "Cole Palmer", position: "Midfield" },
-    team: { id: FD_CHELSEA_TEAM_ID },
+    team: { id: FD_TEST_TEAM_ID },
     playedMatches: 34,
     goals: 18,
     assists: 12,

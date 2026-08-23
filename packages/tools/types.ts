@@ -21,13 +21,14 @@ export type NormalizedFixture = {
   venue: string;
   home: string;
   away: string;
-  isChelseaHome: boolean;
+  /** Whether the tracked club is the home side. */
+  isHome: boolean;
   opponent: string;
   opponentId: number | null;
   status: string; // provider-native short status, informational only
   goalsHome: number | null;
   goalsAway: number | null;
-  /** Chelsea's result, only set for finished fixtures. */
+  /** The tracked club's result, only set for finished fixtures. */
   outcome: "W" | "D" | "L" | null;
 };
 
@@ -142,7 +143,7 @@ export interface FootballProvider {
   }>;
   /** The fixture by provider-native id (used to catch full-time after the live feed empties). */
   getFixtureById(id: number): Promise<NormalizedFixture | null>;
-  /** Chelsea's match currently in play, if any. */
+  /** The tracked club's match currently in play, if any. */
   getLiveMatch(): Promise<NormalizedLiveMatch | null>;
   getMatchStats(fixtureId: number): Promise<NormalizedMatchStats>;
   getGoalEvents(
@@ -155,7 +156,8 @@ export interface FootballProvider {
     supported: boolean;
   }>;
   getStandings(season: number): Promise<{
-    chelsea: NormalizedStanding | null;
+    /** The tracked club's row (null if not found in the table). */
+    team: NormalizedStanding | null;
     table: NormalizedStanding[];
     citation: string;
   }>;

@@ -9,11 +9,12 @@ export const config = { runtime: "edge" };
  */
 
 import {
-  getChelseaTopPerformers,
+  getTeamTopPerformers,
   seasonLabel,
   currentSeason,
+  club,
 } from "../../packages/tools/football";
-import { getChelseaAdvancedStats } from "../../packages/tools/understat";
+import { getTeamAdvancedStats } from "../../packages/tools/understat";
 import { composeAndPost, claimPostedKey, recordPostedTweet } from "../../packages/shared/poster";
 import { withErrorLogging } from "../../packages/observability/index";
 
@@ -27,7 +28,7 @@ function isoWeek(d = new Date()): string {
 
 export default withErrorLogging(async function handler(): Promise<Response> {
   const season = currentSeason();
-  const { players } = await getChelseaTopPerformers(season);
+  const { players } = await getTeamTopPerformers(season);
   const candidates = players.filter((p) => p.appearances > 0).slice(0, 6);
   if (!candidates.length) return json({ skipped: "no player data for this season yet" });
 
@@ -54,7 +55,7 @@ export default withErrorLogging(async function handler(): Promise<Response> {
     // Advanced layer (Understat xG model) — best-effort, card omits it if down.
     let xgLine = "";
     try {
-      const { players: adv } = await getChelseaAdvancedStats(season);
+      const { players: adv } = await getTeamAdvancedStats(season);
       const lastName = p.player.split(" ").slice(-1)[0].toLowerCase();
       const a = adv.find((x) => x.player.toLowerCase().includes(lastName));
       if (a) {
@@ -102,7 +103,7 @@ export default withErrorLogging(async function handler(): Promise<Response> {
         data: {
           player: p.player,
           season: seasonLabel(season),
-          competition: "Premier League",
+          competition: club().league.name,
           context: p.position ? `Position · ${p.position}` : undefined,
           stats,
           photoDataUri,

@@ -8,7 +8,7 @@
     "dev": "pnpm build:worker && cross-env XDG_CONFIG_HOME=.wrangler-xdg WRANGLER_LOG_PATH=.wrangler-xdg wrangler dev dist/worker.mjs --port 3000",
     "build:worker": "esbuild cloudflare/worker.ts --bundle --format=esm --platform=browser --outfile=dist/worker.mjs --loader:.html=text --loader:.css=text --loader:.ttf=binary --external:*.wasm && cp node_modules/@resvg/resvg-wasm/index_bg.wasm dist/resvg.wasm",
     "deploy": "pnpm build:worker && cross-env XDG_CONFIG_HOME=.wrangler-xdg WRANGLER_LOG_PATH=.wrangler-xdg wrangler deploy dist/worker.mjs",
-    "test": "tsx tests/unit/safety.test.ts && tsx tests/unit/tweet-prompts.test.ts && tsx tests/unit/render.test.ts && tsx tests/unit/football.test.ts && tsx tests/unit/understat.test.ts",
+    "test": "tsx tests/unit/safety.test.ts && tsx tests/unit/tweet-prompts.test.ts && tsx tests/unit/render.test.ts && tsx tests/unit/football.test.ts && tsx tests/unit/understat.test.ts && tsx tests/unit/club.test.ts",
     "typecheck": "tsc --noEmit",
     "test:generate": "tsx scripts/smokeGenerate.ts",
     "check:bundle": "node scripts/checkBundle.mjs",

@@ -16,9 +16,9 @@ export const config = { runtime: "edge" };
  */
 
 import {
-  getChelseaFixtures,
+  getTeamFixtures,
   getFixtureById,
-  getLiveChelseaMatch,
+  getLiveTeamMatch,
   getMatchStats,
   getFixtureGoalEvents,
   formatScorers,
@@ -39,7 +39,7 @@ export default withErrorLogging(async function handler(): Promise<Response> {
   // ---- window gate (no API spend outside match windows) ----
   let next = await getCache<{ id: number; date: string }>(nextFixtureKey());
   if (!next) {
-    const { fixtures } = await getChelseaFixtures({ next: 1 });
+    const { fixtures } = await getTeamFixtures({ next: 1 });
     if (fixtures[0]) {
       next = { id: fixtures[0].id, date: fixtures[0].date };
       await setCache(nextFixtureKey(), next, 6 * 60 * 60 * 1000);
@@ -54,7 +54,7 @@ export default withErrorLogging(async function handler(): Promise<Response> {
   }
 
   // ---- inside the window: live feed first ----
-  const live = await getLiveChelseaMatch();
+  const live = await getLiveTeamMatch();
 
   if (live && (live.phase === "live" || live.phase === "ht")) {
     const caps = provider().capabilities;
