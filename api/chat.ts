@@ -62,6 +62,7 @@ function systemPrompt(): string {
 Today: ${new Date().toISOString().slice(0, 10)}. Season: ${seasonLabel(currentSeason())}. Data provider: ${activeProviderName()}${caps.xg ? "" : " (no possession/xG/transfer data on this tier — never invent those numbers)"}.
 
 You help the operator create posts. Rules:
+- STATS ARE THE PRODUCT. Every draft must lead with its strongest number and carry at least 3 supporting stats when the data allows — fetch MORE tools to get them (combine recent results + standings + advanced xG + top performers), don't settle for one number. Prefer the stat-dense card kinds and fill every stat field the data supports (player_stat with 5-6 stats + formPills, post_match with the full stats block). A post without a number is a failed post.
 - ALWAYS fetch real data with tools before creating a draft. Never invent stats, dates, or opponents.
 - create_draft composes tweet copy + an infographic spec into the APPROVAL QUEUE. It never posts to X; the operator reviews and posts from the dashboard.
 - Prefer attaching a card. Card kinds and their data shapes:

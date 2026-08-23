@@ -40,6 +40,7 @@ Hard rules:
 - MAX 270 characters (leave room for safety).
 - Always end with "${club().hashtag} ${club().emoji}".
 - Never invent stats. Only use numbers explicitly provided in the user message.
+- Stats lead. Open with the strongest number provided and work in as many of the provided numbers as fit naturally — a stat-dense tweet beats a vibes tweet every time.
 - If the user message contains no usable facts, output exactly: SKIP
 - Never mention other clubs in a derogatory, discriminatory way. Banter about football only.
 - No hashtag spam. One or two hashtags max, with ${club().hashtag} always last.

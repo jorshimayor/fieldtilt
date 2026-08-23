@@ -4,10 +4,10 @@
  *
  *   npx tsx scripts/brand-assets.mts [outDir]
  *
- * Design: the fieldtilt mark is a pitch tilted 8° with ~62% of it shaded —
- * the field-tilt metric itself. Chelsea-era dressing: royal-blue field,
- * crest-gold tilt, and an ORIGINAL geometric lion in the pitch's center
- * circle (never the trademarked club crest). Stat glyphs on the banner.
+ * Design: broadcast-grade analytics graphic, not a mascot. A REAL pitch
+ * (true proportions, full markings, mow stripes) in Chelsea royal blue,
+ * tilted 8°, with the field-tilt metric drawn as a gold territorial
+ * overlay ending at 62% — plus an xG shot-map texture on the banner.
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { initWasm, Resvg } from "@resvg/resvg-wasm";
@@ -15,14 +15,18 @@ import { initWasm, Resvg } from "@resvg/resvg-wasm";
 const BRAND = "fieldtilt";
 const TAGLINE = "FOOTBALL INTELLIGENCE, PUBLISHED";
 const MICRO = "Chelsea first — xG · form · live · every claim with receipts";
+const TILT = 0.62; // the metric, drawn
 
 const BG = "#0B0C0F";
 const INK = "#FFFFFF";
 const MUTE = "#878D99";
-const ACCENT = "#3D6BFF";
-const CHELSEA = "#034694"; // royal blue
-const CHELSEA_DEEP = "#02356F";
+const NAVY_DEEP = "#04101F";
+const NAVY = "#072A54";
+const PITCH_BLUE = "#0747A0"; // Chelsea royal, grass-lit
+const PITCH_BLUE_DK = "#053578";
+const STRIPE = "#1258B8";
 const GOLD = "#D9A31A"; // crest-gold
+const LINE_A = 0.92; // pitch line opacity
 
 const outDir = process.argv[2] || "brand";
 mkdirSync(outDir, { recursive: true });
@@ -34,82 +38,92 @@ const fonts = [
   readFileSync("packages/render/fonts/Montserrat-ExtraBold.ttf"),
 ];
 
-/** N-spike star polygon points (the lion's mane). */
-function starPoints(cx: number, cy: number, spikes: number, rOut: number, rIn: number): string {
-  const pts: string[] = [];
-  for (let i = 0; i < spikes * 2; i++) {
-    const r = i % 2 === 0 ? rOut : rIn;
-    const a = (Math.PI * i) / spikes - Math.PI / 2;
-    pts.push(`${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`);
-  }
-  return pts.join(" ");
-}
+let uid = 0;
 
 /**
- * Original geometric lion head: spiked mane ring, punched face, minimal
- * gold features. A pictogram, deliberately nothing like the club crest.
+ * A real pitch at true 105x68 proportions with full markings: boundary,
+ * halfway line, center circle + spot, penalty areas, six-yard boxes,
+ * penalty spots + arcs, corner arcs, mow stripes — tilted 8°, with the
+ * field-tilt territorial overlay in gold up to TILT of the length.
  */
-function lionMark(cx: number, cy: number, r: number, opts?: { mane?: string; face?: string; feat?: string }): string {
-  const mane = opts?.mane ?? GOLD;
-  const face = opts?.face ?? CHELSEA;
-  const feat = opts?.feat ?? GOLD;
-  const fr = r * 0.66;
-  const eye = (sx: number) => `
-    <g transform="rotate(${-14 * sx} ${cx + sx * fr * 0.36} ${cy - fr * 0.18})">
-      <ellipse cx="${cx + sx * fr * 0.36}" cy="${cy - fr * 0.18}" rx="${fr * 0.16}" ry="${fr * 0.09}" fill="${feat}"/>
-    </g>`;
-  return `
-  <g>
-    <polygon points="${starPoints(cx, cy, 12, r, r * 0.72)}" fill="${mane}"/>
-    <circle cx="${cx}" cy="${cy}" r="${fr}" fill="${face}"/>
-    ${eye(-1)}${eye(1)}
-    <path d="M ${cx - fr * 0.19} ${cy + fr * 0.18} L ${cx + fr * 0.19} ${cy + fr * 0.18} L ${cx} ${cy + fr * 0.44} Z" fill="${feat}"/>
-    <path d="M ${cx} ${cy + fr * 0.44} L ${cx} ${cy + fr * 0.62} M ${cx} ${cy + fr * 0.62} L ${cx - fr * 0.34} ${cy + fr * 0.66} M ${cx} ${cy + fr * 0.62} L ${cx + fr * 0.34} ${cy + fr * 0.66}"
-      fill="none" stroke="${feat}" stroke-width="${fr * 0.09}" stroke-linecap="round"/>
-  </g>`;
-}
-
-/**
- * The mark: a tilted pitch, majority half shaded = field tilt, with the
- * lion in the (enlarged) center circle on the tilt line.
- */
-function pitchMark(
+function pitch(
   cx: number,
   cy: number,
   scale: number,
-  opts?: { dim?: boolean; fill?: string; lionFace?: string }
+  opts?: { detail?: boolean; shots?: boolean; tagSize?: number }
 ): string {
-  const W = 600 * scale, H = 400 * scale, R = 28 * scale;
+  const id = `p${uid++}`;
+  const W = 600 * scale, H = 390 * scale;
   const x = cx - W / 2, y = cy - H / 2;
-  const stroke = 26 * scale;
-  const tiltShare = 0.62; // the metric, drawn
-  const alpha = opts?.dim ? 0.8 : 1;
-  const fill = opts?.fill ?? ACCENT;
-  const lionR = 96 * scale;
-  const lx = x + W * tiltShare;
+  const lw = 2.4 * scale; // line weight — broadcast-thin
+  const detail = opts?.detail !== false;
+  // true metric proportions of a 105x68 pitch
+  const penD = 0.157 * W, penH = 0.593 * H;
+  const sixD = 0.052 * W, sixH = 0.269 * H;
+  const spot = 0.105 * W;
+  const ccR = 0.087 * W;
+  const arcDy = Math.sqrt(ccR * ccR - (penD - spot) * (penD - spot));
+  const corner = 0.03 * W;
+  const box = (bx: number, mirror: boolean) => {
+    const m = (d: number) => (mirror ? x + W - d : x + d);
+    return `
+    <rect x="${Math.min(m(0), m(penD))}" y="${cy - penH / 2}" width="${penD}" height="${penH}" fill="none" stroke="${INK}" stroke-width="${lw}" opacity="${LINE_A}"/>
+    <rect x="${Math.min(m(0), m(sixD))}" y="${cy - sixH / 2}" width="${sixD}" height="${sixH}" fill="none" stroke="${INK}" stroke-width="${lw}" opacity="${LINE_A}"/>
+    <circle cx="${m(spot)}" cy="${cy}" r="${lw * 1.1}" fill="${INK}" opacity="${LINE_A}"/>
+    <path d="M ${m(penD)} ${cy - arcDy} A ${ccR} ${ccR} 0 0 ${mirror ? 0 : 1} ${m(penD)} ${cy + arcDy}" fill="none" stroke="${INK}" stroke-width="${lw}" opacity="${LINE_A}"/>`;
+  };
+  // deterministic xG shot map — final third, sized like shot quality
+  const shots = [
+    [0.07, 0.42, 2.6, 0.9], [0.11, 0.55, 2.0, 0.7], [0.05, 0.5, 3.2, 1.0],
+    [0.14, 0.36, 1.6, 0.55], [0.09, 0.64, 2.2, 0.8], [0.17, 0.5, 1.4, 0.5],
+    [0.12, 0.47, 1.9, 0.65], [0.2, 0.58, 1.2, 0.45], [0.06, 0.58, 2.4, 0.85],
+    [0.16, 0.63, 1.5, 0.5], [0.22, 0.42, 1.1, 0.4], [0.1, 0.3, 1.5, 0.5],
+  ] as const;
+  const tagSize = opts?.tagSize ?? 0;
   return `
-  <g transform="rotate(-8 ${cx} ${cy})" opacity="${alpha}">
-    <clipPath id="pitch-${cx}-${cy}"><rect x="${x}" y="${y}" width="${W}" height="${H}" rx="${R}"/></clipPath>
-    <rect x="${x}" y="${y}" width="${W * tiltShare}" height="${H}" clip-path="url(#pitch-${cx}-${cy})" fill="${fill}"/>
-    <rect x="${x}" y="${y}" width="${W}" height="${H}" rx="${R}" fill="none" stroke="${INK}" stroke-width="${stroke}"/>
-    <line x1="${lx}" y1="${y}" x2="${lx}" y2="${y + lionR * 0.78 + (cy - y - lionR * 0.78 - lionR)}" stroke="${INK}" stroke-width="${stroke * 0.75}"/>
-    <line x1="${lx}" y1="${cy + lionR}" x2="${lx}" y2="${y + H}" stroke="${INK}" stroke-width="${stroke * 0.75}"/>
-    <circle cx="${lx}" cy="${cy}" r="${lionR}" fill="none" stroke="${INK}" stroke-width="${stroke * 0.65}"/>
-    ${lionMark(lx, cy, lionR * 0.66, { mane: INK, face: opts?.lionFace ?? fill, feat: INK })}
-  </g>`;
-}
-
-/** Small stat glyphs: rising bars, a sparkline, a live dot. */
-function statGlyphs(x: number, y: number, s: number, col: string): string {
-  const bar = (bx: number, h: number) =>
-    `<rect x="${x + bx * s}" y="${y - h * s}" width="${9 * s}" height="${h * s}" rx="${2 * s}" fill="${col}"/>`;
-  return `
-  <g opacity="0.9">
-    ${bar(0, 16)}${bar(14, 26)}${bar(28, 21)}${bar(42, 34)}
-    <polyline points="${[[64, -6], [76, -18], [88, -10], [100, -30], [112, -22], [124, -36]]
-      .map(([px, py]) => `${x + px * s},${y + py * s}`).join(" ")}"
-      fill="none" stroke="${col}" stroke-width="${3 * s}" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="${x + 124 * s}" cy="${y - 36 * s}" r="${5 * s}" fill="${GOLD}"/>
+  <g transform="rotate(-8 ${cx} ${cy})">
+    <defs>
+      <linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${PITCH_BLUE}"/>
+        <stop offset="1" stop-color="${PITCH_BLUE_DK}"/>
+      </linearGradient>
+      <linearGradient id="${id}t" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="${GOLD}" stop-opacity="0.06"/>
+        <stop offset="0.72" stop-color="${GOLD}" stop-opacity="0.2"/>
+        <stop offset="1" stop-color="${GOLD}" stop-opacity="0.46"/>
+      </linearGradient>
+      <clipPath id="${id}c"><rect x="${x}" y="${y}" width="${W}" height="${H}" rx="${6 * scale}"/></clipPath>
+    </defs>
+    <rect x="${x - 10 * scale}" y="${y - 10 * scale}" width="${W + 20 * scale}" height="${H + 20 * scale}" rx="${10 * scale}" fill="url(#${id}g)"/>
+    <g clip-path="url(#${id}c)">
+      ${Array.from({ length: 10 }, (_, i) =>
+        i % 2 === 0 ? "" : `<rect x="${x + (i * W) / 10}" y="${y}" width="${W / 10}" height="${H}" fill="${STRIPE}" opacity="0.28"/>`
+      ).join("")}
+      <rect x="${x}" y="${y}" width="${W * TILT}" height="${H}" fill="url(#${id}t)"/>
+    </g>
+    <rect x="${x}" y="${y}" width="${W}" height="${H}" fill="none" stroke="${INK}" stroke-width="${lw}" opacity="${LINE_A}"/>
+    <line x1="${cx}" y1="${y}" x2="${cx}" y2="${y + H}" stroke="${INK}" stroke-width="${lw}" opacity="${LINE_A}"/>
+    <circle cx="${cx}" cy="${cy}" r="${ccR}" fill="none" stroke="${INK}" stroke-width="${lw}" opacity="${LINE_A}"/>
+    <circle cx="${cx}" cy="${cy}" r="${lw * 1.1}" fill="${INK}" opacity="${LINE_A}"/>
+    ${detail ? box(0, false) + box(0, true) : ""}
+    ${detail
+      ? `<path d="M ${x} ${y + corner} A ${corner} ${corner} 0 0 0 ${x + corner} ${y}" fill="none" stroke="${INK}" stroke-width="${lw}" opacity="${LINE_A}"/>
+         <path d="M ${x + W - corner} ${y} A ${corner} ${corner} 0 0 0 ${x + W} ${y + corner}" fill="none" stroke="${INK}" stroke-width="${lw}" opacity="${LINE_A}"/>
+         <path d="M ${x + W} ${y + H - corner} A ${corner} ${corner} 0 0 0 ${x + W - corner} ${y + H}" fill="none" stroke="${INK}" stroke-width="${lw}" opacity="${LINE_A}"/>
+         <path d="M ${x + corner} ${y + H} A ${corner} ${corner} 0 0 0 ${x} ${y + H - corner}" fill="none" stroke="${INK}" stroke-width="${lw}" opacity="${LINE_A}"/>`
+      : ""}
+    <line x1="${x + W * TILT}" y1="${y}" x2="${x + W * TILT}" y2="${y + H}" stroke="${GOLD}" stroke-width="${lw * 1.4}" stroke-dasharray="${8 * scale} ${6 * scale}"/>
+    ${opts?.shots
+      ? shots.map(([sx, sy, r, o]) =>
+          `<circle cx="${x + sx * W}" cy="${y + sy * H}" r="${r * 2.6 * scale}" fill="${GOLD}" opacity="${o * 0.85}"/>`
+        ).join("")
+      : ""}
+    ${tagSize
+      ? `<g>
+          <rect x="${x + W * TILT - 118 * scale}" y="${y - 34 * scale}" width="${236 * scale}" height="${26 * scale}" rx="${4 * scale}" fill="${GOLD}"/>
+          <text x="${x + W * TILT}" y="${y - 15.5 * scale}" font-family="Montserrat" font-size="${tagSize * scale}" font-weight="800" fill="${NAVY_DEEP}" text-anchor="middle" letter-spacing="${2.4 * scale}">FIELD TILT ${Math.round(TILT * 100)}%</text>
+        </g>`
+      : ""}
   </g>`;
 }
 
@@ -124,55 +138,55 @@ function render(name: string, svg: string, width?: number, bg: string = BG) {
   console.log(`${name}  ${(png.length / 1024).toFixed(0)}KB`);
 }
 
-// ---- 1. App icon / X avatar (square 1024, Chelsea-blue field, gold tilt) ----
+// ---- 1. App icon / X avatar (square 1024, deep navy, broadcast pitch) ----
 const icon = `<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
 <defs>
-  <radialGradient id="ig" cx="0.5" cy="0.36" r="0.95">
-    <stop offset="0" stop-color="${CHELSEA}"/>
-    <stop offset="1" stop-color="${CHELSEA_DEEP}"/>
+  <radialGradient id="ig" cx="0.5" cy="0.34" r="1">
+    <stop offset="0" stop-color="${NAVY}"/>
+    <stop offset="1" stop-color="${NAVY_DEEP}"/>
   </radialGradient>
 </defs>
 <rect width="1024" height="1024" rx="180" fill="url(#ig)"/>
-${pitchMark(512, 440, 1.12, { fill: GOLD })}
-<text x="512" y="836" font-family="Montserrat" font-size="112" font-weight="800" fill="${INK}" text-anchor="middle" letter-spacing="-2">${BRAND}.</text>
-${statGlyphs(376, 936, 2.2, "#7FA8DC")}
+${pitch(512, 450, 1.16, { tagSize: 15 })}
+<text x="512" y="856" font-family="Montserrat" font-size="112" font-weight="800" fill="${INK}" text-anchor="middle" letter-spacing="-2">${BRAND}.</text>
+<text x="512" y="922" font-family="Montserrat" font-size="26" font-weight="700" fill="${GOLD}" text-anchor="middle" letter-spacing="10">CHELSEA FIRST</text>
 </svg>`;
-render("icon-1024.png", icon, undefined, CHELSEA_DEEP);
-render("x-avatar-400.png", icon, 400, CHELSEA_DEEP);
+render("icon-1024.png", icon, undefined, NAVY_DEEP);
+render("x-avatar-400.png", icon, 400, NAVY_DEEP);
 
-// ---- 2. Favicon (64): lion alone on Chelsea blue — legible at tab size ----
+// ---- 2. Favicon: simplified pitch (legible at tab size) ----
 const favicon = `<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
-<rect width="256" height="256" rx="48" fill="${CHELSEA}"/>
-${lionMark(128, 128, 92, { mane: GOLD, face: CHELSEA, feat: GOLD })}
+<rect width="256" height="256" rx="48" fill="${NAVY_DEEP}"/>
+${pitch(128, 128, 0.335, { detail: false })}
 </svg>`;
-render("favicon-64.png", favicon, 64, CHELSEA);
-render("favicon-256.png", favicon, undefined, CHELSEA);
+render("favicon-64.png", favicon, 64, NAVY_DEEP);
+render("favicon-256.png", favicon, undefined, NAVY_DEEP);
 
 // ---- 3. Wordmark lockup (1600x420, mark left) ----
 const lockup = `<svg width="1600" height="420" viewBox="0 0 1600 420" xmlns="http://www.w3.org/2000/svg">
 <rect width="1600" height="420" fill="${BG}"/>
-${pitchMark(230, 210, 0.52, { fill: CHELSEA, lionFace: CHELSEA })}
+${pitch(230, 210, 0.5)}
 <text x="450" y="248" font-family="Montserrat" font-size="150" font-weight="800" fill="${INK}" letter-spacing="-4">${BRAND}.</text>
 <text x="456" y="316" font-family="Montserrat" font-size="30" font-weight="700" fill="${MUTE}" letter-spacing="8">${TAGLINE}</text>
 </svg>`;
 render("logo-lockup.png", lockup);
 
-// ---- 4. X banner (1500x500) ----
+// ---- 4. X banner (1500x500): editorial left, shot-map pitch right ----
 const banner = `<svg width="1500" height="500" viewBox="0 0 1500 500" xmlns="http://www.w3.org/2000/svg">
 <defs>
-  <radialGradient id="g" cx="0.85" cy="0.5" r="1">
-    <stop offset="0" stop-color="${CHELSEA_DEEP}"/>
-    <stop offset="0.62" stop-color="${BG}"/>
+  <radialGradient id="g" cx="0.82" cy="0.5" r="1.05">
+    <stop offset="0" stop-color="${NAVY}"/>
+    <stop offset="0.55" stop-color="${BG}"/>
     <stop offset="1" stop-color="#060709"/>
   </radialGradient>
 </defs>
 <rect width="1500" height="500" fill="url(#g)"/>
-${pitchMark(1210, 250, 0.85, { dim: true, fill: CHELSEA, lionFace: CHELSEA })}
+${pitch(1150, 262, 0.92, { shots: true, tagSize: 13 })}
 <text x="96" y="222" font-family="Montserrat" font-size="120" font-weight="800" fill="${INK}" letter-spacing="-3">${BRAND}.</text>
 <text x="102" y="284" font-family="Montserrat" font-size="26" font-weight="700" fill="${MUTE}" letter-spacing="7">${TAGLINE}</text>
 <rect x="100" y="312" width="64" height="5" rx="2.5" fill="${GOLD}"/>
 <text x="102" y="366" font-family="Montserrat" font-size="23" fill="#9FB6D6">${MICRO}</text>
-${statGlyphs(102, 442, 1.35, "#5C82C4")}
+<text x="102" y="424" font-family="Montserrat" font-size="17" font-weight="700" fill="${MUTE}" letter-spacing="4">DATA: UNDERSTAT · FOOTBALL-DATA.ORG · FBREF</text>
 </svg>`;
 render("x-banner-1500x500.png", banner);
 

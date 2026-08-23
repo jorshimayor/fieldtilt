@@ -26,7 +26,7 @@ function getClient(): OpenAI {
 /** Cost lever: pin any OpenRouter model (e.g. a :free variant) via env. */
 function pickModel(): Model {
   const override = (globalThis as any).process?.env?.OPENROUTER_MODEL;
-  if (override) return { id: override, maxOutputTokens: 2000, priceRank: 0 };
+  if (override) return { id: override, maxOutputTokens: 1200, priceRank: 0 };
   return models[0];
 }
 
