@@ -15,10 +15,9 @@ CLUB=strasbourg   # different club, different league — same platform
 CLUB='{"name":"Arsenal", ...}'   # any club via JSON config
 ```
 
-**Read this first:** [docs/ENGINEERING.md](docs/ENGINEERING.md) — the honest
-write-up: real production numbers (1.85 MB gzip upload, 27 ms startup, ~half
-a cent per post), the decisions that mattered, and the gap list of what this
-system does *not* prove.
+Real production numbers: 1.85 MB gzip upload, 27 ms worker startup, ~half a
+US cent of LLM spend per post, $0/month infrastructure. The full engineering
+write-up, runbooks, and design docs are maintained privately.
 
 ## Architecture
 
@@ -115,7 +114,7 @@ number.
 - Run locally: `pnpm dev` → `http://localhost:3000`
 - Tests / types: `pnpm test` · `pnpm typecheck`
 - Card preview: `/api/render?kind=player_stat&format=svg` · Health: `/api/health`
-- Deploy: `pnpm run deploy`, then [docs/PRODUCTION.md](docs/PRODUCTION.md)
+- Deploy: `pnpm run deploy`
 
 ## What posts, when
 
@@ -132,11 +131,6 @@ approval queue (or auto-post when enabled).
 
 ## Docs
 
-| Doc | What |
-| --- | --- |
-| [ENGINEERING.md](docs/ENGINEERING.md) | The write-up: numbers, decisions, honest gaps |
-| [analytics/README.md](analytics/README.md) | The Python model service contract |
-| [DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) | The visual language (cards + app) |
-| [COSTS.md](docs/COSTS.md) | Cost tiers and the free-data landscape |
-| [PRODUCTION.md](docs/PRODUCTION.md) | Deploy runbook |
-| [FOOTBALL_DATA_MASTERY.md](docs/FOOTBALL_DATA_MASTERY.md) | The learning curriculum this project feeds |
+[analytics/README.md](analytics/README.md) covers the Python model service
+contract. Engineering notes, the design system, cost analysis, and the
+deploy runbook are maintained in a private docs folder.

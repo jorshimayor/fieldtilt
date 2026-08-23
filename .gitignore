@@ -22,5 +22,5 @@ coverage
 .wrangler-xdg/
 
 # Private source-of-truth docs (career plan, season calendar) — NEVER commit
-docs/private/
+docs/
 .wrangler/
