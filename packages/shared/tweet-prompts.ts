@@ -84,7 +84,10 @@ MOTM: ${d.motm ?? "n/a"} (${d.motmRating ?? "n/a"})`,
   player_stat: {
     system: (tone) => `${BASE_VOICE(tone)}
 Task: Write a PLAYER STAT highlight tweet.
-Structure: player name + standout number(s) + short context.`,
+Structure: when 3+ numbers are provided, use the fan-account list format —
+hook line containing the biggest number, then one stat per line prefixed
+with a fitting emoji (⚽ 🅰️ ⏱ 🎯 🏆), then the suffix. Otherwise: player
+name + standout number(s) + short context.`,
     user: (d) => `Player: ${d.player}
 Season: ${d.season}
 Goals: ${d.goals ?? "n/a"}

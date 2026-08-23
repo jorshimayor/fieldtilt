@@ -97,6 +97,36 @@ const DEMO: Record<CardKind, unknown> = {
     ],
     dateLabel: "2024, June 22.",
   },
+  milestone: {
+    player: "Cole Palmer",
+    value: "100",
+    milestoneLabel: "Appearances for Chelsea",
+    context: "All competitions",
+    stats: [
+      { label: "Goals", value: "47" },
+      { label: "Assists", value: "29" },
+      { label: "Mins per goal involvement", value: "104" },
+      { label: "Penalties scored", value: "13/13" },
+      { label: "Player of the Match awards", value: "18" },
+    ],
+    dateLabel: "23 Aug 2026",
+    competition: "Premier League",
+  },
+  comparison: {
+    title: "The creator debate",
+    playerA: "Cole Palmer",
+    playerB: "Bukayo Saka",
+    context: "Premier League 25/26 · per 90",
+    metrics: [
+      { label: "Goals", a: 0.62, b: 0.48 },
+      { label: "Assists", a: 0.35, b: 0.41 },
+      { label: "Expected goals (xG)", a: 0.55, b: 0.44 },
+      { label: "Key passes", a: 2.8, b: 2.4 },
+      { label: "Shots", a: 3.4, b: 2.9 },
+      { label: "Dribbles won", a: 1.6, b: 2.2 },
+    ],
+    footnote: "xG: Understat",
+  },
 };
 
 const KINDS = Object.keys(DEMO) as CardKind[];
@@ -127,10 +157,16 @@ export default withErrorLogging(async function handler(req: Request): Promise<Re
     if (typeof (body as any).photoDataUri === "string" && (body as any).photoDataUri.startsWith("data:image/")) {
       data = { ...(data as Record<string, unknown>), photoDataUri: (body as any).photoDataUri };
     }
+    // Kit switcher: a top-level palette overrides whatever the data carries.
+    if (["neutral", "home", "away"].includes((body as any).palette)) {
+      data = { ...(data as Record<string, unknown>), palette: (body as any).palette };
+    }
   } else {
     kind = (url.searchParams.get("kind") || "post_match") as CardKind;
     if (!KINDS.includes(kind)) return jsonErr(`invalid kind; allowed: ${KINDS.join(", ")}`);
     data = DEMO[kind];
+    const qp = url.searchParams.get("palette");
+    if (qp && ["neutral", "home", "away"].includes(qp)) data = { ...(data as Record<string, unknown>), palette: qp };
   }
 
   let svg = buildCardSvg(kind, data);

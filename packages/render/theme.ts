@@ -28,6 +28,54 @@ export const color = {
   loss: "#E5484D",
 } as const;
 
+/**
+ * Card palettes — the kit system. "neutral" is the dark editorial default;
+ * "home" is Chelsea royal blue with crest-gold accents; "away" is the light
+ * kit (ink on white). vig* are the background vignette stops.
+ */
+export type Palette = "neutral" | "home" | "away";
+
+export const palettes: Record<Palette, Record<string, string>> = {
+  neutral: {
+    ...color,
+    vigA: "#15171D",
+    vigB: color.bg,
+    vigC: "#060709",
+  },
+  home: {
+    bg: "#052A5C",
+    bgAlt: "#0A3570",
+    ink: "#FFFFFF",
+    inkDim: "#CBD9F0",
+    inkMute: "#8FA8CF",
+    line: "#1E4680",
+    scrim: "#021226",
+    accent: "#D9A31A",
+    win: "#8FE3A1",
+    draw: "#9FB0C9",
+    loss: "#FF6B71",
+    vigA: "#0A3B7E",
+    vigB: "#052A5C",
+    vigC: "#031B3D",
+  },
+  away: {
+    bg: "#F2F4F8",
+    bgAlt: "#FFFFFF",
+    ink: "#0A1F3C",
+    inkDim: "#3A4C70",
+    inkMute: "#75839F",
+    line: "#D8DDE7",
+    scrim: "#07080A",
+    accent: "#034694",
+    win: "#1F8A4C",
+    draw: "#75839F",
+    loss: "#C6262E",
+    vigA: "#FFFFFF",
+    vigB: "#F2F4F8",
+    vigC: "#E3E8F0",
+  },
+};
+
 export const font = {
   family: "Montserrat",
   weight: { regular: 400, bold: 700, black: 800 },

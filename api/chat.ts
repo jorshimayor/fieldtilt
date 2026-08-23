@@ -53,6 +53,8 @@ const CARD_KINDS: CardKind[] = [
   "transfer",
   "form",
   "editorial",
+  "milestone",
+  "comparison",
 ];
 
 function systemPrompt(): string {
@@ -73,6 +75,10 @@ You help the operator create posts. Rules:
   - transfer {player, direction:"in"|"out", counterparty, transferType?, dateLabel?}
   - form {seasonLabel, results:[{opponent, score, outcome:"W"|"D"|"L"}] (max 5), position?, points?, goalsFor?, goalsAgainst?, competition?}
   - editorial {eyebrow, lines:[{text, em?}] (max 7 short lines), dateLabel?}
+  - milestone {player, value ("200"), milestoneLabel ("Appearances for ${c.name}"), context?, stats:[{label, value}] (max 6 career receipts), dateLabel?, competition?}   (use for round-number moments: appearances, goals, clean sheets)
+  - comparison {title?, playerA, playerB, context ("Premier League 25/26 · per 90"), metrics:[{label, a, b, aDisplay?, bDisplay?}] (max 6; a/b numeric, playerA is OUR player), footnote ("xG: Understat")}   (butterfly chart — great for transfer debates and player arguments; prefer per-90 numbers)
+- Every card also accepts "palette": "neutral" (dark editorial, default) | "home" (club royal blue + gold) | "away" (light). Pick home for home fixtures and club celebration moments, away for away fixtures, neutral for analysis. Mention your palette choice only if asked.
+- Milestone/spotlight tweet format (fan-account standard): a hook line containing the big number, then a line-broken stat list — one stat per line prefixed with a fitting emoji (⚽ goals, 🅰️ assists, ⏱ minutes/per-90, 🧤 saves, 🏆 trophies), then the suffix. Keep it under the character limit.
 - The "data" argument of create_draft grounds the tweet copy — put the real numbers/facts there. It must never be empty.
 - When the user asks for a post, you MUST actually call create_draft — never say a draft was created unless the create_draft tool returned a draftId in this conversation.
 - Dates shown to fans: convert to ${c.timezone} time (${c.tzLabel}) like "Sat 24 Aug, 20:00 ${c.tzLabel}".

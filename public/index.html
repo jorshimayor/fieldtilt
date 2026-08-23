@@ -178,11 +178,19 @@
                 <button data-kind="transfer" class="btn-ghost px-3 py-1.5 text-xs">Transfer</button>
                 <button data-kind="form" class="btn-ghost px-3 py-1.5 text-xs">Weekly form</button>
                 <button data-kind="editorial" class="btn-ghost px-3 py-1.5 text-xs">Editorial</button>
+                <button data-kind="milestone" class="btn-ghost px-3 py-1.5 text-xs">Milestone</button>
+                <button data-kind="comparison" class="btn-ghost px-3 py-1.5 text-xs">Comparison</button>
                 <label class="btn-ghost px-3 py-1.5 text-xs" style="cursor: pointer" title="Try any template over your own photo — stadium, player, fans, trophy">
                   📷 use photo<input type="file" id="studioPhoto" accept="image/*" style="display: none" />
                 </label>
                 <button id="studioPhotoClear" class="btn-ghost px-3 py-1.5 text-xs" style="display: none">clear photo</button>
                 <button id="studioDownload" class="btn-ghost px-3 py-1.5 text-xs">⬇ download PNG</button>
+              </div>
+              <div class="flex flex-wrap gap-2 items-center">
+                <span class="label">Kit</span>
+                <button data-palette="neutral" class="ptab btn px-3 py-1.5 text-xs">Neutral</button>
+                <button data-palette="home" class="ptab btn-ghost px-3 py-1.5 text-xs">Home · royal</button>
+                <button data-palette="away" class="ptab btn-ghost px-3 py-1.5 text-xs">Away · light</button>
               </div>
               <div id="studioPreview" class="max-w-xl mt-3"></div>
             </div>
@@ -270,7 +278,7 @@
 
       // ---------- client-side rasterization (free-plan path) ----------
       // Fetch the card as SVG with fonts embedded, draw to canvas, get a PNG.
-      async function fetchCardSvg(cardKind, cardData, photoDataUri) {
+      async function fetchCardSvg(cardKind, cardData, photoDataUri, palette) {
         const res = await fetch("/api/render", {
           method: "POST",
           headers: authHeaders({ "Content-Type": "application/json" }),
@@ -280,6 +288,7 @@
             format: "svg",
             fonts: true,
             photoDataUri: photoDataUri || undefined,
+            palette: palette || undefined,
           }),
         });
         if (!res.ok) throw new Error("render failed (" + res.status + ")");
@@ -598,12 +607,21 @@
       // ---------- design studio ----------
       let studioPhoto = null;
       let studioKind = "player_stat";
+      let studioPalette = "neutral";
       let studioRendered = false; // first render happens when the panel opens
+      document.querySelectorAll(".ptab").forEach((b) =>
+        b.addEventListener("click", () => {
+          studioPalette = b.dataset.palette;
+          document.querySelectorAll(".ptab").forEach((x) => (x.className = x.className.replace("btn ", "btn-ghost ")));
+          b.className = b.className.replace("btn-ghost ", "btn ");
+          renderStudio();
+        })
+      );
       async function renderStudio() {
         const box = document.getElementById("studioPreview");
         box.innerHTML = '<div class="muted text-xs">Rendering…</div>';
         try {
-          const svg = await fetchCardSvg(studioKind, null, studioPhoto);
+          const svg = await fetchCardSvg(studioKind, null, studioPhoto, studioPalette);
           const blob = new Blob([svg], { type: "image/svg+xml" });
           box.innerHTML = '<img class="rounded-lg border border-[#2a2e37] max-w-full" />';
           box.querySelector("img").src = URL.createObjectURL(blob);
@@ -625,8 +643,8 @@
         renderStudio();
       });
       document.getElementById("studioDownload").addEventListener("click", async () => {
-        const svg = await fetchCardSvg(studioKind, null, studioPhoto);
-        await downloadCardPng(svg, studioKind + "-demo.png");
+        const svg = await fetchCardSvg(studioKind, null, studioPhoto, studioPalette);
+        await downloadCardPng(svg, studioKind + "-" + studioPalette + ".png");
       });
       document.getElementById("studioPhotoClear").addEventListener("click", () => {
         studioPhoto = null;

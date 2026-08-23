@@ -9,6 +9,10 @@ import {
   transferCard,
   formCard,
   editorialCard,
+  milestoneCard,
+  comparisonCard,
+  MilestoneData,
+  ComparisonData,
   MatchPreviewData,
   ScoreCardData,
   PostMatchData,
@@ -26,7 +30,9 @@ export type CardKind =
   | "player_stat"
   | "transfer"
   | "form"
-  | "editorial";
+  | "editorial"
+  | "milestone"
+  | "comparison";
 
 export function buildCardSvg(kind: CardKind, data: unknown): string {
   switch (kind) {
@@ -44,6 +50,10 @@ export function buildCardSvg(kind: CardKind, data: unknown): string {
       return formCard(data as FormCardData);
     case "editorial":
       return editorialCard(data as EditorialData);
+    case "milestone":
+      return milestoneCard(data as MilestoneData);
+    case "comparison":
+      return comparisonCard(data as ComparisonData);
     default:
       throw new Error(`unknown card kind: ${kind}`);
   }

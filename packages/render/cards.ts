@@ -12,11 +12,24 @@
  *   - hairline dividers; the brand wordmark anchors a corner
  */
 
-import { BRAND, color, font, type, formats, layout, PHOTO_SCRIM_OPACITY } from "./theme";
+import { BRAND, font, type, formats, layout, palettes, Palette } from "./theme";
 
 export const PORTRAIT = formats.portrait;
 export const LANDSCAPE = formats.landscape;
 const M = layout.margin;
+
+/**
+ * Active palette for the card being built. Set by each card function BEFORE
+ * any drawing helper runs (SVG building is synchronous, so this is safe on a
+ * single-threaded Worker). "away" is a light theme designed for pure
+ * infographics — with a full-bleed photo it falls back to the dark scrim
+ * treatment so type always stays legible.
+ */
+let P: Record<string, string> = palettes.neutral;
+function setPalette(palette?: Palette, hasPhoto?: boolean) {
+  const key: Palette = palette && palettes[palette] ? palette : "neutral";
+  P = palettes[hasPhoto && key === "away" ? "neutral" : key];
+}
 
 // ------------------------------------------------------------------ utilities
 
@@ -121,7 +134,7 @@ function text(
     opacity?: number;
   }
 ): string {
-  return `<text x="${x}" y="${y}" font-family="${font.family}" font-size="${opts.size}" font-weight="${opts.weight ?? 400}" fill="${opts.fill ?? color.ink}"${
+  return `<text x="${x}" y="${y}" font-family="${font.family}" font-size="${opts.size}" font-weight="${opts.weight ?? 400}" fill="${opts.fill ?? P.ink}"${
     opts.tracking ? ` letter-spacing="${opts.tracking}"` : ""
   }${opts.anchor ? ` text-anchor="${opts.anchor}"` : ""}${opts.italic ? ` font-style="italic"` : ""}${
     opts.opacity != null ? ` opacity="${opts.opacity}"` : ""
@@ -137,57 +150,72 @@ function frame(w: number, h: number, photoDataUri?: string): string {
   // Type must ALWAYS win: stats are the point of attention, photo the mood.
   const photo = photoDataUri
     ? `<image href="${photoDataUri}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice"/>
-<rect width="${w}" height="${h}" fill="${color.scrim}" opacity="0.38"/>
+<rect width="${w}" height="${h}" fill="${P.scrim}" opacity="0.38"/>
 <rect width="${w}" height="${h}" fill="url(#scrimY)"/>
 <rect width="${w}" height="${h}" fill="url(#scrimX)"/>`
     : `<rect width="${w}" height="${h}" fill="url(#vig)"/>`;
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <radialGradient id="vig" cx="0.5" cy="0.42" r="0.95">
-    <stop offset="0" stop-color="#15171D"/>
-    <stop offset="0.55" stop-color="${color.bg}"/>
-    <stop offset="1" stop-color="#060709"/>
+    <stop offset="0" stop-color="${P.vigA}"/>
+    <stop offset="0.55" stop-color="${P.vigB}"/>
+    <stop offset="1" stop-color="${P.vigC}"/>
   </radialGradient>
   <linearGradient id="scrimY" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="${color.scrim}" stop-opacity="0.72"/>
-    <stop offset="0.28" stop-color="${color.scrim}" stop-opacity="0.18"/>
-    <stop offset="0.52" stop-color="${color.scrim}" stop-opacity="0.22"/>
-    <stop offset="0.78" stop-color="${color.scrim}" stop-opacity="0.68"/>
-    <stop offset="1" stop-color="${color.scrim}" stop-opacity="0.94"/>
+    <stop offset="0" stop-color="${P.scrim}" stop-opacity="0.72"/>
+    <stop offset="0.28" stop-color="${P.scrim}" stop-opacity="0.18"/>
+    <stop offset="0.52" stop-color="${P.scrim}" stop-opacity="0.22"/>
+    <stop offset="0.78" stop-color="${P.scrim}" stop-opacity="0.68"/>
+    <stop offset="1" stop-color="${P.scrim}" stop-opacity="0.94"/>
   </linearGradient>
   <linearGradient id="scrimX" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0" stop-color="${color.scrim}" stop-opacity="0.5"/>
-    <stop offset="0.3" stop-color="${color.scrim}" stop-opacity="0.06"/>
-    <stop offset="0.68" stop-color="${color.scrim}" stop-opacity="0.06"/>
-    <stop offset="1" stop-color="${color.scrim}" stop-opacity="0.55"/>
+    <stop offset="0" stop-color="${P.scrim}" stop-opacity="0.5"/>
+    <stop offset="0.3" stop-color="${P.scrim}" stop-opacity="0.06"/>
+    <stop offset="0.68" stop-color="${P.scrim}" stop-opacity="0.06"/>
+    <stop offset="1" stop-color="${P.scrim}" stop-opacity="0.55"/>
   </linearGradient>
 </defs>
-<rect width="${w}" height="${h}" fill="${color.bg}"/>
+<rect width="${w}" height="${h}" fill="${P.bg}"/>
 ${photo}`;
 }
 
-/** Brand wordmark. Corner-anchored, always the same size. */
+/**
+ * Brand signature: the tilted-pitch chip + wordmark. The chip is what makes
+ * a fieldtilt graphic recognizable at feed speed — it appears on EVERY card.
+ */
+function brandChip(x: number, y: number): string {
+  const w = 36, h = 23;
+  return `<g transform="rotate(-8 ${x + w / 2} ${y + h / 2})">
+<rect x="${x}" y="${y}" width="${w * 0.62}" height="${h}" fill="${P.accent}" opacity="0.85"/>
+<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="none" stroke="${P.ink}" stroke-width="2.2"/>
+<line x1="${x + w * 0.62}" y1="${y}" x2="${x + w * 0.62}" y2="${y + h}" stroke="${P.ink}" stroke-width="1.8"/>
+</g>`;
+}
+
+/** Brand wordmark (with the pitch chip). Corner-anchored, always the same size. */
 function brandMark(x: number, y: number, anchor: "start" | "end" = "start"): string {
-  return text(x, y, BRAND, {
+  const chip = anchor === "start" ? brandChip(x, y - 18) : brandChip(x - 36, y - 18);
+  const tx = anchor === "start" ? x + 48 : x - 48;
+  return `${chip}${text(tx, y, BRAND, {
     size: 24,
     weight: font.weight.black,
     tracking: 1.5,
     anchor,
-  });
+  })}`;
 }
 
 /** "▶ EYEBROW" — small uppercase kicker with a play glyph. */
 function eyebrow(x: number, y: number, label: string, anchor: "start" | "middle" | "end" = "start"): string {
   const tri =
     anchor === "start"
-      ? `<path d="M ${x} ${y - 12} l 14 7 l -14 7 z" fill="${color.ink}"/>`
+      ? `<path d="M ${x} ${y - 12} l 14 7 l -14 7 z" fill="${P.ink}"/>`
       : "";
   const tx = anchor === "start" ? x + 30 : x;
   return `${tri}${text(tx, y + 2, label.toUpperCase(), {
     size: type.micro.size,
     weight: type.micro.weight,
     tracking: type.micro.tracking,
-    fill: color.inkDim,
+    fill: P.inkDim,
     anchor,
   })}`;
 }
@@ -209,7 +237,7 @@ function bigStat(
         size: type.label.size,
         weight: type.label.weight,
         tracking: type.label.tracking,
-        fill: color.inkMute,
+        fill: P.inkMute,
         anchor,
       })
     )
@@ -223,7 +251,7 @@ function bigStat(
 }
 
 function hairline(x1: number, y1: number, x2: number, y2: number): string {
-  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color.line}" stroke-width="${layout.hairline}"/>`;
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${P.line}" stroke-width="${layout.hairline}"/>`;
 }
 
 /** Giant translucent initials — carries the layout when there's no photo. */
@@ -274,9 +302,12 @@ export type PlayerStatData = {
   remark?: string;
   /** Optional full-bleed background photo (data: URI). Rendered under a scrim. */
   photoDataUri?: string;
+  /** Kit palette: neutral (dark editorial), home (royal blue), away (light). */
+  palette?: Palette;
 };
 
 export function playerStatCard(d: PlayerStatData): string {
+  setPalette(d.palette, Boolean(d.photoDataUri));
   const { w, h } = PORTRAIT;
   const stats = (d.stats || []).slice(0, 6);
   const railX = w - M;
@@ -294,7 +325,7 @@ export function playerStatCard(d: PlayerStatData): string {
         size: 13,
         weight: 700,
         tracking: 2,
-        fill: color.inkMute,
+        fill: P.inkMute,
       })
     : "";
 
@@ -305,7 +336,7 @@ export function playerStatCard(d: PlayerStatData): string {
       text(M, h - 118 - (remarkLines.length - 1 - i) * 44, l, {
         size: 29,
         italic: true,
-        fill: color.inkDim,
+        fill: P.inkDim,
       })
     )
     .join("");
@@ -313,13 +344,13 @@ export function playerStatCard(d: PlayerStatData): string {
   return `${frame(w, h, d.photoDataUri)}
 ${d.photoDataUri ? "" : watermark(w, h, initials(d.player))}
 ${stackedName(M, 190, d.player.toUpperCase(), type.h1.size)}
-${d.context ? text(M, 400, d.context.toUpperCase(), { size: type.label.size, weight: 700, tracking: type.label.tracking, fill: color.inkMute }) : ""}
-${text(M, 440, `SEASON ${d.season}`, { size: type.label.size, weight: 700, tracking: type.label.tracking, fill: color.inkMute })}
+${d.context ? text(M, 400, d.context.toUpperCase(), { size: type.label.size, weight: 700, tracking: type.label.tracking, fill: P.inkMute }) : ""}
+${text(M, 440, `SEASON ${d.season}`, { size: type.label.size, weight: 700, tracking: type.label.tracking, fill: P.inkMute })}
 ${pillsSvg}
 ${rail}
 ${remarkSvg}
 ${brandMark(M, h - 64)}
-${d.competition ? text(w - M, h - 64, d.competition.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: color.inkMute, anchor: "end" }) : ""}
+${d.competition ? text(w - M, h - 64, d.competition.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute, anchor: "end" }) : ""}
 </svg>`;
 }
 
@@ -335,6 +366,8 @@ export type PostMatchData = {
   statusLabel: string; // "FULL TIME"
   scorers?: string[];
   photoDataUri?: string;
+  /** Kit palette: neutral (dark editorial), home (royal blue), away (light). */
+  palette?: Palette;
   stats: {
     possession?: number | null;
     xg?: number | null;
@@ -347,6 +380,7 @@ export type PostMatchData = {
 };
 
 export function postMatchCard(d: PostMatchData): string {
+  setPalette(d.palette, Boolean(d.photoDataUri));
   const { w, h } = PORTRAIT;
   const s = d.stats || {};
   const cx = w / 2;
@@ -367,7 +401,7 @@ ${bigStat(w - M - 110, 260, s.possession != null ? `${s.possession}%` : "—", "
   const list = rows
     .map(
       ([label, value], i) => `
-${text(M, listTop + i * 66, label, { size: 28, fill: color.inkDim })}
+${text(M, listTop + i * 66, label, { size: 28, fill: P.inkDim })}
 ${text(w - M, listTop + i * 66, value, { size: 30, weight: 800, anchor: "end" })}`
     )
     .join("");
@@ -375,20 +409,20 @@ ${text(w - M, listTop + i * 66, value, { size: 30, weight: 800, anchor: "end" })
   const scorersSvg = scorers.length
     ? text(M, listTop + rows.length * 66 + 26, scorers.join("  ·  "), {
         size: 22,
-        fill: color.inkMute,
+        fill: P.inkMute,
       })
     : "";
 
   return `${frame(w, h, d.photoDataUri)}
 ${eyebrow(M, 106, d.statusLabel)}
-${text(w - M, 110, truncate(d.competition, 34).toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: color.inkMute, anchor: "end" })}
+${text(w - M, 110, truncate(d.competition, 34).toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute, anchor: "end" })}
 ${hero}
 ${hairline(M, 400, w - M, 400)}
 ${list}
 ${hairline(M, listTop + rows.length * 66 + 44, w - M, listTop + rows.length * 66 + 44)}
 ${scorersSvg}
 ${stackedName(M, h - 168, `${d.home} ${d.homeGoals}-${d.awayGoals} ${d.away}`.toUpperCase(), 46)}
-${text(M, h - 64, (d.seasonLabel || d.competition).toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: color.inkMute })}
+${text(M, h - 64, (d.seasonLabel || d.competition).toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute })}
 ${brandMark(w - M, h - 64, "end")}
 </svg>`;
 }
@@ -405,9 +439,12 @@ export type MatchPreviewData = {
   footnote?: string;
   /** Full-bleed background photo (stadium, fans…) under the cinematic scrim. */
   photoDataUri?: string;
+  /** Kit palette: neutral (dark editorial), home (royal blue), away (light). */
+  palette?: Palette;
 };
 
 export function matchPreviewCard(d: MatchPreviewData): string {
+  setPalette(d.palette, Boolean(d.photoDataUri));
   const { w, h } = LANDSCAPE;
   const cx = w / 2;
   const homeFs = fitFont(d.home, 88, 13);
@@ -415,14 +452,14 @@ export function matchPreviewCard(d: MatchPreviewData): string {
   return `${frame(w, h, d.photoDataUri)}
 ${eyebrow(cx, 116, "Match day", "middle")}
 ${text(cx, 268, d.home.toUpperCase(), { size: homeFs, weight: 800, tracking: -1.5, anchor: "middle" })}
-${text(cx, 330, "vs", { size: 34, italic: true, fill: color.inkMute, anchor: "middle" })}
+${text(cx, 330, "vs", { size: 34, italic: true, fill: P.inkMute, anchor: "middle" })}
 ${text(cx, 432, d.away.toUpperCase(), { size: awayFs, weight: 800, tracking: -1.5, anchor: "middle" })}
 ${hairline(cx - 210, 486, cx + 210, 486)}
 ${text(cx, 540, d.dateLabel, { size: 27, weight: 700, anchor: "middle" })}
-${d.venue ? text(cx, 582, d.venue.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: color.inkMute, anchor: "middle" }) : ""}
-${d.footnote ? text(cx, h - 56, d.footnote.toUpperCase(), { size: type.micro.size, weight: 700, tracking: 1.6, fill: color.inkMute, anchor: "middle" }) : ""}
+${d.venue ? text(cx, 582, d.venue.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute, anchor: "middle" }) : ""}
+${d.footnote ? text(cx, h - 56, d.footnote.toUpperCase(), { size: type.micro.size, weight: 700, tracking: 1.6, fill: P.inkMute, anchor: "middle" }) : ""}
 ${brandMark(M, h - 56)}
-${text(w - M, h - 56, truncate(d.competition, 34).toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: color.inkMute, anchor: "end" })}
+${text(w - M, h - 56, truncate(d.competition, 34).toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute, anchor: "end" })}
 </svg>`;
 }
 
@@ -439,24 +476,27 @@ export type ScoreCardData = {
   /** e.g. "54% possession · 1.8 xG" */
   statLine?: string;
   photoDataUri?: string;
+  /** Kit palette: neutral (dark editorial), home (royal blue), away (light). */
+  palette?: Palette;
 };
 
 export function scoreCard(d: ScoreCardData): string {
+  setPalette(d.palette, Boolean(d.photoDataUri));
   const { w, h } = LANDSCAPE;
   const cx = w / 2;
   const isLive = /live/i.test(d.statusLabel);
-  const dot = isLive ? `<circle cx="${cx - 74}" cy="98" r="9" fill="${color.loss}"/>` : "";
+  const dot = isLive ? `<circle cx="${cx - 74}" cy="98" r="9" fill="${P.loss}"/>` : "";
   const scorers = (d.scorers || []).slice(0, 4);
   return `${frame(w, h, d.photoDataUri)}
-${dot}${text(cx + (isLive ? 14 : 0), 106, d.statusLabel.toUpperCase(), { size: type.micro.size + 3, weight: 700, tracking: type.micro.tracking, fill: color.inkDim, anchor: "middle" })}
+${dot}${text(cx + (isLive ? 14 : 0), 106, d.statusLabel.toUpperCase(), { size: type.micro.size + 3, weight: 700, tracking: type.micro.tracking, fill: P.inkDim, anchor: "middle" })}
 ${text(cx, 330, `${d.homeGoals}-${d.awayGoals}`, { size: 210, weight: 800, tracking: -6, anchor: "middle" })}
-${text(cx - 330, 300, truncate(d.home, 14).toUpperCase(), { size: fitFont(d.home, 34, 12), weight: 700, tracking: 1, fill: color.inkDim, anchor: "middle" })}
-${text(cx + 330, 300, truncate(d.away, 14).toUpperCase(), { size: fitFont(d.away, 34, 12), weight: 700, tracking: 1, fill: color.inkDim, anchor: "middle" })}
+${text(cx - 330, 300, truncate(d.home, 14).toUpperCase(), { size: fitFont(d.home, 34, 12), weight: 700, tracking: 1, fill: P.inkDim, anchor: "middle" })}
+${text(cx + 330, 300, truncate(d.away, 14).toUpperCase(), { size: fitFont(d.away, 34, 12), weight: 700, tracking: 1, fill: P.inkDim, anchor: "middle" })}
 ${scorers.length ? hairline(cx - 190, 404, cx + 190, 404) : ""}
-${scorers.map((sc, i) => text(cx, 452 + i * 36, sc, { size: 22, fill: color.inkMute, anchor: "middle" })).join("")}
-${d.statLine ? text(cx, h - 112, d.statLine.toUpperCase(), { size: type.micro.size, weight: 700, tracking: 1.6, fill: color.inkMute, anchor: "middle" }) : ""}
+${scorers.map((sc, i) => text(cx, 452 + i * 36, sc, { size: 22, fill: P.inkMute, anchor: "middle" })).join("")}
+${d.statLine ? text(cx, h - 112, d.statLine.toUpperCase(), { size: type.micro.size, weight: 700, tracking: 1.6, fill: P.inkMute, anchor: "middle" }) : ""}
 ${brandMark(M, h - 56)}
-${text(w - M, h - 56, truncate(d.competition, 34).toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: color.inkMute, anchor: "end" })}
+${text(w - M, h - 56, truncate(d.competition, 34).toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute, anchor: "end" })}
 </svg>`;
 }
 
@@ -469,9 +509,12 @@ export type TransferCardData = {
   transferType?: string; // "€ 45M" | "Loan" | "Free"
   dateLabel?: string;
   photoDataUri?: string;
+  /** Kit palette: neutral (dark editorial), home (royal blue), away (light). */
+  palette?: Palette;
 };
 
 export function transferCard(d: TransferCardData): string {
+  setPalette(d.palette, Boolean(d.photoDataUri));
   const { w, h } = PORTRAIT;
   const isIn = d.direction === "in";
   const from = isIn ? d.counterparty : "Chelsea";
@@ -482,13 +525,13 @@ ${d.photoDataUri ? "" : watermark(w, h, initials(d.player))}
 ${eyebrow(M, 106, "Transfer news")}
 ${brandMark(w - M, 110, "end")}
 ${stackedName(M, 320, d.player.toUpperCase(), 84)}
-<rect x="${M}" y="${560}" width="${tag.length * 15 + 48}" height="52" rx="26" fill="none" stroke="${color.ink}" stroke-width="2.5"/>
+<rect x="${M}" y="${560}" width="${tag.length * 15 + 48}" height="52" rx="26" fill="none" stroke="${P.ink}" stroke-width="2.5"/>
 ${text(M + 24 + (tag.length * 15) / 2, 594, tag, { size: 19, weight: 800, tracking: 2.4, anchor: "middle" })}
-${text(M, 730, truncate(from, 24), { size: 40, weight: 700, fill: color.inkDim })}
-<path d="M ${M} 786 h 120 m -18 -14 l 18 14 l -18 14" stroke="${color.ink}" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+${text(M, 730, truncate(from, 24), { size: 40, weight: 700, fill: P.inkDim })}
+<path d="M ${M} 786 h 120 m -18 -14 l 18 14 l -18 14" stroke="${P.ink}" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 ${text(M, 872, truncate(to, 24), { size: 46, weight: 800 })}
 ${d.transferType ? bigStat(w - M, 780, d.transferType, "Fee", { anchor: "end", size: 56 }) : ""}
-${d.dateLabel ? text(M, h - 64, d.dateLabel, { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: color.inkMute }) : ""}
+${d.dateLabel ? text(M, h - 64, d.dateLabel, { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute }) : ""}
 </svg>`;
 }
 
@@ -504,16 +547,19 @@ export type FormCardData = {
   goalsAgainst?: number | null;
   competition?: string;
   photoDataUri?: string;
+  /** Kit palette: neutral (dark editorial), home (royal blue), away (light). */
+  palette?: Palette;
 };
 
 function outcomeSquare(x: number, y: number, size: number, outcome: "W" | "D" | "L"): string {
-  const c = outcome === "W" ? color.win : outcome === "L" ? color.loss : color.draw;
+  const c = outcome === "W" ? P.win : outcome === "L" ? P.loss : P.draw;
   const filled = outcome === "W";
   return `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="8" fill="${filled ? c : "none"}" stroke="${c}" stroke-width="2.5"/>
-${text(x + size / 2, y + size * 0.68, outcome, { size: size * 0.5, weight: 800, fill: filled ? color.bg : c, anchor: "middle" })}`;
+${text(x + size / 2, y + size * 0.68, outcome, { size: size * 0.5, weight: 800, fill: filled ? P.bg : c, anchor: "middle" })}`;
 }
 
 export function formCard(d: FormCardData): string {
+  setPalette(d.palette, Boolean(d.photoDataUri));
   const { w, h } = PORTRAIT;
   const results = (d.results || []).slice(0, 5);
   const pills = results.map((r, i) => outcomeSquare(M + i * 78, 196, 56, r.outcome)).join("");
@@ -522,7 +568,7 @@ export function formCard(d: FormCardData): string {
   const rows = results
     .map(
       (r, i) => `
-${text(M, rowTop + i * 62, truncate(r.opponent, 22), { size: 28, fill: color.inkDim })}
+${text(M, rowTop + i * 62, truncate(r.opponent, 22), { size: 28, fill: P.inkDim })}
 ${text(w - M - 96, rowTop + i * 62, r.score, { size: 28, weight: 800, anchor: "end" })}
 ${outcomeSquare(w - M - 44, rowTop + i * 62 - 30, 40, r.outcome)}`
     )
@@ -546,7 +592,7 @@ ${hairline(M, 300, w - M, 300)}
 ${rows}
 ${hairline(M, tileTop - 76, w - M, tileTop - 76)}
 ${tileSvg}
-${text(M, h - 64, (d.competition || `Season ${d.seasonLabel}`).toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: color.inkMute })}
+${text(M, h - 64, (d.competition || `Season ${d.seasonLabel}`).toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute })}
 </svg>`;
 }
 
@@ -559,9 +605,12 @@ export type EditorialData = {
   lines: { text: string; em?: boolean }[];
   dateLabel?: string;
   photoDataUri?: string;
+  /** Kit palette: neutral (dark editorial), home (royal blue), away (light). */
+  palette?: Palette;
 };
 
 export function editorialCard(d: EditorialData): string {
+  setPalette(d.palette, Boolean(d.photoDataUri));
   const { w, h } = PORTRAIT;
   const lines = (d.lines || []).slice(0, 7);
   const lineHeight = 58;
@@ -572,7 +621,7 @@ export function editorialCard(d: EditorialData): string {
         size: 36,
         weight: l.em ? 800 : 400,
         italic: l.em,
-        fill: l.em ? color.ink : color.inkDim,
+        fill: l.em ? P.ink : P.inkDim,
       })
     )
     .join("");
@@ -580,6 +629,132 @@ export function editorialCard(d: EditorialData): string {
 ${brandMark(w - M, 110, "end")}
 ${eyebrow(M, h * 0.28, d.eyebrow)}
 ${body}
-${d.dateLabel ? text(M, h - 64, d.dateLabel, { size: 20, fill: color.inkMute }) : ""}
+${d.dateLabel ? text(M, h - 64, d.dateLabel, { size: 20, fill: P.inkMute }) : ""}
+</svg>`;
+}
+
+// ------------------------------------------------------------------ milestone (portrait)
+
+export type MilestoneData = {
+  player: string;
+  /** The number of the moment — "200", "50", "100" */
+  value: string;
+  /** e.g. "Appearances for Chelsea" */
+  milestoneLabel: string;
+  /** e.g. "All competitions" */
+  context?: string;
+  /** Career/season receipts, rendered as a ledger (max 6). */
+  stats: { label: string; value: string }[];
+  dateLabel?: string;
+  competition?: string;
+  photoDataUri?: string;
+  palette?: Palette;
+};
+
+/** The fan-account milestone post, rebuilt as a pure infographic: the huge
+ *  number is the hero, the receipts are a ledger underneath. */
+export function milestoneCard(d: MilestoneData): string {
+  setPalette(d.palette, Boolean(d.photoDataUri));
+  const { w, h } = PORTRAIT;
+  const value = String(d.value ?? "");
+  const valueSize = fitFont(value, 240, 4);
+  const stats = (d.stats || []).slice(0, 6);
+  // Sequential layout — every block sits below the previous one.
+  let y = 160;
+  y += Math.round(valueSize * 0.78);
+  const numberSvg = text(M, y, value, { size: valueSize, weight: 800, tracking: -8, fill: P.accent });
+  y += 56;
+  const labelSvg = text(M, y, d.milestoneLabel.toUpperCase(), { size: 24, weight: 700, tracking: 4, fill: P.inkMute });
+  const nameTop = y + 96;
+  const nameLines = (d.player || "").trim().split(/\s+/).length > 1 ? 2 : 1;
+  const nameSvg = stackedName(M, nameTop, d.player.toUpperCase(), 58);
+  y = nameTop + (nameLines - 1) * 61 + 24;
+  const contextSvg = d.context
+    ? text(M, y + 24, d.context.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute })
+    : "";
+  if (d.context) y += 44;
+  const rowTop = y + 78;
+  const step = Math.min(62, Math.floor((h - rowTop - 120) / Math.max(stats.length, 1)));
+  const rows = stats
+    .map(
+      (s, i) => `
+${text(M, rowTop + i * step, truncate(s.label, 26), { size: 28, fill: P.inkDim })}
+${text(w - M, rowTop + i * step, s.value, { size: 31, weight: 800, anchor: "end" })}
+${i < stats.length - 1 ? hairline(M, rowTop + i * step + 20, w - M, rowTop + i * step + 20) : ""}`
+    )
+    .join("");
+  return `${frame(w, h, d.photoDataUri)}
+${d.photoDataUri ? "" : watermark(w, h, value)}
+${eyebrow(M, 106, "Milestone")}
+${brandMark(w - M, 110, "end")}
+${numberSvg}
+${labelSvg}
+${nameSvg}
+${contextSvg}
+${hairline(M, rowTop - 54, w - M, rowTop - 54)}
+${rows}
+${d.dateLabel ? text(M, h - 64, d.dateLabel, { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute }) : ""}
+${d.competition ? text(w - M, h - 64, d.competition.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute, anchor: "end" }) : ""}
+</svg>`;
+}
+
+// ------------------------------------------------------------------ comparison (portrait)
+
+export type ComparisonData = {
+  /** Optional headline, defaults to "A vs B" */
+  title?: string;
+  playerA: string;
+  playerB: string;
+  /** e.g. "Premier League 25/26 · per 90" */
+  context?: string;
+  /** Up to 6 metrics; a/b are numbers, *Display overrides the printed value
+   *  (e.g. show "89%" while comparing on 89). */
+  metrics: { label: string; a: number; b: number; aDisplay?: string; bDisplay?: string }[];
+  /** Data credit, e.g. "xG: Understat" */
+  footnote?: string;
+  photoDataUri?: string;
+  palette?: Palette;
+};
+
+/** Opta-style butterfly chart: bars grow outward from the spine, player A in
+ *  the accent, player B muted. The eye settles wherever the tilt is. */
+export function comparisonCard(d: ComparisonData): string {
+  setPalette(d.palette, Boolean(d.photoDataUri));
+  const { w, h } = PORTRAIT;
+  const cx = w / 2;
+  const metrics = (d.metrics || []).slice(0, 6);
+  const gap = 14; // spine clearance
+  const barMax = (w - 2 * M) / 2 - 96;
+  const blockTop = 330;
+  const block = Math.min(136, Math.floor((h - blockTop - 150) / Math.max(metrics.length, 1)));
+  const barH = 30;
+  const bars = metrics
+    .map((m, i) => {
+      const y = blockTop + i * block;
+      const denom = Math.max(Math.abs(m.a), Math.abs(m.b), 0.0001);
+      const aw = Math.max((Math.abs(m.a) / denom) * barMax, 5);
+      const bw = Math.max((Math.abs(m.b) / denom) * barMax, 5);
+      const aWins = m.a > m.b;
+      return `
+${text(cx, y, m.label.toUpperCase(), { size: 18, weight: 700, tracking: 2.4, fill: P.inkMute, anchor: "middle" })}
+<rect x="${cx - gap - aw}" y="${y + 18}" width="${aw}" height="${barH}" rx="5" fill="${P.accent}" opacity="${aWins ? 1 : 0.55}"/>
+<rect x="${cx + gap}" y="${y + 18}" width="${bw}" height="${barH}" rx="5" fill="${P.inkDim}" opacity="${aWins ? 0.45 : 0.9}"/>
+${text(cx - gap - aw - 16, y + 18 + barH * 0.72, m.aDisplay ?? String(m.a), { size: 27, weight: 800, anchor: "end", fill: aWins ? P.ink : P.inkMute })}
+${text(cx + gap + bw + 16, y + 18 + barH * 0.72, m.bDisplay ?? String(m.b), { size: 27, weight: 800, fill: aWins ? P.inkMute : P.ink })}`;
+    })
+    .join("");
+  const title = d.title || `${d.playerA} vs ${d.playerB}`;
+  return `${frame(w, h, d.photoDataUri)}
+${eyebrow(M, 106, "Head to head")}
+${brandMark(w - M, 110, "end")}
+${text(M, 208, truncate(title, 26).toUpperCase(), { size: fitFont(title, 56, 24), weight: 800, tracking: -1 })}
+${d.context ? text(M, 250, d.context.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute }) : ""}
+<rect x="${M}" y="${278}" width="18" height="18" rx="4" fill="${P.accent}"/>
+${text(M + 30, 293, truncate(d.playerA, 20).toUpperCase(), { size: 21, weight: 800, tracking: 1 })}
+${text(w - M - 30, 293, truncate(d.playerB, 20).toUpperCase(), { size: 21, weight: 800, tracking: 1, anchor: "end", fill: P.inkDim })}
+<rect x="${w - M - 18}" y="${278}" width="18" height="18" rx="4" fill="${P.inkDim}" opacity="0.7"/>
+<line x1="${cx}" y1="${blockTop - 24}" x2="${cx}" y2="${blockTop + metrics.length * block - 40}" stroke="${P.line}" stroke-width="2"/>
+${bars}
+${d.footnote ? text(M, h - 64, d.footnote.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute }) : ""}
 </svg>`;
 }
