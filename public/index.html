@@ -27,12 +27,22 @@
           <p class="label mt-1">Football intelligence · Control Room</p>
         </div>
         <div class="flex gap-2 items-center">
+          <span id="authChip" class="chip px-2.5 py-1 text-xs" style="display: none">● authorized</span>
           <input
             id="adminKey"
             type="password"
             placeholder="Admin key (CRON_SECRET)"
             class="p-2 text-sm w-56"
           />
+          <button
+            id="copyLink"
+            class="btn-ghost px-3 py-2 text-sm"
+            style="display: none"
+            title="Copy a sign-in link — open it once on any other device and that device is authorized"
+          >
+            copy link
+          </button>
+          <button id="keyToggle" class="btn-ghost px-3 py-2 text-sm" style="display: none" title="Change the stored admin key">key</button>
           <button id="refresh" class="btn px-4 py-2 text-sm">Refresh</button>
         </div>
       </header>
@@ -48,7 +58,7 @@
           </div>
         </div>
         <div id="queue" class="space-y-4">
-          <div class="muted text-sm">Enter your admin key, then Refresh.</div>
+          <div class="muted text-sm">Open your sign-in link once (or enter the admin key), then Refresh.</div>
         </div>
       </section>
 
@@ -123,9 +133,53 @@
 
     <script>
       // ---------- auth ----------
+      // One-time magic link: opening /?key=<CRON_SECRET> stores the key on
+      // this device and cleans the URL. After that, everything just works —
+      // no pasting. "copy link" reproduces the link for onboarding another
+      // device. Rotate by changing the CRON_SECRET Worker secret.
       const keyInput = document.getElementById("adminKey");
+      const authChip = document.getElementById("authChip");
+      const copyLinkBtn = document.getElementById("copyLink");
+      const keyToggleBtn = document.getElementById("keyToggle");
+
+      const urlParams = new URLSearchParams(location.search);
+      if (urlParams.get("key")) {
+        localStorage.setItem("adminKey", urlParams.get("key").trim());
+        urlParams.delete("key");
+        history.replaceState({}, "", location.pathname + (urlParams.toString() ? "?" + urlParams : ""));
+      }
+
       keyInput.value = localStorage.getItem("adminKey") || "";
-      keyInput.addEventListener("change", () => localStorage.setItem("adminKey", keyInput.value.trim()));
+
+      function renderAuthUi() {
+        const has = Boolean((keyInput.value || "").trim());
+        authChip.style.display = has ? "" : "none";
+        copyLinkBtn.style.display = has ? "" : "none";
+        keyToggleBtn.style.display = has ? "" : "none";
+        keyInput.style.display = has ? "none" : "";
+      }
+      renderAuthUi();
+
+      keyInput.addEventListener("change", () => {
+        localStorage.setItem("adminKey", keyInput.value.trim());
+        renderAuthUi();
+        loadAll();
+      });
+      keyToggleBtn.addEventListener("click", () => {
+        keyInput.style.display = "";
+        keyInput.focus();
+      });
+      copyLinkBtn.addEventListener("click", async () => {
+        const link = location.origin + "/?key=" + encodeURIComponent((keyInput.value || "").trim());
+        try {
+          await navigator.clipboard.writeText(link);
+          copyLinkBtn.textContent = "copied ✓";
+        } catch {
+          prompt("Copy this sign-in link:", link);
+        }
+        setTimeout(() => (copyLinkBtn.textContent = "copy link"), 2000);
+      });
+
       function authHeaders(extra) {
         const h = extra || {};
         const k = (keyInput.value || "").trim();
