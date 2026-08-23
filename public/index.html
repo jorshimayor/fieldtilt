@@ -4,13 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>fieldtilt — football intelligence, published</title>
-    <meta name="description" content="Control room of a production football data &amp; publishing system: live data, grounded agent drafts, human approval, automated delivery." />
+    <meta name="description" content="Console of a production football data &amp; publishing system: live data, grounded agent drafts, human approval, automated delivery." />
     <!-- Private ops panel: keep it out of search indexes -->
     <meta name="robots" content="noindex, nofollow" />
-    <meta name="theme-color" content="#0B0C0F" />
+    <meta name="theme-color" content="#034694" />
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230B0C0F'/%3E%3Cg transform='rotate(-8 50 50)'%3E%3Crect x='22' y='32' width='34.7' height='36' fill='%233D6BFF'/%3E%3Crect x='22' y='32' width='56' height='36' rx='5' fill='none' stroke='white' stroke-width='5'/%3E%3Cline x1='56.7' y1='32' x2='56.7' y2='68' stroke='white' stroke-width='4'/%3E%3Ccircle cx='56.7' cy='50' r='7' fill='none' stroke='white' stroke-width='3.5'/%3E%3C/g%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%23034694'/%3E%3Cpolygon points='50.0,14.0 56.7,25.0 68.0,18.8 68.3,31.7 81.2,32.0 75.0,43.3 86.0,50.0 75.0,56.7 81.2,68.0 68.3,68.3 68.0,81.2 56.7,75.0 50.0,86.0 43.3,75.0 32.0,81.2 31.7,68.3 18.8,68.0 25.0,56.7 14.0,50.0 25.0,43.3 18.8,32.0 31.7,31.7 32.0,18.8 43.3,25.0' fill='%23D9A31A'/%3E%3Ccircle cx='50' cy='50' r='23.8' fill='%23034694'/%3E%3Cellipse cx='41.4' cy='45.7' rx='3.8' ry='2.1' fill='%23D9A31A' transform='rotate(14 41.4 45.7)'/%3E%3Cellipse cx='58.6' cy='45.7' rx='3.8' ry='2.1' fill='%23D9A31A' transform='rotate(-14 58.6 45.7)'/%3E%3Cpath d='M45.5 54.3 L54.5 54.3 L50 60.5 Z' fill='%23D9A31A'/%3E%3Cpath d='M50 60.5 L50 64.8 M50 64.8 L41.9 65.7 M50 64.8 L58.1 65.7' fill='none' stroke='%23D9A31A' stroke-width='2.1' stroke-linecap='round'/%3E%3C/svg%3E"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
@@ -20,149 +20,184 @@
     <link rel="stylesheet" href="/theme.css" />
   </head>
   <body class="min-h-screen">
-    <main class="max-w-6xl mx-auto p-6 space-y-8">
-      <header class="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 class="brand text-2xl">fieldtilt.</h1>
-          <p class="label mt-1" id="headerSub">Football intelligence · Control Room</p>
-        </div>
-        <div class="flex gap-2 items-center">
-          <span id="authChip" class="chip px-2.5 py-1 text-xs" style="display: none">● authorized</span>
-          <input
-            id="adminKey"
-            type="password"
-            placeholder="Admin key (CRON_SECRET)"
-            class="p-2 text-sm w-56"
-          />
-          <button
-            id="copyLink"
-            class="btn-ghost px-3 py-2 text-sm"
-            style="display: none"
-            title="Copy a sign-in link — open it once on any other device and that device is authorized"
-          >
-            copy link
-          </button>
-          <button id="keyToggle" class="btn-ghost px-3 py-2 text-sm" style="display: none" title="Change the stored admin key">key</button>
-          <button id="refresh" class="btn px-4 py-2 text-sm">Refresh</button>
-        </div>
-      </header>
-
-      <!-- Approval queue -->
-      <section class="space-y-3">
-        <div class="flex items-center justify-between">
-          <h2 class="display text-xl">APPROVAL QUEUE</h2>
-          <div class="flex gap-2 text-xs">
-            <button data-status="pending" class="qtab btn px-3 py-1.5">Pending</button>
-            <button data-status="posted" class="qtab btn-ghost px-3 py-1.5">Posted</button>
-            <button data-status="rejected" class="qtab btn-ghost px-3 py-1.5">Rejected</button>
-          </div>
-        </div>
-        <div id="queue" class="space-y-4">
-          <div class="muted text-sm">Open your sign-in link once (or enter the admin key), then Refresh.</div>
-        </div>
-      </section>
-
-      <!-- Compose — agentic chat -->
-      <section class="card rounded-xl p-5 space-y-3">
-        <div class="flex items-center justify-between flex-wrap gap-2">
-          <h2 class="display text-xl">COMPOSE</h2>
-          <span class="label">chat with the agent — grounded in live football data; drafts land in the queue</span>
-        </div>
-        <div>
-          <p class="label mb-2">Suggested — computed from today's numbers</p>
-          <div id="suggestList" class="flex flex-wrap gap-2"><span class="muted text-xs">Loading suggestions…</span></div>
-        </div>
-        <div id="chatLog" class="space-y-3 max-h-[26rem] overflow-y-auto pr-1"></div>
-        <div class="flex flex-wrap gap-2" id="chatSuggestions">
-          <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Create a match preview post for the next fixture, with a card and the head-to-head record.">Preview next fixture</button>
-          <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Make a weekly form review post with a form card from the last 5 results and our league position.">Weekly form post</button>
-          <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Who are our top performers this season? Draft a player spotlight for the best one with a stat card.">Player spotlight</button>
-        </div>
-        <form id="chatForm" class="flex gap-2">
-          <input
-            id="chatInput"
-            class="flex-1 p-2.5 text-sm"
-            placeholder='e.g. "Draft a preview for the next game with a card"'
-            autocomplete="off"
-          />
-          <button id="chatSend" class="btn px-5 py-2 text-sm" type="submit">Send</button>
-        </form>
-      </section>
-
-      <!-- System: readiness + design studio -->
-      <section class="card rounded-xl p-5 space-y-4">
-        <h2 class="display text-xl">SYSTEM</h2>
-        <div>
-          <p class="label mb-2" id="readinessLabel">Readiness</p>
-          <div id="health" class="flex flex-wrap gap-2 text-xs">
-            <span class="muted">Loading…</span>
-          </div>
-          <ul id="healthHints" class="muted text-xs mt-3 list-disc ml-5 space-y-1"></ul>
-        </div>
-        <div class="hairline pt-4">
-          <p class="label mb-2">Design studio — card templates with demo data</p>
-          <div class="flex flex-wrap gap-2" id="cardKinds">
-            <button data-kind="match_preview" class="btn-ghost px-3 py-1.5 text-xs">Match preview</button>
-            <button data-kind="score" class="btn-ghost px-3 py-1.5 text-xs">Live score</button>
-            <button data-kind="post_match" class="btn-ghost px-3 py-1.5 text-xs">Post-match</button>
-            <button data-kind="player_stat" class="btn-ghost px-3 py-1.5 text-xs">Player stat</button>
-            <button data-kind="transfer" class="btn-ghost px-3 py-1.5 text-xs">Transfer</button>
-            <button data-kind="form" class="btn-ghost px-3 py-1.5 text-xs">Weekly form</button>
-            <button data-kind="editorial" class="btn-ghost px-3 py-1.5 text-xs">Editorial</button>
-            <label class="btn-ghost px-3 py-1.5 text-xs" style="cursor: pointer" title="Try any template over your own photo — stadium, player, fans, trophy">
-              📷 use photo<input type="file" id="studioPhoto" accept="image/*" style="display: none" />
-            </label>
-            <button id="studioPhotoClear" class="btn-ghost px-3 py-1.5 text-xs" style="display: none">clear photo</button>
-            <button id="studioDownload" class="btn-ghost px-3 py-1.5 text-xs">⬇ download PNG</button>
-          </div>
-          <div id="studioPreview" class="max-w-xl mt-3"></div>
-        </div>
-      </section>
-
-      <!-- Analytics — Dune/Flipside-style panels -->
-      <section class="card rounded-xl p-5 space-y-4">
-        <div class="flex items-center justify-between flex-wrap gap-2">
-          <h2 class="display text-xl">ANALYTICS</h2>
-          <span id="analyticsMeta" class="label">xG: Understat · refreshed with the page</span>
-        </div>
-        <div class="grid md:grid-cols-2 gap-6">
+    <div class="shell">
+      <!-- ============ Sidebar ============ -->
+      <aside class="sidebar">
+        <div class="side-brand">
+          <svg viewBox="0 0 100 100" width="30" height="30" aria-hidden="true">
+            <rect width="100" height="100" rx="18" fill="#034694" />
+            <polygon points="50.0,14.0 56.7,25.0 68.0,18.8 68.3,31.7 81.2,32.0 75.0,43.3 86.0,50.0 75.0,56.7 81.2,68.0 68.3,68.3 68.0,81.2 56.7,75.0 50.0,86.0 43.3,75.0 32.0,81.2 31.7,68.3 18.8,68.0 25.0,56.7 14.0,50.0 25.0,43.3 18.8,32.0 31.7,31.7 32.0,18.8 43.3,25.0" fill="#D9A31A" />
+            <circle cx="50" cy="50" r="23.8" fill="#034694" />
+            <ellipse cx="41.4" cy="45.7" rx="3.8" ry="2.1" fill="#D9A31A" transform="rotate(14 41.4 45.7)" />
+            <ellipse cx="58.6" cy="45.7" rx="3.8" ry="2.1" fill="#D9A31A" transform="rotate(-14 58.6 45.7)" />
+            <path d="M45.5 54.3 L54.5 54.3 L50 60.5 Z" fill="#D9A31A" />
+            <path d="M50 60.5 L50 64.8 M50 64.8 L41.9 65.7 M50 64.8 L58.1 65.7" fill="none" stroke="#D9A31A" stroke-width="2.1" stroke-linecap="round" />
+          </svg>
           <div>
-            <p class="label mb-2">League map — xG created vs conceded</p>
-            <div id="chartLeague" class="w-full"><span class="muted text-xs">Loading…</span></div>
-          </div>
-          <div>
-            <p class="label mb-2">Squad — goals vs expected goals</p>
-            <div id="chartSquad" class="w-full"><span class="muted text-xs">Loading…</span></div>
+            <div class="brand" style="font-size: 1.05rem">fieldtilt.</div>
+            <div class="label" id="headerSub" style="font-size: 9px">Control room</div>
           </div>
         </div>
-        <div class="hairline pt-4">
-          <p class="label mb-2">Form timeline — last 10</p>
-          <div id="chartForm" class="w-full"><span class="muted text-xs">Loading…</span></div>
+        <nav class="sidenav">
+          <a class="nav-item" href="#overview" data-nav="overview"><span class="nav-ico">▦</span>Overview</a>
+          <div class="nav-group">Content</div>
+          <a class="nav-item" href="#queue" data-nav="queue"><span class="nav-ico">☑</span>Approval queue<span class="nav-badge" id="navQueueBadge" style="display: none"></span></a>
+          <a class="nav-item" href="#compose" data-nav="compose"><span class="nav-ico">✎</span>Compose</a>
+          <div class="nav-group">Insight</div>
+          <a class="nav-item" href="#analytics" data-nav="analytics"><span class="nav-ico">◔</span>Analytics</a>
+          <div class="nav-group">Toolbox</div>
+          <a class="nav-item" href="#studio" data-nav="studio"><span class="nav-ico">▣</span>Card studio</a>
+        </nav>
+        <div class="side-foot">
+          <div class="flex items-center gap-2">
+            <span id="authChip" class="chip px-2.5 py-1 text-xs" style="display: none">● authorized</span>
+            <span id="clubChip" class="label">Tracked club</span>
+          </div>
+          <a class="label" href="https://github.com/jorshimayor/fieldtilt" target="_blank" rel="noopener" style="color: var(--accent); text-decoration: none; display: inline-block; margin-top: 0.5rem">source on GitHub</a>
         </div>
-      </section>
+      </aside>
 
-      <!-- Fixtures + recent -->
-      <section class="grid md:grid-cols-2 gap-6">
-        <div class="card rounded-xl p-5">
-          <h2 class="display text-xl mb-3">FIXTURES — TRACKED CLUB</h2>
-          <div id="fixtures" class="space-y-2 text-sm">
-            <div class="muted">Loading…</div>
+      <!-- ============ Main ============ -->
+      <div class="main">
+        <header class="topbar">
+          <h1 class="display text-xl" id="panelTitle">Overview</h1>
+          <div class="flex gap-2 items-center flex-wrap">
+            <input id="adminKey" type="password" placeholder="Admin key (CRON_SECRET)" class="p-2 text-sm w-56" />
+            <button id="copyLink" class="btn-ghost px-3 py-2 text-sm" style="display: none" title="Copy a sign-in link — open it once on any other device and that device is authorized">copy link</button>
+            <button id="keyToggle" class="btn-ghost px-3 py-2 text-sm" style="display: none" title="Change the stored admin key">key</button>
+            <button id="refresh" class="btn px-4 py-2 text-sm">Refresh</button>
           </div>
-        </div>
-        <div class="card rounded-xl p-5">
-          <h2 class="display text-xl mb-3">RECENTLY POSTED</h2>
-          <ul id="posts" class="space-y-2 text-sm">
-            <li class="muted">Loading…</li>
-          </ul>
-        </div>
-      </section>
-      <footer class="hairline pt-4" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;padding-bottom:1.5rem">
-        <span class="label">fieldtilt — an open football data &amp; publishing system · models in Python, delivery in TypeScript</span>
-        <a class="label" href="https://github.com/jorshimayor/fieldtilt" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">source on GitHub</a>
-      </footer>
-    </main>
+        </header>
+
+        <main class="content">
+          <!-- ======== Overview ======== -->
+          <section class="panel space-y-8" data-panel="overview">
+            <div class="tiles">
+              <div class="tile"><div class="label">Pending drafts</div><div class="t-value" id="tilePending">—</div><div class="t-sub">awaiting your approval</div></div>
+              <div class="tile"><div class="label">Next fixture</div><div class="t-value" id="tileFixture">—</div><div class="t-sub" id="tileFixtureSub">no fixture loaded</div></div>
+              <div class="tile"><div class="label">Form — last 5</div><div class="t-value" id="tileForm">—</div><div class="t-sub">most recent first</div></div>
+              <div class="tile"><div class="label">League xG rank</div><div class="t-value" id="tileXg">—</div><div class="t-sub" id="tileXgSub">xG created · Understat</div></div>
+            </div>
+            <div>
+              <p class="label mb-2" id="readinessLabel">Readiness</p>
+              <div id="health" class="flex flex-wrap gap-2 text-xs"><span class="muted">Loading…</span></div>
+              <ul id="healthHints" class="muted text-xs mt-3 list-disc ml-5 space-y-1"></ul>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="card rounded-xl p-5">
+                <h2 class="display text-xl mb-3">FIXTURES</h2>
+                <div id="fixtures" class="space-y-2 text-sm"><div class="muted">Loading…</div></div>
+              </div>
+              <div class="card rounded-xl p-5">
+                <h2 class="display text-xl mb-3">RECENTLY POSTED</h2>
+                <ul id="posts" class="space-y-2 text-sm"><li class="muted">Loading…</li></ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- ======== Approval queue ======== -->
+          <section class="panel space-y-3" data-panel="queue">
+            <div class="flex items-center justify-between">
+              <span class="label">edit copy, edit the card, add a photo, then post</span>
+              <div class="flex gap-2 text-xs">
+                <button data-status="pending" class="qtab btn px-3 py-1.5">Pending</button>
+                <button data-status="posted" class="qtab btn-ghost px-3 py-1.5">Posted</button>
+                <button data-status="rejected" class="qtab btn-ghost px-3 py-1.5">Rejected</button>
+              </div>
+            </div>
+            <div id="queue" class="space-y-4">
+              <div class="muted text-sm">Open your sign-in link once (or enter the admin key), then Refresh.</div>
+            </div>
+          </section>
+
+          <!-- ======== Compose — agentic chat ======== -->
+          <section class="panel" data-panel="compose">
+            <div class="card rounded-xl p-5 space-y-3">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <span class="label">chat with the agent — grounded in live football data; drafts land in the queue</span>
+              </div>
+              <div>
+                <p class="label mb-2">Suggested — computed from today's numbers</p>
+                <div id="suggestList" class="flex flex-wrap gap-2"><span class="muted text-xs">Loading suggestions…</span></div>
+              </div>
+              <div id="chatLog" class="space-y-3 max-h-[26rem] overflow-y-auto pr-1"></div>
+              <div class="flex flex-wrap gap-2" id="chatSuggestions">
+                <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Create a match preview post for the next fixture, with a card and the head-to-head record.">Preview next fixture</button>
+                <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Make a weekly form review post with a form card from the last 5 results and our league position.">Weekly form post</button>
+                <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Who are our top performers this season? Draft a player spotlight for the best one with a stat card.">Player spotlight</button>
+              </div>
+              <form id="chatForm" class="flex gap-2">
+                <input id="chatInput" class="flex-1 p-2.5 text-sm" placeholder='e.g. "Draft a preview for the next game with a card"' autocomplete="off" />
+                <button id="chatSend" class="btn px-5 py-2 text-sm" type="submit">Send</button>
+              </form>
+            </div>
+          </section>
+
+          <!-- ======== Analytics ======== -->
+          <section class="panel" data-panel="analytics">
+            <div class="card rounded-xl p-5 space-y-4">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <span id="analyticsMeta" class="label">xG: Understat · refreshed with the page</span>
+              </div>
+              <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                  <p class="label mb-2">League map — xG created vs conceded</p>
+                  <div id="chartLeague" class="w-full"><span class="muted text-xs">Loading…</span></div>
+                </div>
+                <div>
+                  <p class="label mb-2">Squad — goals vs expected goals</p>
+                  <div id="chartSquad" class="w-full"><span class="muted text-xs">Loading…</span></div>
+                </div>
+              </div>
+              <div class="hairline pt-4">
+                <p class="label mb-2">Form timeline — last 10</p>
+                <div id="chartForm" class="w-full"><span class="muted text-xs">Loading…</span></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ======== Card studio ======== -->
+          <section class="panel" data-panel="studio">
+            <div class="card rounded-xl p-5 space-y-4">
+              <p class="label">card templates with demo data — try a photo, download the PNG</p>
+              <div class="flex flex-wrap gap-2" id="cardKinds">
+                <button data-kind="match_preview" class="btn-ghost px-3 py-1.5 text-xs">Match preview</button>
+                <button data-kind="score" class="btn-ghost px-3 py-1.5 text-xs">Live score</button>
+                <button data-kind="post_match" class="btn-ghost px-3 py-1.5 text-xs">Post-match</button>
+                <button data-kind="player_stat" class="btn-ghost px-3 py-1.5 text-xs">Player stat</button>
+                <button data-kind="transfer" class="btn-ghost px-3 py-1.5 text-xs">Transfer</button>
+                <button data-kind="form" class="btn-ghost px-3 py-1.5 text-xs">Weekly form</button>
+                <button data-kind="editorial" class="btn-ghost px-3 py-1.5 text-xs">Editorial</button>
+                <label class="btn-ghost px-3 py-1.5 text-xs" style="cursor: pointer" title="Try any template over your own photo — stadium, player, fans, trophy">
+                  📷 use photo<input type="file" id="studioPhoto" accept="image/*" style="display: none" />
+                </label>
+                <button id="studioPhotoClear" class="btn-ghost px-3 py-1.5 text-xs" style="display: none">clear photo</button>
+                <button id="studioDownload" class="btn-ghost px-3 py-1.5 text-xs">⬇ download PNG</button>
+              </div>
+              <div id="studioPreview" class="max-w-xl mt-3"></div>
+            </div>
+          </section>
+
+          <footer class="hairline pt-4 mt-3" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; padding-bottom: 1.5rem">
+            <span class="label">fieldtilt — an open football data &amp; publishing system · models in Python, delivery in TypeScript</span>
+          </footer>
+        </main>
+      </div>
+    </div>
 
     <script>
+      // ---------- router ----------
+      const PANELS = { overview: "Overview", queue: "Approval queue", compose: "Compose", analytics: "Analytics", studio: "Card studio" };
+      function showPanel(name) {
+        if (!PANELS[name]) name = "overview";
+        document.querySelectorAll("[data-panel]").forEach((p) => p.classList.toggle("active", p.dataset.panel === name));
+        document.querySelectorAll("[data-nav]").forEach((a) => a.classList.toggle("active", a.dataset.nav === name));
+        document.getElementById("panelTitle").textContent = PANELS[name];
+        if (location.hash !== "#" + name) history.replaceState({}, "", "#" + name);
+        if (name === "studio" && !studioRendered) { studioRendered = true; renderStudio(); }
+      }
+      window.addEventListener("hashchange", () => showPanel(location.hash.slice(1)));
+
       // ---------- auth ----------
       // One-time magic link: opening /?key=<CRON_SECRET> stores the key on
       // this device and cleans the URL. After that, everything just works —
@@ -177,7 +212,7 @@
       if (urlParams.get("key")) {
         localStorage.setItem("adminKey", urlParams.get("key").trim());
         urlParams.delete("key");
-        history.replaceState({}, "", location.pathname + (urlParams.toString() ? "?" + urlParams : ""));
+        history.replaceState({}, "", location.pathname + (urlParams.toString() ? "?" + urlParams : "") + location.hash);
       }
 
       keyInput.value = localStorage.getItem("adminKey") || "";
@@ -299,6 +334,13 @@
         })
       );
 
+      function setQueueBadge(n) {
+        const badge = document.getElementById("navQueueBadge");
+        document.getElementById("tilePending").textContent = String(n);
+        badge.textContent = String(n);
+        badge.style.display = n > 0 ? "" : "none";
+      }
+
       async function loadQueue() {
         const el = document.getElementById("queue");
         try {
@@ -309,6 +351,7 @@
           }
           const j = await res.json();
           const list = j.drafts || [];
+          if (queueStatus === "pending") setQueueBadge(list.length);
           if (!list.length) {
             el.innerHTML = '<div class="muted text-sm">Nothing ' + queueStatus + ".</div>";
             return;
@@ -504,6 +547,7 @@
       async function sendChat(text) {
         const msg = (text || "").trim();
         if (!msg) return;
+        showPanel("compose");
         chatInput.value = "";
         chatSend.disabled = true;
         chatBubble("user", msg);
@@ -544,6 +588,7 @@
       // ---------- design studio ----------
       let studioPhoto = null;
       let studioKind = "player_stat";
+      let studioRendered = false; // first render happens when the panel opens
       async function renderStudio() {
         const box = document.getElementById("studioPreview");
         box.innerHTML = '<div class="muted text-xs">Rendering…</div>';
@@ -589,7 +634,8 @@
           const h = await res.json();
           if (h.club) {
             clubInfo = { name: h.club.name.replace(/ FC$/, ""), fullName: h.club.name, league: h.club.league };
-            document.getElementById("headerSub").textContent = "Football intelligence · " + h.club.name;
+            document.getElementById("headerSub").textContent = h.club.name;
+            document.getElementById("clubChip").textContent = "● " + h.club.name + " · " + h.club.league;
             document.getElementById("readinessLabel").textContent =
               "Readiness · tracked club: " + h.club.name + " · " + h.club.league + " (configuration, not identity)";
           }
@@ -612,8 +658,16 @@
           if (!res.ok) throw new Error("dashboard " + res.status);
           const d = await res.json();
           const fx = document.getElementById("fixtures");
+          const up = d.upcoming || [];
+          if (up.length) {
+            const f0 = up[0];
+            document.getElementById("tileFixture").textContent = f0.isHome ? "vs " + f0.opponent : "@ " + f0.opponent;
+            document.getElementById("tileFixtureSub").textContent = new Date(f0.date).toLocaleString("en-GB", {
+              timeZone: "Africa/Lagos", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+            }) + " WAT · " + f0.competition;
+          }
           fx.innerHTML =
-            (d.upcoming || [])
+            up
               .map((f) => {
                 const when = new Date(f.date).toLocaleString("en-GB", {
                   timeZone: "Africa/Lagos",
@@ -739,8 +793,18 @@
           document.getElementById("analyticsMeta").textContent =
             a.club.fullName + " · " + a.season + " · xG: Understat";
           const myName = (a.club.name || "").toLowerCase();
+          const league = a.leagueXg || [];
+          if (league.length) {
+            const rank = [...league].sort((p, q) => q.xG - p.xG).findIndex(t => t.team.toLowerCase().includes(myName)) + 1;
+            if (rank > 0) {
+              document.getElementById("tileXg").textContent = "#" + rank;
+              document.getElementById("tileXgSub").textContent = "of " + league.length + " by xG created · Understat";
+            }
+          }
+          const form5 = (a.recentForm || []).slice(0, 5).map(r => r.outcome).join(" ");
+          if (form5) document.getElementById("tileForm").textContent = form5;
           document.getElementById("chartLeague").innerHTML = scatterChart(
-            (a.leagueXg || []).map(t => ({ x: t.xG, y: t.xGA, label: t.team, mine: t.team.toLowerCase().includes(myName) })),
+            league.map(t => ({ x: t.xG, y: t.xGA, label: t.team, mine: t.team.toLowerCase().includes(myName) })),
             { xLabel: "xG created", yLabel: "xG conceded" }
           );
           document.getElementById("chartSquad").innerHTML = scatterChart(
@@ -766,14 +830,15 @@
         aEl.click();
       }
 
-      function loadAll() {
-        loadHealth();
+      async function loadAll() {
+        await loadHealth(); // resolves the club name first — fixtures render with it
         loadQueue();
         loadDashboard();
         loadSuggestions();
         loadAnalytics();
       }
       document.getElementById("refresh").addEventListener("click", loadAll);
+      showPanel(location.hash.slice(1) || "overview");
       loadAll();
     </script>
   </body>
