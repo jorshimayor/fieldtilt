@@ -14,7 +14,7 @@
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,700;0,800;1,400;1,800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,700;0,800;1,400;1,800&family=JetBrains+Mono:wght@400;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/theme.css" />
@@ -36,7 +36,7 @@
             </g>
           </svg>
           <div>
-            <div class="brand" style="font-size: 1.05rem">fieldtilt.</div>
+            <div class="brand" style="font-size: 1.05rem">fieldtilt.<span class="cursor" aria-hidden="true"></span></div>
             <div class="label" id="headerSub" style="font-size: 9px">Control room</div>
           </div>
         </div>
@@ -88,7 +88,8 @@
             </div>
             <div class="grid md:grid-cols-2 gap-6">
               <div class="card rounded-xl p-5">
-                <h2 class="display text-xl mb-3">FIXTURES</h2>
+                <h2 class="display text-xl mb-1">FIXTURES</h2>
+                <p class="label mono mb-3">all competitions in the data plan · domestic cups arrive with the api-football tier</p>
                 <div id="fixtures" class="space-y-2 text-sm"><div class="muted">Loading…</div></div>
               </div>
               <div class="card rounded-xl p-5">
@@ -197,7 +198,7 @@
           </section>
 
           <footer class="hairline pt-4 mt-3" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; padding-bottom: 1.5rem">
-            <span class="label">fieldtilt — an open football data &amp; publishing system · models in Python, delivery in TypeScript</span>
+            <span class="label mono">fieldtilt — an open football data &amp; publishing system · py models / ts delivery · build 2026.08</span>
           </footer>
         </main>
       </div>

@@ -322,3 +322,84 @@ img { max-width: 100%; display: block; }
   .nav-item.active { border-bottom-color: var(--accent); }
   .side-foot { display: none; }
 }
+
+
+/* =============================================================================
+   Terminal blend — console texture over the editorial system. Mono type for
+   data/labels, prompt markers, bracketed panel titles, scanlines, cursor.
+   Palette unchanged: this is structure, not a reskin.
+   ============================================================================= */
+
+:root { --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; }
+
+/* faint scanlines over everything (pointer-transparent) */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.012) 0px,
+    rgba(255, 255, 255, 0.012) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* data + annotation type goes mono */
+.label, .nav-group, .chip, .mono { font-family: var(--font-mono); }
+.label, .nav-group { letter-spacing: 0.09em; }
+.tile .t-value { font-family: var(--font-mono); letter-spacing: -0.5px; }
+.tile .t-sub, .status-pending, .status-posted, .status-rejected { font-family: var(--font-mono); }
+input, textarea { font-family: var(--font-mono); font-size: 0.85em; }
+
+/* bracketed panel title, terminal style */
+.topbar #panelTitle {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.topbar #panelTitle::before { content: "\27E8  "; color: var(--accent); }
+.topbar #panelTitle::after { content: "  \27E9"; color: var(--accent); }
+
+/* prompt marker on the active nav entry */
+.nav-item.active .nav-ico { visibility: hidden; position: relative; }
+.nav-item.active .nav-ico::after {
+  content: "\276F";
+  visibility: visible;
+  position: absolute;
+  left: 0; right: 0;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+/* blinking block cursor after the wordmark */
+.cursor {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.9em;
+  margin-left: 0.15em;
+  background: var(--accent);
+  vertical-align: -0.08em;
+  animation: cursor-blink 1.2s steps(1) infinite;
+}
+@keyframes cursor-blink { 50% { opacity: 0; } }
+
+/* cards get a faint corner tick, console-frame feel */
+.card { position: relative; }
+.card::before {
+  content: "";
+  position: absolute;
+  top: -1px; left: -1px;
+  width: 14px; height: 14px;
+  border-top: 2px solid var(--accent);
+  border-left: 2px solid var(--accent);
+  border-top-left-radius: var(--radius);
+  opacity: 0.55;
+  pointer-events: none;
+}

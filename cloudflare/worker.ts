@@ -16,6 +16,7 @@ import cronWeekly from "../api/cron/weekly";
 import cronMatchDay from "../api/cron/match-day";
 import cronTransfers from "../api/cron/transfers";
 import cronSpotlight from "../api/cron/spotlight";
+import cronAccountability from "../api/cron/accountability";
 import xAuth from "../api/x/auth";
 import xCallback from "../api/x/callback";
 import xPublish from "../api/x/publish";
@@ -86,6 +87,7 @@ const routes: Record<string, Route> = {
   "/api/cron/match-day": { handler: cronMatchDay as any, protected: true },
   "/api/cron/transfers": { handler: cronTransfers as any, protected: true },
   "/api/cron/spotlight": { handler: cronSpotlight as any, protected: true },
+  "/api/cron/accountability": { handler: cronAccountability as any, protected: true },
 
   "/api/x/auth": { handler: xAuth as any },
   "/api/x/callback": { handler: xCallback as any },
@@ -152,6 +154,11 @@ export default {
 
     if (cron === "0 12 * * 3") {
       await callHandler(cronSpotlight as any, cronRequest("/api/cron/spotlight"));
+      return;
+    }
+
+    if (cron === "30 21 * * *") {
+      await callHandler(cronAccountability as any, cronRequest("/api/cron/accountability"));
     }
   },
 };

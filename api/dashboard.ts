@@ -17,7 +17,7 @@ import { withErrorLogging } from "../packages/observability/index";
 
 export default withErrorLogging(async function handler(): Promise<Response> {
   const [upcomingRes, recentRes, recentPosts] = await Promise.all([
-    getTeamFixtures({ next: 5 }),
+    getTeamFixtures({ next: 10 }),
     getTeamFixtures({ last: 1 }),
     db
       .select()
