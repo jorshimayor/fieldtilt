@@ -11,6 +11,7 @@
  * manual dashboard flow rasterizes in YOUR browser instead, which is why the
  * queue works on the free plan.
  */
+import { notifyAssistant } from "./assistant";
 import { routeAndChat } from "./openrouter";
 import {
   buildTweetMessages,
@@ -80,6 +81,12 @@ export async function composeAndPost(opts: {
     })
     .returning({ id: drafts.id });
   const draftId = draft?.id || "";
+  // Reminder through the personal assistant: a queued draft is useless
+  // until reviewed — surface it where the operator already lives.
+  void notifyAssistant(
+    `fieldtilt: draft queued (${opts.kind})`,
+    `"${tweet.slice(0, 180)}"${opts.card?.kind ? `\n\ncard: ${opts.card.kind}` : ""}\n\nReview and post: https://fieldtilt.joelobafemii.workers.dev/#queue`
+  );
 
   if (flags.publish_draft_only || opts.forceQueue) {
     return { draftId, tweet, posted: false, tweetId: "", imageAttached: false, skipped: "queued for approval" };
