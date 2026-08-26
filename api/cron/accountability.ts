@@ -53,7 +53,11 @@ export default withErrorLogging(async function handler(req: Request): Promise<Re
 
   let assistant: { ok: boolean; taskId?: string; error?: string } = { ok: false };
   try {
-    const res = await fetch(`${ASSISTANT_API}/api/tasks`, {
+    // Service binding when deployed (same-account workers.dev fetch 404s);
+    // plain fetch as the local-dev fallback.
+    const svc = (globalThis as any).__ASSISTANT;
+    const doFetch = svc ? svc.fetch.bind(svc) : fetch;
+    const res = await doFetch(`${ASSISTANT_API}/api/tasks`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ description }),

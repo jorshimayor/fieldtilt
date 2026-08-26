@@ -28,6 +28,8 @@ type EnvBindings = Record<string, string | undefined>;
 function setProcessEnv(env: EnvBindings): void {
   const g = globalThis as any;
   if (!g.process) g.process = {};
+  // Service bindings aren't strings — handlers reach them via globalThis.
+  if ((env as any).ASSISTANT) g.__ASSISTANT = (env as any).ASSISTANT;
   const normalized: Record<string, string | undefined> = {};
   for (const [k, v] of Object.entries(env || {})) {
     normalized[k] = v;

@@ -8,6 +8,12 @@ compatibility_date = "2026-04-22"
 # [limits]
 # cpu_ms = 30000
 
+# Direct worker-to-worker call to the OpenClaw assistant (same-account
+# workers.dev fetches 404 — the binding is the supported path).
+[[services]]
+binding = "ASSISTANT"
+service = "monster-agent-backend"
+
 [triggers]
 crons = [
   "*/5 * * * *", # match-day poller (gated to the match window; cheap otherwise)
