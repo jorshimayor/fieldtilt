@@ -127,6 +127,18 @@ const DEMO: Record<CardKind, unknown> = {
     ],
     footnote: "xG: Understat",
   },
+  leaderboard: {
+    title: "Most goal involvements",
+    context: "Chelsea 26/27 · all competitions",
+    entries: [
+      { value: "2", label: "Cole Palmer", sub: "1G 1A", highlight: true },
+      { value: "2", label: "João Pedro", sub: "1G 1A", highlight: true },
+      { value: "1", label: "Morgan Rogers", sub: "1G" },
+      { value: "1", label: "Pedro Neto", sub: "1A" },
+      { value: "1", label: "Estêvão", sub: "1A" },
+    ],
+    footnote: "matchday 1 · source: football-data",
+  },
 };
 
 const KINDS = Object.keys(DEMO) as CardKind[];

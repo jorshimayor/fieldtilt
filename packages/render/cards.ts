@@ -760,3 +760,49 @@ ${bars}
 ${d.footnote ? text(M, h - 64, d.footnote.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute }) : ""}
 </svg>`;
 }
+
+// ------------------------------------------------------------------ leaderboard (portrait)
+
+export type LeaderboardData = {
+  /** e.g. "Top 5 by progressive value" */
+  title: string;
+  /** e.g. "Premier League 26/27 · per 90 · U23" */
+  context?: string;
+  /** Ranked rows, max 7. sub e.g. "(Chelsea, 21)". highlight marks our player. */
+  entries: { value: string; label: string; sub?: string; highlight?: boolean }[];
+  /** Data credit, e.g. "xG: Understat" */
+  footnote?: string;
+  photoDataUri?: string;
+  palette?: Palette;
+};
+
+/** Ranked-list card (the @DataMB_ pattern): filled marker for #1, values in
+ *  a mono-weight column, our players highlighted in the accent. */
+export function leaderboardCard(d: LeaderboardData): string {
+  setPalette(d.palette, Boolean(d.photoDataUri));
+  const { w, h } = PORTRAIT;
+  const entries = (d.entries || []).slice(0, 7);
+  const top = 330;
+  const step = Math.min(118, Math.floor((h - top - 140) / Math.max(entries.length, 1)));
+  const rows = entries
+    .map((e, i) => {
+      const y = top + i * step;
+      const first = i === 0;
+      const col = e.highlight ? P.accent : first ? P.ink : P.inkDim;
+      return `
+<circle cx="${M + 12}" cy="${y - 12}" r="9" fill="${first ? P.accent : "none"}" stroke="${P.accent}" stroke-width="2.5"/>
+${text(M + 44, y, e.value, { size: 44, weight: 800, tracking: -1, fill: col })}
+${text(M + 220, y, truncate(e.label, 20), { size: 32, weight: e.highlight || first ? 800 : 400, fill: col })}
+${e.sub ? text(w - M, y, truncate(e.sub, 16), { size: 20, fill: P.inkMute, anchor: "end" }) : ""}
+${i < entries.length - 1 ? hairline(M, y + step / 2 - 8, w - M, y + step / 2 - 8) : ""}`;
+    })
+    .join("");
+  return `${frame(w, h, d.photoDataUri)}
+${eyebrow(M, 106, "Leaderboard")}
+${brandMark(w - M, 110, "end")}
+${text(M, 218, truncate(d.title, 30).toUpperCase(), { size: fitFont(d.title, 54, 26), weight: 800, tracking: -1 })}
+${d.context ? text(M, 262, d.context.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute }) : ""}
+${rows}
+${d.footnote ? text(M, h - 64, d.footnote.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute }) : ""}
+</svg>`;
+}

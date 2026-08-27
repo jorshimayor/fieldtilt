@@ -11,8 +11,10 @@ import {
   editorialCard,
   milestoneCard,
   comparisonCard,
+  leaderboardCard,
   MilestoneData,
   ComparisonData,
+  LeaderboardData,
   MatchPreviewData,
   ScoreCardData,
   PostMatchData,
@@ -32,7 +34,8 @@ export type CardKind =
   | "form"
   | "editorial"
   | "milestone"
-  | "comparison";
+  | "comparison"
+  | "leaderboard";
 
 export function buildCardSvg(kind: CardKind, data: unknown): string {
   switch (kind) {
@@ -54,6 +57,8 @@ export function buildCardSvg(kind: CardKind, data: unknown): string {
       return milestoneCard(data as MilestoneData);
     case "comparison":
       return comparisonCard(data as ComparisonData);
+    case "leaderboard":
+      return leaderboardCard(data as LeaderboardData);
     default:
       throw new Error(`unknown card kind: ${kind}`);
   }

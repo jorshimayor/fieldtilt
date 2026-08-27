@@ -22,4 +22,5 @@ export const CARD_KINDS: CardKind[] = [
   "editorial",
   "milestone",
   "comparison",
+  "leaderboard",
 ];
