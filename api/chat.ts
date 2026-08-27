@@ -98,7 +98,7 @@ const TOOLS = [
   ),
   tool(
     "web_lookup",
-    "Grounded web search (Gemini + Google Search) for football facts the structured tools CANNOT provide: domestic cup fixtures/kickoff times, lower-league opponents, confirmed team news. Returns an answer WITH source URLs — cite them. Never use it for stats the other tools already cover.",
+    "Multi-source web lookup (Wikipedia + DuckDuckGo, with Gemini grounding when available) for football facts the structured tools CANNOT provide: domestic cup fixtures/kickoff times, lower-league opponents, confirmed team news. Returns an answer WITH source URLs — cite them. Never use it for stats the other tools already cover.",
     { question: { type: "string", description: "One specific factual question, e.g. 'When and where do Chelsea play Luton Town next, any competition?'" } }
   ),
   tool("list_pending_drafts", "Drafts currently waiting in the approval queue.", {}),

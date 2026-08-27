@@ -40,3 +40,11 @@ check("ddg title cleaned", ddg[0]?.title === "Chelsea v Luton");
 check("ddg snippet cleaned", ddg[0]?.snippet.includes("Stamford Bridge"));
 if (failures) process.exit(1);
 console.log("All ddg tests passed");
+
+// ---- Wikipedia summary mapper ----
+import { mapWikiSummary } from "../../packages/tools/websearch";
+const wk = mapWikiSummary({ title: "2025–26 EFL Cup", extract: "The 66th season of the League Cup.", content_urls: { desktop: { page: "https://en.wikipedia.org/wiki/X" } } });
+check("wiki summary mapped", wk?.snippet === "The 66th season of the League Cup." && wk?.url.includes("wikipedia"));
+check("wiki empty extract dropped", mapWikiSummary({ title: "X", extract: "" }) === null);
+if (failures) process.exit(1);
+console.log("All wiki tests passed");

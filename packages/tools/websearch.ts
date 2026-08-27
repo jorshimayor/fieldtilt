@@ -64,22 +64,78 @@ export function parseDdgHtml(htmlText: string): { title: string; url: string; sn
   });
 }
 
+type SearchSnippet = { title: string; url: string; snippet: string };
+
+const WIKI_UA = { "User-Agent": "fieldtilt/1.0 (football data console)" };
+
+/** Pure mapper for the Wikipedia REST page summary — unit-tested. */
+export function mapWikiSummary(j: any): SearchSnippet | null {
+  const extract = String(j?.extract || "").trim();
+  if (!extract) return null;
+  return {
+    title: `${j?.title || "Wikipedia"} — en.wikipedia.org`,
+    url: j?.content_urls?.desktop?.page || "",
+    snippet: extract.slice(0, 500),
+  };
+}
+
+/** Official Wikipedia APIs: search then page summaries. Free, keyless, stable. */
+async function wikiSnippets(question: string): Promise<SearchSnippet[]> {
+  try {
+    const sr = await fetch(
+      `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(question)}&format=json&srlimit=3`,
+      { headers: WIKI_UA }
+    );
+    if (!sr.ok) return [];
+    const hits: any[] = ((await sr.json()) as any)?.query?.search || [];
+    const out: SearchSnippet[] = [];
+    await Promise.all(
+      hits.slice(0, 3).map(async (h) => {
+        try {
+          const r = await fetch(
+            `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(String(h.title).replace(/ /g, "_"))}`,
+            { headers: WIKI_UA }
+          );
+          if (!r.ok) return;
+          const mapped = mapWikiSummary(await r.json());
+          if (mapped) out.push(mapped);
+        } catch {}
+      })
+    );
+    return out;
+  } catch {
+    return [];
+  }
+}
+
+/** DuckDuckGo HTML results as snippets (scrape — treated as best-effort). */
+async function ddgSnippets(question: string): Promise<SearchSnippet[]> {
+  try {
+    const res = await fetch(
+      `https://html.duckduckgo.com/html/?q=${encodeURIComponent(question)}`,
+      { headers: { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)" } }
+    );
+    if (!res.ok) return [];
+    return parseDdgHtml(await res.text());
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Free fallback: DuckDuckGo results + the house LLM to synthesize an answer
  * strictly from the snippets, with the result URLs as sources.
  */
-async function ddgLookup(question: string): Promise<GroundedAnswer> {
-  const res = await fetch(
-    `https://html.duckduckgo.com/html/?q=${encodeURIComponent(question)}`,
-    { headers: { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)" } }
-  );
-  if (!res.ok) throw new Error(`web_lookup_ddg_failed_${res.status}`);
-  const results = parseDdgHtml(await res.text());
-  if (!results.length) throw new Error("web_lookup_ddg_empty: no results");
+async function multiSourceLookup(question: string): Promise<GroundedAnswer> {
+  const [wiki, ddg] = await Promise.all([wikiSnippets(question), ddgSnippets(question)]);
+  // Wikipedia first (stable, citable), then DDG for recency; cap the context.
+  const results = [...wiki, ...ddg].slice(0, 8);
+  if (!results.length) throw new Error("web_lookup_no_sources: wikipedia and ddg both returned nothing");
 
   const { routeAndChat } = await import("../shared/openrouter");
+  const host = (u: string) => { try { return new URL(u).hostname; } catch { return "unknown"; } };
   const context = results
-    .map((r, i) => `[${i + 1}] ${r.title} (${new URL(r.url).hostname})\n${r.snippet}`)
+    .map((r, i) => `[${i + 1}] ${r.title} (${host(r.url)})\n${r.snippet}`)
     .join("\n\n");
   const out = await routeAndChat({
     messages: [
@@ -96,7 +152,7 @@ async function ddgLookup(question: string): Promise<GroundedAnswer> {
   return {
     answer,
     sources: results.map((r) => r.url),
-    sourceTitles: results.map((r) => `${r.title} — ${new URL(r.url).hostname}`),
+    sourceTitles: results.map((r) => r.title),
   };
 }
 
@@ -123,5 +179,5 @@ export async function groundedLookup(question: string): Promise<GroundedAnswer> 
   } catch {
     /* fall through to DDG */
   }
-  return ddgLookup(question);
+  return multiSourceLookup(question);
 }
