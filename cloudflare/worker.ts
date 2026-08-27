@@ -17,6 +17,7 @@ import cronMatchDay from "../api/cron/match-day";
 import cronTransfers from "../api/cron/transfers";
 import cronSpotlight from "../api/cron/spotlight";
 import cronAccountability from "../api/cron/accountability";
+import cronAnalyticsBrief from "../api/cron/analytics-brief";
 import agentGraph from "../api/agent";
 import xAuth from "../api/x/auth";
 import xCallback from "../api/x/callback";
@@ -91,6 +92,7 @@ const routes: Record<string, Route> = {
   "/api/cron/transfers": { handler: cronTransfers as any, protected: true },
   "/api/cron/spotlight": { handler: cronSpotlight as any, protected: true },
   "/api/cron/accountability": { handler: cronAccountability as any, protected: true },
+  "/api/cron/analytics-brief": { handler: cronAnalyticsBrief as any, protected: true },
   "/api/agent": { handler: agentGraph as any, protected: true },
 
   "/api/x/auth": { handler: xAuth as any },
@@ -163,6 +165,11 @@ export default {
 
     if (cron === "30 21 * * *") {
       await callHandler(cronAccountability as any, cronRequest("/api/cron/accountability"));
+      return;
+    }
+
+    if (cron === "45 5 * * *") {
+      await callHandler(cronAnalyticsBrief as any, cronRequest("/api/cron/analytics-brief"));
     }
   },
 };

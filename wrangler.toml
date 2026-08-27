@@ -22,6 +22,7 @@ crons = [
   "0 9 * * 1",   # weekly form deep-dive
   "0 12 * * 3",  # player spotlight
   "30 21 * * *", # posting accountability → nudges the personal assistant if <5 posts today
+  "45 5 * * *",  # daily analytics & research brief (20 items, 3 tiers) → Telegram/Slack via assistant
 ]
 
 # dist/resvg.wasm ships next to the bundle (copied by build:worker) and is
