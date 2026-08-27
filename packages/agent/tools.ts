@@ -118,6 +118,38 @@ export async function execTool(name: string, args: any): Promise<any> {
         url: res.source,
       };
     }
+    case "get_positional_stats": {
+      const { getPositionalStats } = await import("../tools/positional");
+      const who = String(args?.player || "").trim();
+      if (!who) return { error: "player required" };
+      return getPositionalStats(who, args?.pack ? String(args.pack) : undefined);
+    }
+    case "get_player_career": {
+      const { getPlayerCareer } = await import("../tools/positional");
+      const who = String(args?.player || "").trim();
+      if (!who) return { error: "player required" };
+      return getPlayerCareer(who);
+    }
+    case "get_former_club_players": {
+      const { playersWhoPlayedFor } = await import("../tools/positional");
+      const opp = String(args?.opponent || "").trim();
+      if (!opp) return { error: "opponent required" };
+      return playersWhoPlayedFor(opp);
+    }
+    case "get_points_vs_past_seasons": {
+      const { getPointsVsPastSeasons } = await import("../tools/history");
+      return getPointsVsPastSeasons(Number(args?.count) || 3);
+    }
+    case "get_league_coefficients": {
+      const { LEAGUE_COEFFICIENTS, LEAGUE_ADJ_VERSION } = await import("../shared/league-adjust");
+      return {
+        version: LEAGUE_ADJ_VERSION,
+        anchor: "Premier League = 1.00",
+        coefficients: LEAGUE_COEFFICIENTS,
+        how_to_apply:
+          "multiply a per-90 produced in league X by its coefficient to express it on a PL scale; ALWAYS disclose in the footnote, e.g. 'adjusted: eredivisie x0.75 (league-adj-v1)'. Unknown league: compare unadjusted and say so.",
+      };
+    }
     case "web_lookup": {
       const q = String(args?.question || "").trim();
       if (!q) return { error: "question required" };

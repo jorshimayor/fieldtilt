@@ -367,6 +367,28 @@
         }
       }
 
+      // ---------- FBref importer bookmarklet ----------
+      function buildFbrefBookmarklet() {
+        const a = document.getElementById("fbrefBookmarklet");
+        if (!a) return;
+        const key = localStorage.getItem("adminKey") || new URLSearchParams(location.search).get("key") || "";
+        const endpoint = location.origin + "/api/ingest?key=" + encodeURIComponent(key);
+        const src = "(function(){try{var S=function(tr,ns){for(var i=0;i<ns.length;i++){var el=tr.querySelector('th[data-stat=\"'+ns[i]+'\"],td[data-stat=\"'+ns[i]+'\"]');if(el)return el.textContent.trim()}return ''};"+
+          "var scout=[];document.querySelectorAll('table[id^=scout] tbody tr').forEach(function(tr){var st=S(tr,['statistic']),p9=S(tr,['per90']),pc=S(tr,['percentile']);if(st&&p9)scout.push({stat:st,per90:p9,percentile:pc})});"+
+          "var career=[];document.querySelectorAll('table[id^=stats_standard] tbody tr').forEach(function(tr){var se=S(tr,['year_id','season']),sq=S(tr,['team','squad']);if(se&&sq)career.push({season:se,squad:sq,comp:S(tr,['comp_level','comp']),minutes:S(tr,['minutes']),goals:S(tr,['goals']),assists:S(tr,['assists'])})});"+
+          "var h1=document.querySelector('h1');var player=h1?h1.textContent.replace(/scouting report/i,'').replace(/\\s+/g,' ').trim():'';"+
+          "fetch('" + endpoint + "',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({player:player,url:location.href,scout:scout,career:career})})"+
+          ".then(function(r){return r.json()}).then(function(j){alert(j.ok?('fieldtilt: imported '+j.player+' ('+j.scoutRows+' scout rows, '+j.careerRows+' seasons)'):'fieldtilt error: '+(j.error||'unknown'))})"+
+          ".catch(function(e){alert('fieldtilt error: '+e.message)})}catch(e){alert('fieldtilt error: '+e.message)}})()";
+        a.setAttribute("href", "javascript:" + src);
+        fetch("/api/ingest", { headers: authHeaders() }).then((r) => r.json()).then((j) => {
+          const names = Object.keys(j.imported || {});
+          const el = document.getElementById("fbrefImportedList");
+          if (el) el.textContent = names.length ? "imported: " + names.join(", ") : "no players imported yet";
+        }).catch(() => {});
+      }
+      buildFbrefBookmarklet();
+
       // ---------- approval queue ----------
       let queueStatus = "pending";
       document.querySelectorAll(".qtab").forEach((b) =>
@@ -1134,3 +1156,10 @@
     </script>
   </body>
 </html>
+
+            <div class="card rounded-xl p-4 mt-4 space-y-2">
+              <span class="rail-title">[ FBREF IMPORTER ]</span>
+              <p class="muted text-xs">FBref sits behind a human check, so positional metrics (aerials, clearances, carries, tackle resistance) import from <em>your</em> browser. Drag the button to your bookmarks bar, open any FBref player page (best: the Scouting Report), pass the human check once, then click the bookmark. The page's tables land in fieldtilt and the agent can use them.</p>
+              <p><a id="fbrefBookmarklet" class="btn px-4 py-2 text-sm" href="#" title="Drag me to the bookmarks bar">❯ fieldtilt import</a>
+              <span class="muted text-xs" id="fbrefImportedList" style="margin-left:10px"></span></p>
+            </div>

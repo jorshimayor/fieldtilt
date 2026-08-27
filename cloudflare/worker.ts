@@ -19,6 +19,8 @@ import cronSpotlight from "../api/cron/spotlight";
 import cronAccountability from "../api/cron/accountability";
 import cronAnalyticsBrief from "../api/cron/analytics-brief";
 import cronScheduledPosts from "../api/cron/scheduled-posts";
+import probe from "../api/probe";
+import ingest from "../api/ingest";
 import agentGraph from "../api/agent";
 import xAuth from "../api/x/auth";
 import xCallback from "../api/x/callback";
@@ -95,6 +97,8 @@ const routes: Record<string, Route> = {
   "/api/cron/accountability": { handler: cronAccountability as any, protected: true },
   "/api/cron/analytics-brief": { handler: cronAnalyticsBrief as any, protected: true },
   "/api/cron/scheduled-posts": { handler: cronScheduledPosts as any, protected: true },
+  "/api/probe": { handler: probe as any, protected: true },
+  "/api/ingest": { handler: ingest as any, protected: true },
   "/api/agent": { handler: agentGraph as any, protected: true },
 
   "/api/x/auth": { handler: xAuth as any },

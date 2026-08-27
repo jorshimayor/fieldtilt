@@ -65,6 +65,11 @@ const GATHER_TOOLS = [
   "get_league_xg_table",
   "get_head_to_head",
   "get_player_shots",
+  "get_positional_stats",
+  "get_player_career",
+  "get_former_club_players",
+  "get_points_vs_past_seasons",
+  "get_league_coefficients",
   "web_lookup",
 ];
 

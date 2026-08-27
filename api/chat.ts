@@ -74,6 +74,7 @@ You help the operator create posts. Rules:
 - When the user asks for a post, you MUST actually call create_draft — never say a draft was created unless the create_draft tool returned a draftId in this conversation.
 - Dates shown to fans: convert to ${c.timezone} time (${c.tzLabel}) like "Sat 24 Aug, 20:00 ${c.tzLabel}".
 - Advanced stats (get_advanced_player_stats / get_league_xg_table) come from Understat's xG model — when a post leans on them, credit "xG: Understat" in the copy or card. Great for over/under-performance takes (goals vs xG), profiling (xGChain/xGBuildup), and transfer arguments. NEVER produce Opta-style historical trivia ("first player since…") — no tool can verify it.
+- Positional metrics (get_positional_stats/get_player_career) are OPERATOR-IMPORTED FBref data. If a player is not imported the tool says so - relay that honestly and suggest importing via the bookmarklet on the Stat sources page; never fill positional stats from memory. Cross-league comparisons MUST use get_league_coefficients (adjust + footnote) or explicitly state the numbers are unadjusted.
 - web_lookup fills free-tier gaps (cup fixtures, lower-league opponents, kickoff times). Facts from it MUST carry their source: put the source name in the create_draft data and credit it in the copy or card footnote (e.g. "fixture: BBC Sport"). If web_lookup errors, say so — never fill the gap from memory.
 - STYLE: never use em dashes or en dashes in tweet copy or card text; hyphens/commas only. Multi-fact tweets use line breaks: hook, blank line, one fact per line.
 - TAGGING: when another club is central to the post (opponent, comparison, transfer counterparty), tag their official X handle once on the line that mentions them. Use ONLY these handles, never guess: ${HANDLE_LINE}.
@@ -104,6 +105,34 @@ const TOOLS = [
     "get_player_shots",
     "A player's full shot map this season (source: Understat): x/y pitch coordinates, xG and result per shot, plus totals. Feeds the shot_map card and spatial narratives (e.g. 'all 5 goals from inside the box').",
     { player: { type: "string", description: "Player name (partial ok)" } }
+  ),
+  tool(
+    "get_positional_stats",
+    "Positional metrics from FBref/Opta (per-90 + percentile vs positional peers, last 365 days): aerial duels, clearances, tackles, dribblers tackled (carry defending), interceptions, recoveries, errors, progressive passes/carries, take-ons, dispossessed, key passes. pack='defender'|'midfielder' filters to the curated set. STORE-BACKED: only works for players the operator has imported via the FBref bookmarklet; on error, say the player is not imported yet - NEVER estimate these numbers. Credit 'FBref/Opta' when used.",
+    { player: { type: "string" }, pack: { type: "string", description: "defender | midfielder | omit for all" } },
+    ["player"]
+  ),
+  tool(
+    "get_player_career",
+    "Season-by-season career (squad, competition, minutes, G/A) from the player's FBref import. Powers YEAR VS YEAR comparisons (head_to_head card with seasons as roleA/roleB) and former-club angles. Store-backed like get_positional_stats.",
+    { player: { type: "string" } },
+    ["player"]
+  ),
+  tool(
+    "get_former_club_players",
+    "Which imported players used to play for a given opponent (career squads from FBref imports) - the 'facing his former club' angle for match previews. Only sees imported players; say so if the list is empty.",
+    { opponent: { type: "string" } },
+    ["opponent"]
+  ),
+  tool(
+    "get_points_vs_past_seasons",
+    "The club's CURRENT league points/position compared with the same number of games played in each of the last N seasons (football-data historic standings). Feeds 'best start since ...' posts, a leaderboard card of season starts, or a comparison card.",
+    { count: { type: "number", description: "past seasons to include, 1-4, default 3" } }
+  ),
+  tool(
+    "get_league_coefficients",
+    "Transparent cross-league adjustment constants (league-adj-v1, PL=1.00). Use when comparing players across leagues so weaker-league per-90s don't flatter: multiply and DISCLOSE the adjustment in the footnote. Never compare cross-league without either applying this or saying the numbers are unadjusted.",
+    {}
   ),
   tool(
     "web_lookup",
