@@ -5,7 +5,7 @@ export function createAuthUrl(clientId: string, redirectUri: string, state: stri
   u.searchParams.set("response_type", "code");
   // media.write is required for uploading infographics. If you authorized the
   // bot before this scope existed, visit /api/x/auth again to re-consent.
-  u.searchParams.set("scope", "tweet.read tweet.write users.read media.write offline.access");
+  u.searchParams.set("scope", "tweet.read tweet.write users.read media.write dm.read offline.access");
   u.searchParams.set("state", state);
   u.searchParams.set("code_challenge", state);
   u.searchParams.set("code_challenge_method", "plain");
