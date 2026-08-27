@@ -211,8 +211,10 @@
                   </div>
                 </div>
                 <div class="rail-group">
-                  <span class="rail-title">Export</span>
-                  <button id="studioDownload" class="btn px-3 py-2 text-xs">⬇ download png</button>
+                  <span class="rail-title">Publish</span>
+                  <button id="studioQueue" class="btn px-3 py-2 text-xs" title="House writer turns the card data into tweet copy; the draft lands in the approval queue for you to edit and post">❯ queue as draft</button>
+                  <button id="studioDownload" class="btn-ghost px-3 py-2 text-xs">⬇ download png</button>
+                  <span id="studioQueueMeta" class="muted text-xs"></span>
                 </div>
                 <div class="rail-group">
                   <span class="rail-title">Data <button id="studioJsonToggle" class="btn-ghost px-2 py-0.5 text-xs" style="margin-left:0.4rem">edit</button></span>
@@ -922,6 +924,60 @@
         studioPhoto = await readPhotoFile(f);
         document.getElementById("studioPhotoClear").style.display = "";
         renderStudio();
+      });
+      // Studio -> approval queue: the missing link for manually-sourced stats
+      // (e.g. Sofascore cup numbers). The house writer grounds the copy in the
+      // card's own data; the draft is then edited/posted from the queue.
+
+      function sfFlatten(data, prefix, out) {
+        out = out || [];
+        for (const k of Object.keys(data || {})) {
+          if (SF_SKIP(k)) continue;
+          const v = data[k];
+          const label = (prefix ? prefix + " " : "") + sfLabel(k);
+          if (Array.isArray(v)) {
+            v.slice(0, 12).forEach((item) => {
+              if (item && typeof item === "object") out.push(Object.values(item).filter((x) => typeof x !== "object").join(" "));
+              else out.push(String(item));
+            });
+          } else if (v && typeof v === "object") sfFlatten(v, label, out);
+          else if (v !== "" && v != null) out.push(label + ": " + v);
+        }
+        return out;
+      }
+      document.getElementById("studioQueue").addEventListener("click", async () => {
+        const btn = document.getElementById("studioQueue");
+        const meta = document.getElementById("studioQueueMeta");
+        try {
+          await ensureStudioData();
+        } catch (e) { meta.textContent = "no data: " + e.message; return; }
+        btn.disabled = true;
+        meta.textContent = "composing copy…";
+        // Always compose via the deep-dive writer: its template takes the
+        // flattened card facts directly, so hand-sourced numbers never SKIP.
+        const kind = "weekly_deep_dive";
+        const facts = sfFlatten(studioData).join("; ").slice(0, 1500);
+        const data = {
+          theme: (studioData.title || studioData.player || studioKind.replace(/_/g, " ")) + (studioData.context ? ", " + studioData.context : ""),
+          numbers: facts,
+          window: studioData.season || studioData.seasonLabel || "",
+        };
+        const cardData = Object.assign({}, studioData, { palette: studioPalette });
+        if (studioPhoto) cardData.photoDataUri = studioPhoto;
+        try {
+          const res = await fetch("/api/drafts", {
+            method: "POST",
+            headers: authHeaders({ "Content-Type": "application/json" }),
+            body: JSON.stringify({ action: "compose", kind, data, card: { kind: studioKind, data: cardData } }),
+          });
+          const j = await res.json();
+          if (!res.ok || j.error || !j.draftId) throw new Error(j.error || j.skipped || "compose failed");
+          meta.textContent = "queued ✓ draft " + j.draftId.slice(0, 8) + " — edit & post from the Approval queue";
+          setTimeout(loadQueue, 600);
+        } catch (e) {
+          meta.textContent = "error: " + e.message;
+        }
+        btn.disabled = false;
       });
       document.getElementById("studioDownload").addEventListener("click", async () => {
         const svg = await fetchCardSvg(studioKind, studioData, studioPhoto, studioPalette);
