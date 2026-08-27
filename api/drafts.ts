@@ -78,6 +78,17 @@ export default withErrorLogging(async function handler(req: Request): Promise<Re
     return json({ ok: true, ...res });
   }
 
+  if (body.action === "mark_posted") {
+    // Manual-posting flow: the operator downloaded the card and posted from
+    // their own X app — record it so accountability and history stay true.
+    if (!body.id) return json({ error: "missing id" }, 400);
+    await db
+      .update(drafts)
+      .set({ status: "posted", postedAt: new Date(), content: body.content || undefined })
+      .where(eq(drafts.id, body.id));
+    return json({ ok: true, id: body.id, status: "posted", manual: true });
+  }
+
   if (body.action === "reject" || body.action === "restore") {
     if (!body.id) return json({ error: "missing id" }, 400);
     const status = body.action === "reject" ? "rejected" : "pending";

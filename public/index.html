@@ -403,6 +403,8 @@
                   '<button data-role="editcard" class="btn-ghost px-3 py-2 text-sm">✎ edit card</button>' +
                   '<button data-role="download" class="btn-ghost px-3 py-2 text-sm">⬇ download</button>'
                 : "") +
+              '<button data-role="copytext" class="btn-ghost px-3 py-2 text-sm" title="Copy the tweet text for manual posting">📋 copy text</button>' +
+              '<button data-role="markposted" class="btn-ghost px-3 py-2 text-sm" title="Already posted it manually? Move it to Posted — it counts toward your daily 5.">✓ mark posted</button>' +
               '<button data-role="reject" class="btn-danger px-4 py-2 text-sm">Reject</button>' +
               '<span data-role="meta" class="muted text-xs self-center"></span>' +
               "</div>"
@@ -502,6 +504,25 @@
               meta.textContent = "Error: " + e.message;
               postBtn.disabled = false;
             }
+          });
+        const copyBtn = root.querySelector('[data-role="copytext"]');
+        if (copyBtn)
+          copyBtn.addEventListener("click", async () => {
+            const txt = root.querySelector('[data-role="content"]').value;
+            try { await navigator.clipboard.writeText(txt); copyBtn.textContent = "copied ✓"; }
+            catch { prompt("Copy the tweet text:", txt); }
+            setTimeout(() => (copyBtn.textContent = "📋 copy text"), 1800);
+          });
+        const markBtn = root.querySelector('[data-role="markposted"]');
+        if (markBtn)
+          markBtn.addEventListener("click", async () => {
+            if (!confirm("Mark this draft as posted (you published it manually on X)?")) return;
+            await fetch("/api/drafts", {
+              method: "POST",
+              headers: authHeaders({ "Content-Type": "application/json" }),
+              body: JSON.stringify({ action: "mark_posted", id: d.id, content: root.querySelector('[data-role="content"]').value }),
+            });
+            loadQueue();
           });
         const rejectBtn = root.querySelector('[data-role="reject"]');
         if (rejectBtn)
