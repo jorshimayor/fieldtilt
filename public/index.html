@@ -156,7 +156,15 @@
           <!-- ======== Stat sources ======== -->
           <section class="panel" data-panel="sources">
             <p class="label mb-3">where the numbers live — research here, then credit the source in the post. handles are the accounts to reference on X.</p>
-            <div class="grid md:grid-cols-2 gap-4" id="sourceList"></div>
+            <div class="card rounded-xl p-4 mb-4">
+              <span class="rail-title">[ RESEARCH LAUNCHER ]</span>
+              <div class="flex gap-2 mt-2 flex-wrap items-center">
+                <input id="srcQuery" type="text" placeholder="player, team or match…" class="p-2 text-sm" style="min-width: 240px" />
+                <span class="muted text-xs">type once, open anywhere ↓</span>
+              </div>
+              <div id="srcLaunch" class="flex gap-2 mt-3 flex-wrap"></div>
+            </div>
+            <div id="sourceGroups" class="space-y-6"></div>
             <p class="muted text-xs mt-3">Citing well is part of the brand: every claim with receipts. Understat and FBref/Opta data power this app's own analytics — always credit "xG: Understat" when a post uses the xG layer.</p>
           </section>
 
@@ -1307,27 +1315,79 @@
         }
       }
 
-      // ---------- stat sources (Chelsea-first research shelf) ----------
-      const STAT_SOURCES = [
-        { name: "Understat", url: "https://understat.com/team/Chelsea/2025", what: "xG, npxG, xA, xGChain per player, team and match — the model behind this app's advanced stats.", cite: "cite: “xG: Understat”" },
-        { name: "FBref", url: "https://fbref.com/en/squads/cff3d9bb/Chelsea-Stats", what: "The deepest free stats table: shooting, passing, progression, defense, per-90s (Opta data).", cite: "cite: FBref / @fbref" },
-        { name: "The Analyst (Opta)", url: "https://theanalyst.com/competition/premier-league", what: "Opta's editorial — field tilt, expected points, long-form stat pieces to reference.", cite: "cite: @OptaAnalyst" },
-        { name: "WhoScored", url: "https://www.whoscored.com/Teams/15/Show/England-Chelsea", what: "Player ratings, detailed match dashboards, strengths/weaknesses per player.", cite: "cite: @WhoScored" },
-        { name: "FotMob", url: "https://www.fotmob.com/teams/8455/overview/chelsea", what: "Live match stats, momentum, season overviews — fast on matchday.", cite: "cite: @FotMob" },
-        { name: "SofaScore", url: "https://www.sofascore.com/team/football/chelsea/38", what: "Live ratings, heatmaps, attack momentum graphs.", cite: "cite: @SofaScore" },
-        { name: "Transfermarkt", url: "https://www.transfermarkt.com/fc-chelsea/startseite/verein/631", what: "Market values, transfer history, contract lengths — the transfer-post backbone.", cite: "cite: @Transfermarkt" },
-        { name: "Premier League", url: "https://www.premierleague.com/clubs/4/Chelsea/stats", what: "Official club + player stats hub, all-time records.", cite: "cite: @premierleague" },
-        { name: "Chelsea FC", url: "https://www.chelseafc.com", what: "Official club site — lineups, injury news, quotes for context lines.", cite: "cite: @ChelseaFC" },
-        { name: "football-data.org", url: "https://www.football-data.org", what: "The API feeding this app's fixtures, results and standings.", cite: "cite: football-data.org" },
+      // ---------- stat sources (research directory + launcher) ----------
+      const gsite = (host) => (q) => "https://www.google.com/search?q=" + encodeURIComponent("site:" + host + " " + q);
+      const SOURCE_GROUPS = [
+        {
+          title: "QUICK STATS · MATCHDAY",
+          blurb: "fast reads during and right after a game — including EFL Cup and every competition the free API can't see.",
+          items: [
+            { name: "Sofascore", url: "https://www.sofascore.com/team/football/chelsea/38", what: "Live ratings, heatmaps, attack momentum, full match stat sheets for EVERY competition — first stop after a cup game.", cite: "cite: @SofaScore", search: gsite("sofascore.com") },
+            { name: "FotMob", url: "https://www.fotmob.com/teams/8455/overview/chelsea", what: "Live stats, momentum graphs, quick post-match player ratings.", cite: "cite: @FotMob", search: gsite("fotmob.com") },
+            { name: "Flashscore", url: "https://www.flashscore.com/team/chelsea/4fGZN2oK/", what: "Fastest raw scores + basic stats across every league and cup on earth.", cite: "cite: Flashscore", search: gsite("flashscore.com") },
+            { name: "Squawka", url: "https://www.squawka.com/en/comparison-matrix/", what: "Quick stat graphics and the comparison matrix — side-by-side player stats, great for head_to_head card inputs.", cite: "cite: @Squawka", search: gsite("squawka.com") },
+            { name: "BBC Sport", url: "https://www.bbc.co.uk/sport/football/teams/chelsea", what: "Trusted match reports + line-ups minutes after full time; the citation that always lands.", cite: "cite: BBC Sport", search: (q) => "https://www.bbc.co.uk/search?q=" + encodeURIComponent(q) },
+          ],
+        },
+        {
+          title: "CUPS · UEFA · OFFICIAL",
+          blurb: "competition-official numbers for everything outside the league feed.",
+          items: [
+            { name: "EFL / Carabao Cup", url: "https://www.efl.com/carabao-cup/", what: "Official EFL Cup fixtures, results and round draws — the API's blind spot, covered.", cite: "cite: EFL", search: gsite("efl.com") },
+            { name: "UEFA", url: "https://www.uefa.com/uefachampionsleague/statistics/", what: "Official UCL/UEL stat centre: per-player and per-club European numbers, squad lists, coefficients.", cite: "cite: UEFA.com", search: gsite("uefa.com") },
+            { name: "Premier League", url: "https://www.premierleague.com/clubs/4/Chelsea/stats", what: "Official PL stats hub and all-time records.", cite: "cite: @premierleague", search: gsite("premierleague.com") },
+            { name: "The FA / FA Cup", url: "https://www.thefa.com/competitions/thefacup", what: "Official FA Cup draws, fixtures and archives.", cite: "cite: The FA", search: gsite("thefa.com") },
+            { name: "Chelsea FC", url: "https://www.chelseafc.com", what: "Official site — lineups, injury news, quotes for context lines.", cite: "cite: @ChelseaFC", search: gsite("chelseafc.com") },
+          ],
+        },
+        {
+          title: "DEEP RESEARCH",
+          blurb: "where the long-form numbers live — slower, richer, the stuff threads are made of.",
+          items: [
+            { name: "FBref", url: "https://fbref.com/en/squads/cff3d9bb/Chelsea-Stats", what: "The deepest free table: shooting, passing, progression, defense per-90s (Opta). Click the fieldtilt bookmarklet on any player page to pipe it in.", cite: "cite: FBref / Opta", feed: "bookmarklet", search: (q) => "https://fbref.com/en/search/search.fcgi?search=" + encodeURIComponent(q) },
+            { name: "Understat", url: "https://understat.com/team/Chelsea/2025", what: "xG, npxG, xA, xGChain per player/team/match — the model behind this app's advanced stats.", cite: "cite: xG: Understat", feed: "auto", search: gsite("understat.com") },
+            { name: "WhoScored", url: "https://www.whoscored.com/Teams/15/Show/England-Chelsea", what: "Ratings, detailed dashboards, per-player strengths/weaknesses.", cite: "cite: @WhoScored", search: gsite("whoscored.com") },
+            { name: "The Analyst (Opta)", url: "https://theanalyst.com/competition/premier-league", what: "Opta editorial: field tilt, expected points, long-form stat pieces.", cite: "cite: @OptaAnalyst", search: gsite("theanalyst.com") },
+            { name: "Transfermarkt", url: "https://www.transfermarkt.com/fc-chelsea/startseite/verein/631", what: "Market values, transfer history, contracts, career paths (former-club angles).", cite: "cite: @Transfermarkt", search: (q) => "https://www.transfermarkt.com/schnellsuche/ergebnis/schnellsuche?query=" + encodeURIComponent(q) },
+            { name: "football-data.org", url: "https://www.football-data.org", what: "The API feeding fixtures, results, standings and historic same-stage tables.", cite: "cite: football-data.org", feed: "auto", search: null },
+            { name: "Wikipedia", url: "https://en.wikipedia.org/wiki/Chelsea_F.C.", what: "Season articles, cup runs, honours — also feeds the agent's web_lookup automatically.", cite: "cite: Wikipedia", feed: "auto", search: (q) => "https://en.wikipedia.org/w/index.php?search=" + encodeURIComponent(q) },
+          ],
+        },
       ];
-      document.getElementById("sourceList").innerHTML = STAT_SOURCES.map(
-        (s) =>
-          '<a class="card rounded-xl p-4" style="text-decoration:none;color:inherit;display:block" href="' + s.url + '" target="_blank" rel="noopener">' +
-          '<div class="flex items-center justify-between"><span class="dim font-semibold">' + s.name + '</span><span class="label" style="color:var(--accent)">open ↗</span></div>' +
-          '<div class="muted text-xs mt-1">' + s.what + "</div>" +
-          '<div class="label mt-3">' + s.cite + "</div>" +
-          "</a>"
+      const FEED_BADGE = { auto: "⚡ feeds fieldtilt", bookmarklet: "❯ via bookmarklet" };
+      document.getElementById("sourceGroups").innerHTML = SOURCE_GROUPS.map(
+        (g) =>
+          '<div><div class="rail-title mb-1">[ ' + g.title + " ]</div>" +
+          '<p class="muted text-xs mb-3">' + g.blurb + "</p>" +
+          '<div class="grid md:grid-cols-2 gap-4">' +
+          g.items.map(
+            (x) =>
+              '<a class="card rounded-xl p-4" style="text-decoration:none;color:inherit;display:block" href="' + x.url + '" target="_blank" rel="noopener">' +
+              '<div class="flex items-center justify-between"><span class="dim font-semibold">' + x.name + "</span>" +
+              '<span class="label" style="color:var(--accent)">' + (FEED_BADGE[x.feed] || "open ↗") + "</span></div>" +
+              '<div class="muted text-xs mt-1">' + x.what + "</div>" +
+              '<div class="label mt-3">' + x.cite + "</div>" +
+              "</a>"
+          ).join("") +
+          "</div></div>"
       ).join("");
+      // launcher: one query, open in any source
+      (function () {
+        const input = document.getElementById("srcQuery");
+        const launch = document.getElementById("srcLaunch");
+        const targets = SOURCE_GROUPS.flatMap((g) => g.items).filter((x) => x.search);
+        launch.innerHTML = targets.map((x, i) => '<button data-i="' + i + '" class="btn-ghost px-3 py-1.5 text-xs">' + x.name + "</button>").join("");
+        launch.querySelectorAll("button").forEach((b) =>
+          b.addEventListener("click", () => {
+            const q = input.value.trim();
+            if (!q) return input.focus();
+            window.open(targets[Number(b.dataset.i)].search(q), "_blank", "noopener");
+          })
+        );
+        input.addEventListener("keydown", (ev) => {
+          if (ev.key === "Enter" && input.value.trim()) window.open(targets[0].search(input.value.trim()), "_blank", "noopener");
+        });
+      })();
 
       // ---------- PNG download helper ----------
       async function downloadCardPng(svgText, filename) {
