@@ -183,7 +183,7 @@ comparison {title?, playerA, playerB, context, metrics:[{label, a, b, aDisplay?,
  "palette": "home" (home fixtures, celebrations) | "away" (away fixtures) | "neutral" (analysis),
  "card_data": object matching the shape, or null,
  "copy_data": flat object of the concrete facts the tweet writer needs (strings/numbers only — e.g. {"opponent":"Luton Town","competition":"Carabao Cup R2","date":"Thu 27 Aug, 19:30 WAT","venue":"Stamford Bridge","hook":"H2H: W2, 6-2 agg","source":"chelseafc.com"}). NEVER empty — this is what the copy is written from,
- "rationale": "<one line on the design choice>"}
+ "rationale": "<one line on the design choice>"}\nNever use em dashes or en dashes in any card text or copy_data value; use hyphens or commas.
 Card shapes:\n${shapes}
 ${state.grounding.webSources.length ? "Facts from web_lookup MUST be credited: put the source domain in a footnote/context field." : ""}`,
       `Post intent: ${state.plan!.intent}\nGathered data: ${dataStr}${attempt ? "\n\nYour previous card_data was invalid or empty — fix it or set card_kind to null." : ""}`

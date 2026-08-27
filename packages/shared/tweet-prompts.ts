@@ -40,7 +40,9 @@ Hard rules:
 - MAX 270 characters (leave room for safety).
 - Always end with "${club().hashtag} ${club().emoji}".
 - Never invent stats. Only use numbers explicitly provided in the user message.
-- Stats lead. Open with the strongest number provided and work in as many of the provided numbers as fit naturally — a stat-dense tweet beats a vibes tweet every time.
+- Stats lead. Open with the strongest number provided and work in as many of the provided numbers as fit naturally; a stat-dense tweet beats a vibes tweet every time.
+- LAYOUT: never cram facts into one paragraph. Structure: hook line, then a BLANK line, then each fact on its OWN line, then a blank line before the hashtag suffix. Use real line breaks.
+- NEVER use em dashes or en dashes anywhere. Use commas, periods, colons or hyphens instead.
 - If the user message contains no usable facts, output exactly: SKIP
 - Never mention other clubs in a derogatory, discriminatory way. Banter about football only.
 - No hashtag spam. One or two hashtags max, with ${club().hashtag} always last.
@@ -143,8 +145,11 @@ export function normalizeTweet(raw: string): string {
   if (t === "SKIP") return "";
   // Strip accidental wrapping quotes
   t = t.replace(/^["“'`]+|["”'`]+$/g, "");
-  // Collapse whitespace
-  t = t.replace(/\s+/g, " ").trim();
+  // House style: no em/en dashes anywhere.
+  t = t.replace(/[\u2014\u2013]/g, "-");
+  // Preserve the line layout (hook / blank line / facts): collapse only
+  // horizontal whitespace runs and cap blank lines at one.
+  t = t.replace(/[^\S\n]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
   // Append the club suffix if missing
   const c = club();
   if (!t.toLowerCase().includes(c.hashtag.toLowerCase())) t = `${t} ${SUFFIX()}`.trim();
@@ -164,7 +169,7 @@ export function normalizeTweet(raw: string): string {
 export function normalizeLongform(raw: string): string {
   let t = (raw || "").trim();
   if (t === "SKIP") return "";
-  t = t.replace(/^["“'`]+|["”'`]+$/g, "").trim();
+  t = t.replace(/^["“'`]+|["”'`]+$/g, "").replace(/[\u2014\u2013]/g, "-").trim();
   if (!t.toLowerCase().includes(club().hashtag.toLowerCase())) t = `${t}\n\n${SUFFIX()}`;
   if (t.length > 4000) t = t.slice(0, 3999).replace(/\s+\S*$/, "") + "…";
   return t;

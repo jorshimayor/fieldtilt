@@ -68,6 +68,16 @@ export async function composeAndPost(opts: {
     return { draftId: "", tweet: "", posted: false, tweetId: "", imageAttached: false, skipped: "llm produced SKIP" };
   }
 
+  const sanitize = (v: unknown): unknown =>
+    typeof v === "string"
+      ? v.replace(/[\u2014\u2013]/g, "-")
+      : Array.isArray(v)
+        ? v.map(sanitize)
+        : v && typeof v === "object"
+          ? Object.fromEntries(Object.entries(v as Record<string, unknown>).map(([k, x]) => [k, sanitize(x)]))
+          : v;
+  if (opts.card?.data) opts.card.data = sanitize(opts.card.data) as Record<string, unknown>;
+
   const [draft] = await db
     .insert(drafts)
     .values({
