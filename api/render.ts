@@ -261,6 +261,15 @@ export default withErrorLogging(async function handler(req: Request): Promise<Re
     if (qp && ["neutral", "home", "away", "terminal"].includes(qp)) data = { ...(data as Record<string, unknown>), palette: qp };
   }
 
+  // Builder support: format=json returns the (demo or posted) data object
+  // itself — the Studio's form editor seeds from this.
+  if (format === "json") {
+    return new Response(JSON.stringify({ kind, data }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    });
+  }
+
   // Inline any image URLs / wiki-photo / crest-club fields before building
   // the SVG — canvas and resvg both refuse external hrefs.
   data = await resolveCardImages(data as Record<string, unknown>);

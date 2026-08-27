@@ -17,3 +17,7 @@ declare module "*.wasm" {
   const mod: WebAssembly.Module;
   export default mod;
 }
+declare module "*.txt" {
+  const content: string;
+  export default content;
+}

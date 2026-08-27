@@ -211,6 +211,7 @@
                   </div>
                 </div>
               </aside>
+              <div class="studio-form" id="studioForm"><div class="muted text-xs">Loading builder…</div></div>
               <div class="studio-stage">
                 <div class="stage-head">
                   <span class="ana-title" id="stageTitle">player stat</span>
@@ -228,6 +229,7 @@
       </div>
     </div>
 
+    <script src="/sortable.min.js"></script>
     <script>
       // ---------- router ----------
       const PANELS = { overview: "Overview", queue: "Approval queue", compose: "Compose", analytics: "Analytics", sources: "Stat sources", studio: "Card studio" };
@@ -237,7 +239,7 @@
         document.querySelectorAll("[data-nav]").forEach((a) => a.classList.toggle("active", a.dataset.nav === name));
         document.getElementById("panelTitle").textContent = PANELS[name];
         if (location.hash !== "#" + name) history.replaceState({}, "", "#" + name);
-        if (name === "studio" && !studioRendered) { studioRendered = true; renderStudio(); }
+        if (name === "studio" && !studioRendered) { studioRendered = true; renderStudio(); openStudioBuilder(); }
       }
       window.addEventListener("hashchange", () => showPanel(location.hash.slice(1)));
 
@@ -844,12 +846,14 @@
       let studioData = null; // null = server demo data
       function stageMeta() {
         document.getElementById("stageTitle").textContent = studioKind.replace(/_/g, " ");
-        document.getElementById("stageMeta").textContent = (studioData ? "custom data" : "demo data") + " · " + studioPalette + " kit" + (studioPhoto ? " · photo" : "");
+        document.getElementById("stageMeta").textContent = (studioDirty ? "custom data" : "demo data") + " · " + studioPalette + " kit" + (studioPhoto ? " · photo" : "");
       }
       document.querySelectorAll("#cardKinds button[data-kind]").forEach((btn) =>
         btn.addEventListener("click", () => {
           studioKind = btn.dataset.kind;
           studioData = null;
+          studioDemo = null;
+          openStudioBuilder();
           document.querySelectorAll("#cardKinds .kind-btn").forEach((b) => b.classList.toggle("active", b === btn));
           document.getElementById("studioJson").style.display = "none";
           document.getElementById("studioJsonActions").style.display = "none";
@@ -860,23 +864,17 @@
       document.getElementById("studioJsonToggle").addEventListener("click", async () => {
         const open = jsonEl.style.display !== "none";
         if (open) { jsonEl.style.display = "none"; document.getElementById("studioJsonActions").style.display = "none"; return; }
-        if (!jsonEl.value) {
-          // seed the editor with the rendered data (server demo)
-          try {
-            const res = await fetch("/api/render", { method: "POST", headers: authHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ kind: studioKind, format: "svg" }) });
-            void res; // demo JSON isn't exposed; provide a scaffold instead
-          } catch {}
-          jsonEl.value = JSON.stringify(studioData || { note: "paste card data JSON here — shapes are documented in Compose (ask the agent) — or press demo data" }, null, 2);
-        }
+        try { await ensureStudioData(); } catch {}
+        jsonEl.value = JSON.stringify(studioData || {}, null, 2);
         jsonEl.style.display = "";
         document.getElementById("studioJsonActions").style.display = "flex";
       });
       document.getElementById("studioJsonApply").addEventListener("click", () => {
-        try { studioData = JSON.parse(jsonEl.value); renderStudio(); }
+        try { studioData = JSON.parse(jsonEl.value); studioDirty = true; buildStudioForm(); renderStudio(); }
         catch (e) { alert("Invalid JSON: " + e.message); }
       });
       document.getElementById("studioJsonReset").addEventListener("click", () => {
-        studioData = null; jsonEl.value = ""; renderStudio();
+        studioData = null; studioDemo = null; jsonEl.value = ""; openStudioBuilder().then(renderStudio);
       });
       document.getElementById("studioPhoto").addEventListener("change", async (ev) => {
         const f = ev.target.files && ev.target.files[0];
@@ -894,6 +892,203 @@
         document.getElementById("studioPhotoClear").style.display = "none";
         renderStudio();
       });
+
+      // ---------- studio form builder (drag & drop) ----------
+      const studioFormEl = document.getElementById("studioForm");
+      let studioDemo = null;   // pristine demo copy for the current kind (add-item templates)
+      let studioDirty = false; // false until the operator edits something
+      let sfTimer = null;
+      const SF_SKIP = (k) => k === "palette" || /DataUri$/.test(k);
+
+      async function fetchDemoData(kind) {
+        const res = await fetch("/api/render?kind=" + encodeURIComponent(kind) + "&format=json", { headers: authHeaders() });
+        if (!res.ok) throw new Error("demo data unavailable (" + res.status + ")");
+        return (await res.json()).data || {};
+      }
+      async function ensureStudioData() {
+        if (!studioData) {
+          studioDemo = await fetchDemoData(studioKind);
+          studioData = JSON.parse(JSON.stringify(studioDemo));
+          studioDirty = false;
+        } else if (!studioDemo) {
+          studioDemo = JSON.parse(JSON.stringify(studioData));
+        }
+        return studioData;
+      }
+      function sfTouched() {
+        studioDirty = true;
+        clearTimeout(sfTimer);
+        sfTimer = setTimeout(renderStudio, 350);
+      }
+      function sfLabel(k) { return k.replace(/([A-Z])/g, " $1").replace(/_/g, " ").toLowerCase(); }
+      function sfPrimitiveInput(value, onSet) {
+        const wasNumber = typeof value === "number";
+        const inp = document.createElement(String(value).length > 60 ? "textarea" : "input");
+        if (inp.tagName === "INPUT") inp.type = "text";
+        else inp.rows = 2;
+        inp.value = value == null ? "" : String(value);
+        inp.addEventListener("input", () => {
+          let v = inp.value;
+          if (wasNumber && v.trim() !== "" && !isNaN(Number(v))) v = Number(v);
+          onSet(v);
+          sfTouched();
+        });
+        return inp;
+      }
+      function sfRow(labelText, inputEl) {
+        const row = document.createElement("div");
+        row.className = "sf-row";
+        const lab = document.createElement("label");
+        lab.textContent = labelText;
+        row.appendChild(lab);
+        row.appendChild(inputEl);
+        return row;
+      }
+      function sfItemRow(list, idx, rebuild) {
+        const item = list[idx];
+        const row = document.createElement("div");
+        row.className = "sf-item";
+        const handle = document.createElement("span");
+        handle.className = "sf-handle";
+        handle.textContent = "≡";
+        handle.title = "Drag to reorder";
+        row.appendChild(handle);
+        const fields = document.createElement("div");
+        fields.className = "sf-fields";
+        if (item && typeof item === "object") {
+          for (const fk of Object.keys(item)) {
+            const v = item[fk];
+            if (typeof v === "boolean") {
+              const cb = document.createElement("input");
+              cb.type = "checkbox";
+              cb.checked = v;
+              cb.title = sfLabel(fk);
+              cb.style.flex = "0";
+              cb.addEventListener("change", () => { item[fk] = cb.checked; sfTouched(); });
+              fields.appendChild(cb);
+            } else if (v == null || typeof v !== "object") {
+              const inp = sfPrimitiveInput(v, (nv) => { item[fk] = nv; });
+              inp.placeholder = sfLabel(fk);
+              inp.title = sfLabel(fk);
+              fields.appendChild(inp);
+            }
+          }
+        } else {
+          const inp = sfPrimitiveInput(item, (nv) => { list[row._sfIndex] = nv; });
+          fields.appendChild(inp);
+        }
+        row._sfIndex = idx;
+        row.appendChild(fields);
+        const del = document.createElement("button");
+        del.className = "sf-del";
+        del.textContent = "✕";
+        del.title = "Remove";
+        del.addEventListener("click", () => { list.splice(row._sfIndex, 1); rebuild(); sfTouched(); });
+        row.appendChild(del);
+        return row;
+      }
+      function buildStudioForm() {
+        if (!studioData || !studioFormEl) return;
+        studioFormEl.innerHTML = "";
+        for (const key of Object.keys(studioData)) {
+          if (SF_SKIP(key)) continue;
+          const val = studioData[key];
+          if (Array.isArray(val)) {
+            const group = document.createElement("div");
+            group.className = "sf-group";
+            const title = document.createElement("div");
+            title.className = "sf-title";
+            title.textContent = "[ " + sfLabel(key) + " ]";
+            group.appendChild(title);
+            const listEl = document.createElement("div");
+            listEl.className = "sf-list";
+            const rebuild = () => {
+              listEl.innerHTML = "";
+              val.forEach((_, i) => listEl.appendChild(sfItemRow(val, i, rebuild)));
+              [...listEl.children].forEach((row, i) => (row._sfIndex = i));
+            };
+            rebuild();
+            group.appendChild(listEl);
+            if (window.Sortable)
+              Sortable.create(listEl, {
+                handle: ".sf-handle",
+                animation: 140,
+                onEnd: (ev) => {
+                  if (ev.oldIndex === ev.newIndex) return;
+                  const moved = val.splice(ev.oldIndex, 1)[0];
+                  val.splice(ev.newIndex, 0, moved);
+                  [...listEl.children].forEach((row, i) => (row._sfIndex = i));
+                  sfTouched();
+                },
+              });
+            const add = document.createElement("button");
+            add.className = "btn-ghost px-3 py-1.5 text-xs sf-add";
+            add.textContent = "+ add " + sfLabel(key).replace(/s$/, "");
+            add.addEventListener("click", () => {
+              const tmpl = val[val.length - 1] ?? (studioDemo && Array.isArray(studioDemo[key]) ? studioDemo[key][0] : "");
+              val.push(typeof tmpl === "object" && tmpl !== null ? JSON.parse(JSON.stringify(tmpl)) : tmpl);
+              rebuild();
+              sfTouched();
+            });
+            group.appendChild(add);
+            studioFormEl.appendChild(group);
+          } else if (val && typeof val === "object") {
+            const group = document.createElement("div");
+            group.className = "sf-group";
+            const title = document.createElement("div");
+            title.className = "sf-title";
+            title.textContent = "[ " + sfLabel(key) + " ]";
+            group.appendChild(title);
+            for (const nk of Object.keys(val)) {
+              if (typeof val[nk] === "object" && val[nk] !== null) continue;
+              group.appendChild(sfRow(sfLabel(nk), sfPrimitiveInput(val[nk], (nv) => { val[nk] = nv; })));
+            }
+            studioFormEl.appendChild(group);
+          } else if (typeof val === "boolean") {
+            const wrap = document.createElement("div");
+            wrap.className = "sf-check";
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.checked = val;
+            cb.addEventListener("change", () => { studioData[key] = cb.checked; sfTouched(); });
+            const lab = document.createElement("label");
+            lab.textContent = sfLabel(key);
+            wrap.appendChild(cb);
+            wrap.appendChild(lab);
+            studioFormEl.appendChild(wrap);
+          } else {
+            studioFormEl.appendChild(sfRow(sfLabel(key), sfPrimitiveInput(val, (nv) => { studioData[key] = nv; })));
+          }
+        }
+      }
+      async function openStudioBuilder() {
+        try {
+          await ensureStudioData();
+          buildStudioForm();
+        } catch (e) {
+          studioFormEl.innerHTML = '<div class="muted text-xs">Builder unavailable: ' + escapeHtml(e.message) + "</div>";
+        }
+      }
+
+      // photo drag & drop straight onto the stage
+      const stageEl = document.querySelector(".studio-stage");
+      if (stageEl) {
+        ["dragover", "dragenter"].forEach((evName) =>
+          stageEl.addEventListener(evName, (ev) => { ev.preventDefault(); stageEl.classList.add("dropzone-active"); })
+        );
+        ["dragleave", "drop"].forEach((evName) =>
+          stageEl.addEventListener(evName, (ev) => { ev.preventDefault(); stageEl.classList.remove("dropzone-active"); })
+        );
+        stageEl.addEventListener("drop", async (ev) => {
+          const f = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+          if (!f || !/^image\//.test(f.type)) return;
+          try {
+            studioPhoto = await readPhotoFile(f);
+            document.getElementById("studioPhotoClear").style.display = "";
+            renderStudio();
+          } catch (e) { alert("Photo failed: " + e.message); }
+        });
+      }
 
       // ---------- health / fixtures / posts ----------
       let clubInfo = { name: "Club", fullName: "Club", league: "" };

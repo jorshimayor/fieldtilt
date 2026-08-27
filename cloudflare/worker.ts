@@ -1,5 +1,6 @@
 import dashboardHtml from "../public/index.html";
 import themeCss from "../public/theme.css";
+import sortableJs from "../public/sortable.min.js.txt";
 
 import apiIndex from "../api/index";
 import apiDashboard from "../api/dashboard";
@@ -123,6 +124,12 @@ export default {
     const p = url.pathname;
 
     if (p === "/" || p === "/index.html") return serveDashboard();
+    if (p === "/sortable.min.js") {
+      return new Response(sortableJs, {
+        status: 200,
+        headers: { "Content-Type": "application/javascript; charset=utf-8", "Cache-Control": "public, max-age=86400" },
+      });
+    }
     if (p === "/theme.css") {
       return new Response(themeCss, {
         status: 200,
