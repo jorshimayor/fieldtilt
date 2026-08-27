@@ -57,21 +57,29 @@ export async function uploadMedia(
   bytes: Uint8Array,
   mimeType = "image/png"
 ): Promise<string> {
-  const form = new FormData();
-  const copy = new Uint8Array(bytes); // detach from any pooled buffer
-  form.append("media", new Blob([copy.buffer as ArrayBuffer], { type: mimeType }));
-  form.append("media_category", "tweet_image");
-  const res = await fetch("https://api.x.com/2/media/upload", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-    body: form,
-  });
-  const json = (await res.json().catch(() => ({}))) as any;
-  const id = json?.data?.id || json?.media_id_string || "";
-  if (!res.ok || !id) {
-    throw new Error(`x_media_upload_failed_${res.status}: ${JSON.stringify(json).slice(0, 500)}`);
+  // X's v2 media endpoint 503s intermittently — retry 5xx with backoff
+  // (verified: unauthenticated probes 401 while authenticated uploads 503,
+  // i.e. the service is up but flaky on the upload path).
+  const waits = [0, 1200, 3000];
+  let lastErr = "";
+  for (const wait of waits) {
+    if (wait) await new Promise((r) => setTimeout(r, wait));
+    const form = new FormData();
+    const copy = new Uint8Array(bytes); // detach from any pooled buffer
+    form.append("media", new Blob([copy.buffer as ArrayBuffer], { type: mimeType }));
+    form.append("media_category", "tweet_image");
+    const res = await fetch("https://api.x.com/2/media/upload", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    });
+    const json = (await res.json().catch(() => ({}))) as any;
+    const id = json?.data?.id || json?.media_id_string || "";
+    if (res.ok && id) return String(id);
+    lastErr = `x_media_upload_failed_${res.status}: ${JSON.stringify(json).slice(0, 500)}`;
+    if (res.status < 500) break; // 4xx won't heal on retry
   }
-  return String(id);
+  throw new Error(lastErr);
 }
 
 export async function startOAuth(state: string): Promise<{ url: string; verifier: string }> {
