@@ -36,7 +36,10 @@ if (payload.cardKind) {
   };
   await initWasm(readFileSync("node_modules/@resvg/resvg-wasm/index_bg.wasm"));
   const svg = cards[fnMap[payload.cardKind]](await resolveCardImages(payload.cardData || {}));
-  const fonts = ["Regular", "Bold", "ExtraBold"].map((w) => readFileSync(`packages/render/fonts/Montserrat-${w}.ttf`));
+  const fonts = ["Regular", "Bold", "ExtraBold"].flatMap((w) => [
+    readFileSync(`packages/render/fonts/Montserrat-${w}.ttf`),
+    readFileSync(`packages/render/fonts/JetBrainsMono-${w}.ttf`),
+  ]);
   const png = new Resvg(svg, { font: { fontBuffers: fonts, defaultFontFamily: "Montserrat", loadSystemFonts: false } }).render().asPng();
   console.log("card rendered:", Math.round(png.length / 1024), "KB");
   const id = await uploadMedia(tok.accessToken, new Uint8Array(png));

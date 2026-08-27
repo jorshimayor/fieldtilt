@@ -39,7 +39,7 @@ export type GraphState = {
   grounding: { ok: boolean; failed: string[]; webSources: string[] };
   design?: {
     card_kind?: CardKind;
-    palette: "neutral" | "home" | "away";
+    palette: "neutral" | "home" | "away" | "terminal";
     card_data?: Record<string, unknown>;
     copy_data?: Record<string, unknown>;
     rationale: string;
@@ -184,7 +184,7 @@ head_to_head {title? (max 2 short lines), context?, playerA, playerB, roleA?, ro
     const d = await deps.llmJson(
       `You are the DESIGN stage of a football graphics pipeline. Choose the infographic for this post and fill its data — every value MUST come from the gathered data below, never invented. Reply ONLY with JSON:
 {"card_kind": one of ${JSON.stringify(state.plan!.card_candidates.length ? state.plan!.card_candidates : CARD_KINDS)} or null,
- "palette": "home" (home fixtures, celebrations) | "away" (away fixtures) | "neutral" (analysis),
+ "palette": "home" (home fixtures, celebrations) | "away" (away fixtures) | "neutral" (analysis) | "terminal" (mono terminal skin, best for data-heavy analysis: leaderboards, shot maps, xG tables),
  "card_data": object matching the shape, or null,
  "copy_data": flat object of the concrete facts the tweet writer needs (strings/numbers only — e.g. {"opponent":"Luton Town","competition":"Carabao Cup R2","date":"Thu 27 Aug, 19:30 WAT","venue":"Stamford Bridge","hook":"H2H: W2, 6-2 agg","source":"chelseafc.com"}). NEVER empty — this is what the copy is written from,
  "rationale": "<one line on the design choice>"}\nNever use em dashes or en dashes in any card text or copy_data value; use hyphens or commas.
@@ -195,15 +195,15 @@ ${state.grounding.webSources.length ? "Facts from web_lookup MUST be credited: p
     const kind = d?.card_kind;
     const copyData = d?.copy_data && typeof d.copy_data === "object" ? d.copy_data : undefined;
     if (kind == null) {
-      state.design = { palette: d?.palette === "home" || d?.palette === "away" ? d.palette : "neutral", copy_data: copyData, rationale: String(d?.rationale || "no card") };
+      state.design = { palette: ["home", "away", "terminal"].includes(d?.palette) ? d.palette : "neutral", copy_data: copyData, rationale: String(d?.rationale || "no card") };
       done("ok", `no card · ${state.design.rationale}`);
       return;
     }
     if (CARD_KINDS.includes(kind) && d?.card_data && typeof d.card_data === "object" && Object.keys(d.card_data).length) {
       state.design = {
         card_kind: kind,
-        palette: d?.palette === "home" || d?.palette === "away" ? d.palette : "neutral",
-        card_data: { ...d.card_data, palette: d?.palette === "home" || d?.palette === "away" ? d.palette : "neutral" },
+        palette: ["home", "away", "terminal"].includes(d?.palette) ? d.palette : "neutral",
+        card_data: { ...d.card_data, palette: ["home", "away", "terminal"].includes(d?.palette) ? d.palette : "neutral" },
         copy_data: copyData,
         rationale: String(d?.rationale || "").slice(0, 160),
       };

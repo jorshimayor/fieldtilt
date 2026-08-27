@@ -33,7 +33,7 @@ export const color = {
  * "home" is Chelsea royal blue with crest-gold accents; "away" is the light
  * kit (ink on white). vig* are the background vignette stops.
  */
-export type Palette = "neutral" | "home" | "away";
+export type Palette = "neutral" | "home" | "away" | "terminal";
 
 export const palettes: Record<Palette, Record<string, string>> = {
   neutral: {
@@ -58,6 +58,24 @@ export const palettes: Record<Palette, Record<string, string>> = {
     vigB: "#052A5C",
     vigC: "#031B3D",
   },
+  terminal: {
+    // The dashboard's terminal-agentic look on a card: near-black canvas,
+    // #3d6bff accent (same as the app UI), mono type via cards.ts.
+    bg: "#07090D",
+    bgAlt: "#0D1117",
+    ink: "#E7EDF7",
+    inkDim: "#A9B4C9",
+    inkMute: "#66738C",
+    line: "#1B2230",
+    scrim: "#04060A",
+    accent: "#3D6BFF",
+    win: "#3FDF8C",
+    draw: "#8A94A8",
+    loss: "#FF5F56",
+    vigA: "#0C1018",
+    vigB: "#07090D",
+    vigC: "#04060A",
+  },
   away: {
     bg: "#F2F4F8",
     bgAlt: "#FFFFFF",
@@ -80,6 +98,9 @@ export const font = {
   family: "Montserrat",
   weight: { regular: 400, bold: 700, black: 800 },
 } as const;
+
+/** Mono face used by the "terminal" palette (subset, bundled like Montserrat). */
+export const fontMono = { family: "JetBrains Mono" } as const;
 
 /**
  * Type scale (px, at card resolution). Display sizes use tight tracking;

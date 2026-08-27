@@ -12,7 +12,7 @@
  *   - hairline dividers; the brand wordmark anchors a corner
  */
 
-import { BRAND, font, type, formats, layout, palettes, Palette } from "./theme";
+import { BRAND, font, fontMono, type, formats, layout, palettes, Palette } from "./theme";
 import { LION_HEAD_URI } from "./lion";
 
 export const PORTRAIT = formats.portrait;
@@ -27,9 +27,12 @@ const M = layout.margin;
  * treatment so type always stays legible.
  */
 let P: Record<string, string> = palettes.neutral;
+/** Terminal mode: mono type + scanline/bracket chrome, set alongside P. */
+let TERM = false;
 function setPalette(palette?: Palette, hasPhoto?: boolean) {
   const key: Palette = palette && palettes[palette] ? palette : "neutral";
   P = palettes[hasPhoto && key === "away" ? "neutral" : key];
+  TERM = key === "terminal";
 }
 
 // ------------------------------------------------------------------ utilities
@@ -40,21 +43,26 @@ function setPalette(palette?: Palette, hasPhoto?: boolean) {
  * This is what makes the zero-cost approval flow work on the Workers free
  * plan: the dashboard rasterizes client-side instead of running wasm here.
  */
-export function embedFontsInSvg(svg: string, fontBuffers: Uint8Array[]): string {
-  const weights = [400, 700, 800];
-  const faces = fontBuffers
-    .slice(0, 3)
-    .map((buf, i) => {
+export function embedFontsInSvg(
+  svg: string,
+  faces: ({ family: string; weight: number; buf: Uint8Array } | Uint8Array)[]
+): string {
+  const legacyWeights = [400, 700, 800];
+  const css = faces
+    .map((face, i) => {
+      const buf = face instanceof Uint8Array ? face : face.buf;
+      const family = face instanceof Uint8Array ? font.family : face.family;
+      const weight = face instanceof Uint8Array ? legacyWeights[i % 3] : face.weight;
       let bin = "";
       const chunk = 0x8000;
       for (let o = 0; o < buf.length; o += chunk) {
         bin += String.fromCharCode(...buf.subarray(o, o + chunk));
       }
       const b64 = btoa(bin);
-      return `@font-face{font-family:'${font.family}';font-weight:${weights[i]};src:url(data:font/ttf;base64,${b64}) format('truetype');}`;
+      return `@font-face{font-family:'${family}';font-weight:${weight};src:url(data:font/ttf;base64,${b64}) format('truetype');}`;
     })
     .join("");
-  return svg.replace(/(<svg[^>]*>)/, `$1<style>${faces}</style>`);
+  return svg.replace(/(<svg[^>]*>)/, `$1<style>${css}</style>`);
 }
 
 export function esc(s: unknown): string {
@@ -135,7 +143,7 @@ function text(
     opacity?: number;
   }
 ): string {
-  return `<text x="${x}" y="${y}" font-family="${font.family}" font-size="${opts.size}" font-weight="${opts.weight ?? 400}" fill="${opts.fill ?? P.ink}"${
+  return `<text x="${x}" y="${y}" font-family="${TERM ? fontMono.family : font.family}" font-size="${opts.size}" font-weight="${opts.weight ?? 400}" fill="${opts.fill ?? P.ink}"${
     opts.tracking ? ` letter-spacing="${opts.tracking}"` : ""
   }${opts.anchor ? ` text-anchor="${opts.anchor}"` : ""}${opts.italic ? ` font-style="italic"` : ""}${
     opts.opacity != null ? ` opacity="${opts.opacity}"` : ""
@@ -177,7 +185,25 @@ function frame(w: number, h: number, photoDataUri?: string): string {
   </linearGradient>
 </defs>
 <rect width="${w}" height="${h}" fill="${P.bg}"/>
-${photo}`;
+${photo}${TERM ? termChrome(w, h) : ""}`;
+}
+
+/**
+ * Terminal-mode chrome: phosphor scanlines, a hairline outer border, and
+ * accent corner brackets, matching the dashboard's terminal-agentic UI.
+ */
+function termChrome(w: number, h: number): string {
+  const inset = 22;
+  const len = 30;
+  const bracket = (x: number, y: number, dx: number, dy: number) =>
+    `<path d="M ${x + dx * len} ${y} L ${x} ${y} L ${x} ${y + dy * len}" fill="none" stroke="${P.accent}" stroke-width="3"/>`;
+  return `<pattern id="scan" width="4" height="5" patternUnits="userSpaceOnUse"><rect width="4" height="1.4" fill="#FFFFFF" opacity="0.03"/></pattern>
+<rect width="${w}" height="${h}" fill="url(#scan)"/>
+<rect x="10" y="10" width="${w - 20}" height="${h - 20}" fill="none" stroke="${P.line}" stroke-width="1.5"/>
+${bracket(inset, inset, 1, 1)}
+${bracket(w - inset, inset, -1, 1)}
+${bracket(inset, h - inset, 1, -1)}
+${bracket(w - inset, h - inset, -1, -1)}`;
 }
 
 /**
@@ -206,8 +232,18 @@ function brandMark(x: number, y: number, anchor: "start" | "end" = "start"): str
   })}`;
 }
 
-/** "▶ EYEBROW" — small uppercase kicker with a play glyph. */
+/** "▶ EYEBROW" — small uppercase kicker with a play glyph. In terminal mode
+ *  it becomes a prompt line: accent chevron, snake_case label, cursor block. */
 function eyebrow(x: number, y: number, label: string, anchor: "start" | "middle" | "end" = "start"): string {
+  if (TERM && anchor === "start") {
+    const lbl = label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+    const sz = type.micro.size + 2;
+    const charW = sz * 0.6 + type.micro.tracking; // mono advance + tracking
+    const cursorX = x + 30 + (lbl.length + 0.4) * charW;
+    return `<path d="M ${x + 2} ${y - 9} l 10 9 l -10 9" fill="none" stroke="${P.accent}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+${text(x + 30, y + 2, lbl, { size: sz, weight: 700, tracking: type.micro.tracking, fill: P.inkDim })}
+<rect x="${cursorX}" y="${y - 10}" width="${sz * 0.6}" height="${sz + 4}" fill="${P.accent}" opacity="0.85"/>`;
+  }
   const tri =
     anchor === "start"
       ? `<path d="M ${x} ${y - 12} l 14 7 l -14 7 z" fill="${P.ink}"/>`

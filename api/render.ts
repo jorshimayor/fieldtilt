@@ -15,7 +15,7 @@ export const config = { runtime: "edge" };
  */
 
 import { buildCardSvg, svgToPng, embedFontsInSvg, resolveCardImages, CardKind } from "../packages/render/index";
-import { fontBuffers } from "../packages/render/fonts";
+import { fontFaces } from "../packages/render/fonts";
 import { withErrorLogging } from "../packages/observability/index";
 import { requireOpsAuth } from "../packages/shared/auth";
 
@@ -225,7 +225,7 @@ export default withErrorLogging(async function handler(req: Request): Promise<Re
       data = { ...(data as Record<string, unknown>), photoDataUri: (body as any).photoDataUri };
     }
     // Kit switcher: a top-level palette overrides whatever the data carries.
-    if (["neutral", "home", "away"].includes((body as any).palette)) {
+    if (["neutral", "home", "away", "terminal"].includes((body as any).palette)) {
       data = { ...(data as Record<string, unknown>), palette: (body as any).palette };
     }
   } else {
@@ -233,7 +233,7 @@ export default withErrorLogging(async function handler(req: Request): Promise<Re
     if (!KINDS.includes(kind)) return jsonErr(`invalid kind; allowed: ${KINDS.join(", ")}`);
     data = DEMO[kind];
     const qp = url.searchParams.get("palette");
-    if (qp && ["neutral", "home", "away"].includes(qp)) data = { ...(data as Record<string, unknown>), palette: qp };
+    if (qp && ["neutral", "home", "away", "terminal"].includes(qp)) data = { ...(data as Record<string, unknown>), palette: qp };
   }
 
   // Inline any image URLs / wiki-photo / crest-club fields before building
@@ -242,7 +242,7 @@ export default withErrorLogging(async function handler(req: Request): Promise<Re
 
   let svg = buildCardSvg(kind, data);
   if (format === "svg") {
-    if (embedFonts) svg = embedFontsInSvg(svg, fontBuffers);
+    if (embedFonts) svg = embedFontsInSvg(svg, fontFaces);
     return new Response(svg, {
       status: 200,
       headers: { "Content-Type": "image/svg+xml", "Cache-Control": "no-store" },

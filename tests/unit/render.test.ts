@@ -221,4 +221,17 @@ check("clubAssets resolves aliases", clubAssets("Man City")?.handle === "@ManCit
 check("clubAssets resolves fuzzy", clubAssets("Aston Villa FC")?.crestUrl.includes("/58.png") === true);
 check("clubAssets unknown is null", clubAssets("Real Madrid") === null);
 
+// ---- terminal palette ----
+import { leaderboardCard } from "../../packages/render/cards";
+const term = leaderboardCard({
+  title: "Most xG per 90",
+  entries: [{ value: "0.82", label: "Cole Palmer", highlight: true }],
+  palette: "terminal" as any,
+});
+check("terminal uses mono type", term.includes("JetBrains Mono"));
+check("terminal has scanlines + brackets", term.includes('url(#scan)') && term.includes('stroke="#3D6BFF"'));
+check("terminal eyebrow is a snake_case prompt", /leaderboard|most_xg/.test(term));
+const neutral = leaderboardCard({ title: "Most xG per 90", entries: [{ value: "0.82", label: "Cole Palmer" }] });
+check("neutral still Montserrat, no scanlines", neutral.includes("Montserrat") && !neutral.includes("url(#scan)"));
+
 if (failures) process.exit(1);
