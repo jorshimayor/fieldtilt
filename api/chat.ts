@@ -12,6 +12,7 @@ export const config = { runtime: "edge" };
  * never post to X directly. Stateless: the client resends the transcript.
  */
 
+import { groundedLookup } from "../packages/tools/websearch";
 import { chatWithTools } from "../packages/shared/openrouter";
 import { composeAndPost } from "../packages/shared/poster";
 import {
@@ -83,6 +84,7 @@ You help the operator create posts. Rules:
 - When the user asks for a post, you MUST actually call create_draft — never say a draft was created unless the create_draft tool returned a draftId in this conversation.
 - Dates shown to fans: convert to ${c.timezone} time (${c.tzLabel}) like "Sat 24 Aug, 20:00 ${c.tzLabel}".
 - Advanced stats (get_advanced_player_stats / get_league_xg_table) come from Understat's xG model — when a post leans on them, credit "xG: Understat" in the copy or card. Great for over/under-performance takes (goals vs xG), profiling (xGChain/xGBuildup), and transfer arguments. NEVER produce Opta-style historical trivia ("first player since…") — no tool can verify it.
+- web_lookup fills free-tier gaps (cup fixtures, lower-league opponents, kickoff times). Facts from it MUST carry their source: put the source name in the create_draft data and credit it in the copy or card footnote (e.g. "fixture: BBC Sport"). If web_lookup errors, say so — never fill the gap from memory.
 - Be brief in replies: one or two sentences on what you did or found. Plain text, no markdown.`;
 }
 
@@ -106,6 +108,11 @@ const TOOLS = [
     {}
   ),
   tool("get_head_to_head", "Head-to-head record vs the next opponent (last ~10 meetings).", {}),
+  tool(
+    "web_lookup",
+    "Grounded web search (Gemini + Google Search) for football facts the structured tools CANNOT provide: domestic cup fixtures/kickoff times, lower-league opponents, confirmed team news. Returns an answer WITH source URLs — cite them. Never use it for stats the other tools already cover.",
+    { question: { type: "string", description: "One specific factual question, e.g. 'When and where do Chelsea play Luton Town next, any competition?'" } }
+  ),
   tool("list_pending_drafts", "Drafts currently waiting in the approval queue.", {}),
   tool(
     "create_draft",
@@ -222,6 +229,16 @@ async function execTool(name: string, args: any): Promise<any> {
         return { error: "no league xG data available yet (early season or Understat unreachable)" };
       }
       return { table, source: "Understat", url: source };
+    }
+    case "web_lookup": {
+      const q = String(args?.question || "").trim();
+      if (!q) return { error: "question required" };
+      try {
+        const r = await groundedLookup(q);
+        return { answer: r.answer, sources: r.sourceTitles.slice(0, 4), source_urls: r.sources.slice(0, 4) };
+      } catch (e) {
+        return { error: String((e as Error).message || e) };
+      }
     }
     case "get_head_to_head": {
       const { fixtures } = await getTeamFixtures({ next: 1 });
