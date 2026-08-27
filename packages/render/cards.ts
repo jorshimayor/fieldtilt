@@ -1076,3 +1076,108 @@ ${d.tagline ? text(mid, h - 66, truncate(d.tagline, 44).toUpperCase(), { size: 2
 ${d.footnote ? text(M, h - 26, d.footnote.toUpperCase(), { size: 13, weight: 700, tracking: 2, fill: P.inkMute }) : ""}
 </svg>`;
 }
+
+// ------------------------------------------------------------------ scatter quadrant (portrait)
+
+export type ScatterData = {
+  /** e.g. "Eze club fit analysis" / "The league map" */
+  title: string;
+  context?: string;
+  xLabel: string;
+  yLabel: string;
+  /** Up to 26 labeled points. score 0..1 tints loss-red → amber → win-green;
+   *  omit score for quiet ink dots. highlight = accent ring + bold label. */
+  points: { label: string; x: number; y: number; score?: number; highlight?: boolean }[];
+  /** Corner captions, e.g. { tl: "Less chemistry", tr: "Best fit", ... } */
+  quadrants?: { tl?: string; tr?: string; bl?: string; br?: string };
+  /** Flip an axis so "up/right = better" holds for inverse metrics (xGA). */
+  xInvert?: boolean;
+  yInvert?: boolean;
+  footnote?: string;
+  photoDataUri?: string;
+  palette?: Palette;
+};
+
+function lerpHex(a: string, b: string, t: number): string {
+  const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
+  const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
+  return `#${pa.map((v, i) => Math.round(v + (pb[i] - v) * t).toString(16).padStart(2, "0")).join("")}`;
+}
+
+/** score 0..1 → loss red → amber → win green (the "fit map" scale). */
+export function scoreTint(score: number, loss: string, win: string): string {
+  const t = Math.max(0, Math.min(1, score));
+  const amber = "#E3B341";
+  return t < 0.5 ? lerpHex(loss, amber, t * 2) : lerpHex(amber, win, (t - 0.5) * 2);
+}
+
+/** Quadrant scatter — the club-fit / league-map pattern: labeled dots on a
+ *  2D plane, color-scaled by score, corner captions naming the quadrants. */
+export function scatterCard(d: ScatterData): string {
+  setPalette(d.palette, Boolean(d.photoDataUri));
+  const { w, h } = PORTRAIT;
+  const points = (d.points || []).slice(0, 26);
+
+  // plot geometry ---------------------------------------------------------
+  const px = M + 34; // room for the rotated y label
+  const pw = w - M - px;
+  const py = d.context ? 320 : 292;
+  const ph = h - py - 170;
+  const xs = points.map((p) => p.x);
+  const ys = points.map((p) => p.y);
+  const pad = (arr: number[]) => {
+    const lo = Math.min(...arr);
+    const hi = Math.max(...arr);
+    const span = hi - lo || 1;
+    return { lo: lo - span * 0.08, hi: hi + span * 0.08 };
+  };
+  const xr = pad(xs.length ? xs : [0, 1]);
+  const yr = pad(ys.length ? ys : [0, 1]);
+  const sx = (v: number) => {
+    const t = (v - xr.lo) / (xr.hi - xr.lo);
+    return px + (d.xInvert ? 1 - t : t) * pw;
+  };
+  const sy = (v: number) => {
+    const t = (v - yr.lo) / (yr.hi - yr.lo);
+    return py + (d.yInvert ? t : 1 - t) * ph;
+  };
+
+  // dots + labels ---------------------------------------------------------
+  const dots = points
+    .map((p) => {
+      const cx = sx(p.x);
+      const cy = sy(p.y);
+      const fill = p.highlight ? P.accent : p.score != null ? scoreTint(p.score, P.loss, P.win) : P.inkDim;
+      const r = p.highlight ? 13 : 10;
+      const onRight = cx > px + pw * 0.78;
+      const off = r + (p.highlight ? 6 : 0) + 8;
+      const lx = onRight ? cx - off : cx + off;
+      return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" opacity="0.92"/>
+${p.highlight ? `<circle cx="${cx}" cy="${cy}" r="${r + 6}" fill="none" stroke="${P.accent}" stroke-width="2.5"/>` : ""}
+${text(lx, cy + 5, truncate(p.label, 20), { size: 16, weight: p.highlight ? 800 : 400, fill: p.highlight ? P.ink : P.inkDim, anchor: onRight ? "end" : "start" })}`;
+    })
+    .join("\n");
+
+  // frame, axes, quadrants ------------------------------------------------
+  const q = d.quadrants || {};
+  const quadLabel = (label: string | undefined, x: number, y: number, anchor: "start" | "end") =>
+    label ? text(x, y, label.toUpperCase(), { size: 13, weight: 700, tracking: 1.8, fill: P.inkMute, anchor }) : "";
+  return `${frame(w, h, d.photoDataUri)}
+${eyebrow(M, 100, "Scatter")}
+${brandMark(w - M, 104, "end")}
+${text(M, 196, truncate(d.title, 30).toUpperCase(), { size: fitFont(d.title, 50, 26), weight: 800, tracking: -1 })}
+${d.context ? text(M, 240, d.context.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute }) : ""}
+<rect x="${px}" y="${py}" width="${pw}" height="${ph}" fill="${P.bgAlt}" opacity="0.4" rx="10"/>
+<rect x="${px}" y="${py}" width="${pw}" height="${ph}" fill="none" stroke="${P.line}" stroke-width="1.5" rx="10"/>
+<line x1="${px + pw / 2}" y1="${py + 8}" x2="${px + pw / 2}" y2="${py + ph - 8}" stroke="${P.line}" stroke-width="1.5" stroke-dasharray="3 7"/>
+<line x1="${px + 8}" y1="${py + ph / 2}" x2="${px + pw - 8}" y2="${py + ph / 2}" stroke="${P.line}" stroke-width="1.5" stroke-dasharray="3 7"/>
+${quadLabel(q.tl, px + 18, py + 30, "start")}
+${quadLabel(q.tr, px + pw - 18, py + 30, "end")}
+${quadLabel(q.bl, px + 18, py + ph - 18, "start")}
+${quadLabel(q.br, px + pw - 18, py + ph - 18, "end")}
+${dots}
+${text(px + pw / 2, py + ph + 44, d.xLabel.toUpperCase(), { size: 15, weight: 700, tracking: 2.2, fill: P.inkMute, anchor: "middle" })}
+<g transform="rotate(-90 ${M - 4} ${py + ph / 2})">${text(M - 4, py + ph / 2, d.yLabel.toUpperCase(), { size: 15, weight: 700, tracking: 2.2, fill: P.inkMute, anchor: "middle" })}</g>
+${d.footnote ? text(M, h - 40, d.footnote.toUpperCase(), { size: 13, weight: 700, tracking: 2, fill: P.inkMute }) : ""}
+</svg>`;
+}

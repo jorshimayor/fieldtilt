@@ -92,6 +92,7 @@
               <span class="label">edit copy, edit the card, add a photo, then post</span>
               <div class="flex gap-2 text-xs">
                 <button data-status="pending" class="qtab btn px-3 py-1.5">Pending</button>
+                <button data-status="scheduled" class="qtab btn-ghost px-3 py-1.5">Scheduled</button>
                 <button data-status="posted" class="qtab btn-ghost px-3 py-1.5">Posted</button>
                 <button data-status="rejected" class="qtab btn-ghost px-3 py-1.5">Rejected</button>
               </div>
@@ -176,6 +177,7 @@
                     <button data-kind="milestone" class="kind-btn">milestone</button>
                     <button data-kind="comparison" class="kind-btn">comparison</button>
                     <button data-kind="head_to_head" class="kind-btn">head to head</button>
+                    <button data-kind="scatter" class="kind-btn">scatter</button>
                     <button data-kind="leaderboard" class="kind-btn">leaderboard</button>
                     <button data-kind="shot_map" class="kind-btn">shot map</button>
                   </div>
@@ -408,6 +410,8 @@
       function draftHtml(d) {
         const when = d.createdAt ? new Date(d.createdAt).toLocaleString() : "";
         const isPending = d.status === "pending";
+        const isScheduled = d.status === "scheduled";
+        const schedWhen = d.scheduledFor ? new Date(d.scheduledFor).toLocaleString([], { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
         return (
           '<div class="card rounded-xl p-4 space-y-3" id="draft-' + d.id + '">' +
           '<div class="flex items-center justify-between flex-wrap gap-2">' +
@@ -415,21 +419,38 @@
           '<span class="chip px-2.5 py-1 text-xs">' + escapeHtml(d.kind) + "</span>" +
           (d.longform ? '<span class="chip px-2.5 py-1 text-xs">long-form</span>' : "") +
           (d.cardKind ? '<span class="chip px-2.5 py-1 text-xs">🖼 ' + escapeHtml(d.cardKind) + "</span>" : "") +
+          (isScheduled ? '<span class="chip px-2.5 py-1 text-xs" style="color:var(--accent)">⏱ ' + escapeHtml(schedWhen) + "</span>" : "") +
           '<span class="label">' + escapeHtml(d.source || "") + " · " + when + "</span>" +
           "</div>" +
           '<span class="label status-' + d.status + '">' + d.status + (d.tweetId ? " · " + escapeHtml(d.tweetId) : "") + "</span>" +
           "</div>" +
           '<div class="grid md:grid-cols-2 gap-4">' +
-          '<textarea data-role="content" rows="6" class="w-full p-3 text-sm" ' + (isPending ? "" : "readonly") + ">" +
+          '<textarea data-role="content" rows="6" class="w-full p-3 text-sm" ' + (isPending || isScheduled ? "" : "readonly") + ">" +
           escapeHtml(d.content) +
           "</textarea>" +
           '<textarea data-role="cardjson" rows="5" class="w-full p-2 font-mono text-xs" style="display:none"></textarea>' +
           '<div data-role="preview" class="min-h-[80px]">' +
           (d.cardKind ? '<div class="muted text-xs">Loading preview…</div>' : '<div class="muted text-xs">No image for this draft.</div>') +
           "</div></div>" +
+          (isScheduled
+            ? '<div class="flex gap-2 flex-wrap items-center">' +
+              '<button data-role="post" class="btn px-4 py-2 text-sm">Post now</button>' +
+              '<button data-role="postpone" data-min="60" class="btn-ghost px-3 py-2 text-sm">+1h</button>' +
+              '<button data-role="postpone" data-min="360" class="btn-ghost px-3 py-2 text-sm">+6h</button>' +
+              '<button data-role="postpone" data-min="1440" class="btn-ghost px-3 py-2 text-sm">+1d</button>' +
+              '<button data-role="schedopen" class="btn-ghost px-3 py-2 text-sm">⏱ reschedule</button>' +
+              '<button data-role="unschedule" class="btn-ghost px-3 py-2 text-sm">↩ back to pending</button>' +
+              '<span data-role="meta" class="muted text-xs self-center"></span>' +
+              "</div>" +
+              '<div data-role="schedrow" class="flex gap-2 items-center" style="display:none">' +
+              '<input data-role="schedat" type="datetime-local" class="p-2 text-sm" />' +
+              '<button data-role="schedgo" class="btn px-3 py-2 text-sm">Confirm</button>' +
+              "</div>"
+            : "") +
           (isPending
             ? '<div class="flex gap-2 flex-wrap">' +
               '<button data-role="post" class="btn px-4 py-2 text-sm">Post to X</button>' +
+              '<button data-role="schedopen" class="btn-ghost px-3 py-2 text-sm" title="Park it out of the queue; it posts itself at the chosen time">⏱ schedule</button>' +
               (d.cardKind
                 ? '<label class="btn-ghost px-3 py-2 text-sm" style="cursor:pointer">📷 add photo<input type="file" data-role="photo" accept="image/*" style="display:none"></label>' +
                   '<button data-role="editcard" class="btn-ghost px-3 py-2 text-sm">✎ edit card</button>' +
@@ -439,6 +460,10 @@
               '<button data-role="markposted" class="btn-ghost px-3 py-2 text-sm" title="Already posted it manually? Move it to Posted — it counts toward your daily 5.">✓ mark posted</button>' +
               '<button data-role="reject" class="btn-danger px-4 py-2 text-sm">Reject</button>' +
               '<span data-role="meta" class="muted text-xs self-center"></span>' +
+              "</div>" +
+              '<div data-role="schedrow" class="flex gap-2 items-center" style="display:none">' +
+              '<input data-role="schedat" type="datetime-local" class="p-2 text-sm" />' +
+              '<button data-role="schedgo" class="btn px-3 py-2 text-sm">Schedule</button>' +
               "</div>"
             : d.status === "rejected"
               ? '<button data-role="restore" class="btn-ghost px-4 py-2 text-sm">Restore to pending</button>'
@@ -553,6 +578,74 @@
               method: "POST",
               headers: authHeaders({ "Content-Type": "application/json" }),
               body: JSON.stringify({ action: "mark_posted", id: d.id, content: root.querySelector('[data-role="content"]').value }),
+            });
+            loadQueue();
+          });
+        // ---- scheduling ----
+        const schedOpen = root.querySelector('[data-role="schedopen"]');
+        const schedRow = root.querySelector('[data-role="schedrow"]');
+        const schedAt = root.querySelector('[data-role="schedat"]');
+        const schedGo = root.querySelector('[data-role="schedgo"]');
+        if (schedOpen && schedRow && schedAt && schedGo) {
+          schedOpen.addEventListener("click", () => {
+            const open = schedRow.style.display !== "none";
+            schedRow.style.display = open ? "none" : "";
+            if (!open && !schedAt.value) {
+              const t = new Date(d.scheduledFor ? new Date(d.scheduledFor) : Date.now() + 60 * 60 * 1000);
+              t.setMinutes(t.getMinutes() - t.getTimezoneOffset(), 0, 0);
+              schedAt.value = t.toISOString().slice(0, 16);
+            }
+          });
+          schedGo.addEventListener("click", async () => {
+            const at = new Date(schedAt.value);
+            if (isNaN(at.getTime())) return alert("Pick a date and time first.");
+            schedGo.disabled = true;
+            if (meta) meta.textContent = "Scheduling…";
+            try {
+              let pngBase64;
+              if (d.cardKind) {
+                if (meta) meta.textContent = "Rendering card for the scheduler…";
+                if (!svgText) svgText = await fetchCardSvg(d.cardKind, cardData, draftPhoto);
+                pngBase64 = await svgToPngBase64(svgText);
+              }
+              const res = await fetch("/api/drafts", {
+                method: "POST",
+                headers: authHeaders({ "Content-Type": "application/json" }),
+                body: JSON.stringify({
+                  action: "schedule",
+                  id: d.id,
+                  at: at.toISOString(),
+                  content: root.querySelector('[data-role="content"]').value,
+                  pngBase64: pngBase64,
+                }),
+              });
+              const j = await res.json();
+              if (!res.ok || j.error) throw new Error(j.error || "schedule failed");
+              if (meta) meta.textContent = "Scheduled for " + new Date(j.scheduledFor).toLocaleString();
+              setTimeout(loadQueue, 700);
+            } catch (e) {
+              if (meta) meta.textContent = "Error: " + e.message;
+              schedGo.disabled = false;
+            }
+          });
+        }
+        root.querySelectorAll('[data-role="postpone"]').forEach((b) =>
+          b.addEventListener("click", async () => {
+            await fetch("/api/drafts", {
+              method: "POST",
+              headers: authHeaders({ "Content-Type": "application/json" }),
+              body: JSON.stringify({ action: "postpone", id: d.id, byMinutes: Number(b.dataset.min) }),
+            });
+            loadQueue();
+          })
+        );
+        const unschedBtn = root.querySelector('[data-role="unschedule"]');
+        if (unschedBtn)
+          unschedBtn.addEventListener("click", async () => {
+            await fetch("/api/drafts", {
+              method: "POST",
+              headers: authHeaders({ "Content-Type": "application/json" }),
+              body: JSON.stringify({ action: "unschedule", id: d.id }),
             });
             loadQueue();
           });

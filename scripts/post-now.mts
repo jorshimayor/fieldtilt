@@ -32,7 +32,7 @@ if (payload.cardKind) {
     match_preview: "matchPreviewCard", score: "scoreCard", post_match: "postMatchCard",
     player_stat: "playerStatCard", transfer: "transferCard", form: "formCard",
     editorial: "editorialCard", milestone: "milestoneCard", comparison: "comparisonCard",
-    leaderboard: "leaderboardCard", shot_map: "shotMapCard", head_to_head: "headToHeadCard",
+    leaderboard: "leaderboardCard", shot_map: "shotMapCard", head_to_head: "headToHeadCard", scatter: "scatterCard",
   };
   await initWasm(readFileSync("node_modules/@resvg/resvg-wasm/index_bg.wasm"));
   const svg = cards[fnMap[payload.cardKind]](await resolveCardImages(payload.cardData || {}));

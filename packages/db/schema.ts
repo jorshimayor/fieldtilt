@@ -67,13 +67,20 @@ export const drafts = pgTable("drafts", {
   longform: boolean("longform").default(false),
   cardKind: text("card_kind"),
   cardData: jsonb("card_data"),
-  status: text("status").$type<"pending" | "posted" | "rejected">().notNull().default("pending"),
+  status: text("status").$type<"pending" | "posted" | "rejected" | "scheduled">().notNull().default("pending"),
   tweetId: text("tweet_id"),
   modelUsed: text("model_used"),
+  // Scheduling: a draft parked for a future time leaves the pending queue.
+  // scheduledPng holds the browser-rendered card (base64) captured at
+  // schedule time, so the cron can post it with pure IO on the free plan.
+  scheduledFor: timestamp("scheduled_for"),
+  scheduledPng: text("scheduled_png"),
+  scheduleAttempts: integer("schedule_attempts").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   postedAt: timestamp("posted_at")
 }, (table) => ({
-  statusIdx: index("drafts_status_idx").on(table.status, table.createdAt)
+  statusIdx: index("drafts_status_idx").on(table.status, table.createdAt),
+  scheduledIdx: index("drafts_scheduled_idx").on(table.status, table.scheduledFor)
 }));
 
 /**

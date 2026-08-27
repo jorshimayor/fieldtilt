@@ -235,3 +235,23 @@ const neutral = leaderboardCard({ title: "Most xG per 90", entries: [{ value: "0
 check("neutral still Montserrat, no scanlines", neutral.includes("Montserrat") && !neutral.includes("url(#scan)"));
 
 if (failures) process.exit(1);
+
+// ---- scatter quadrant ----
+import { scatterCard, scoreTint } from "../../packages/render/cards";
+const sc = scatterCard({
+  title: "The league map",
+  xLabel: "xG per 90",
+  yLabel: "xGA per 90",
+  yInvert: true,
+  quadrants: { tr: "Title material", bl: "In trouble" },
+  points: [
+    { label: "Chelsea", x: 1.9, y: 1.0, score: 0.9, highlight: true },
+    { label: "Burnley", x: 0.8, y: 2.0, score: 0.05 },
+  ],
+});
+check("scatter renders labels + quadrants", sc.includes("Chelsea") && sc.includes("TITLE MATERIAL"));
+check("scatter highlight ring present", sc.includes('stroke-width="2.5"'));
+check("scoreTint endpoints", scoreTint(0, "#E5484D", "#8FE3A1") === "#e5484d" && scoreTint(1, "#E5484D", "#8FE3A1") === "#8fe3a1");
+check("scatter no dashes", !/[—–]/.test(sc));
+
+if (failures) process.exit(1);

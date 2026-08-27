@@ -113,7 +113,7 @@ export async function composeAndPost(opts: {
  */
 export async function postDraftNow(
   draftId: string,
-  opts?: { image?: Uint8Array; contentOverride?: string }
+  opts?: { image?: Uint8Array; contentOverride?: string; skipImage?: boolean }
 ): Promise<{ tweetId: string; imageAttached: boolean; content: string }> {
   const rows = await db.select().from(drafts).where(eq(drafts.id, draftId)).limit(1);
   const draft = rows[0];
@@ -124,7 +124,7 @@ export async function postDraftNow(
   if (!content) throw new Error("draft_empty_content");
 
   let image = opts?.image;
-  if (!image && draft.cardKind && flags.image_generation_enabled) {
+  if (!image && !opts?.skipImage && draft.cardKind && flags.image_generation_enabled) {
     const cardData = await resolveCardImages((draft.cardData || {}) as Record<string, unknown>);
     image = await renderCardPng(draft.cardKind as CardKind, cardData);
   }
