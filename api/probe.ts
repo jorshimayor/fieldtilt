@@ -31,17 +31,21 @@ export default withErrorLogging(async function handler(req: Request): Promise<Re
     }
     try {
       const teamId = (await import("../packages/shared/club")).club().ids.apiFootball;
-      const res = await fetch(`https://v3.football.api-sports.io/fixtures?team=${teamId}&next=5`, {
+      // Free plans reject next/last params; a season query answers both
+      // questions (param access AND season-window access) in one call.
+      const season = new Date().getUTCMonth() >= 6 ? new Date().getUTCFullYear() : new Date().getUTCFullYear() - 1;
+      const res = await fetch(`https://v3.football.api-sports.io/fixtures?team=${teamId}&season=${season}`, {
         headers: { "x-apisports-key": key },
       });
       const j = (await res.json()) as any;
-      const fixtures = (j?.response || []).map((r: any) => ({
+      const fixtures = (j?.response || []).slice(0, 400).map((r: any) => ({
         date: r?.fixture?.date,
         competition: r?.league?.name,
         home: r?.teams?.home?.name,
         away: r?.teams?.away?.name,
       }));
       const cupCount = fixtures.filter((f: any) => f.competition && !/premier league/i.test(f.competition)).length;
+      const upcomingOnly = fixtures.filter((f: any) => f.date > new Date().toISOString()).slice(0, 6);
       return new Response(
         JSON.stringify(
           {
@@ -49,7 +53,8 @@ export default withErrorLogging(async function handler(req: Request): Promise<Re
             status: res.status,
             planErrors: j?.errors && Object.keys(j.errors).length ? j.errors : null,
             currentSeasonVisible: fixtures.length > 0,
-            upcoming: fixtures,
+            upcoming: upcomingOnly,
+            totalFixturesThisSeason: fixtures.length,
             cupFixturesVisible: cupCount,
             verdict:
               fixtures.length > 0

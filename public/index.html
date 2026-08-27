@@ -135,19 +135,19 @@
             </div>
             <div class="ana-grid">
               <div class="ana-panel">
-                <div class="ana-head"><span class="ana-title">League map</span><span class="ana-sub">xG created vs conceded</span></div>
+                <div class="ana-head"><span class="ana-title">League map</span><span class="ana-sub">xG created vs conceded <button data-anastudio="league" class="btn-ghost px-2 py-0.5 text-xs" style="margin-left:0.5rem">❯ edit in studio</button></span></div>
                 <div id="chartLeague" class="w-full"><span class="muted text-xs">Loading…</span></div>
               </div>
               <div class="ana-panel">
-                <div class="ana-head"><span class="ana-title">Squad finishing</span><span class="ana-sub">goals vs expected goals</span></div>
+                <div class="ana-head"><span class="ana-title">Squad finishing</span><span class="ana-sub">goals vs expected goals <button data-anastudio="squad" class="btn-ghost px-2 py-0.5 text-xs" style="margin-left:0.5rem">❯ edit in studio</button></span></div>
                 <div id="chartSquad" class="w-full"><span class="muted text-xs">Loading…</span></div>
               </div>
               <div class="ana-panel">
-                <div class="ana-head"><span class="ana-title">Shot map</span><span class="ana-sub" id="shotMapSub">top xG player · season</span></div>
+                <div class="ana-head"><span class="ana-title">Shot map</span><span class="ana-sub" id="shotMapSub">top xG player · season</span><button data-anastudio="shot" class="btn-ghost px-2 py-0.5 text-xs" style="margin-left:0.5rem">❯ edit in studio</button></div>
                 <div id="chartShotMap" class="w-full"><span class="muted text-xs">Loading…</span></div>
               </div>
               <div class="ana-panel">
-                <div class="ana-head"><span class="ana-title">Form timeline</span><span class="ana-sub">last 10 results</span></div>
+                <div class="ana-head"><span class="ana-title">Form timeline</span><span class="ana-sub">last 10 results <button data-anastudio="form" class="btn-ghost px-2 py-0.5 text-xs" style="margin-left:0.5rem">❯ edit in studio</button></span></div>
                 <div id="chartForm" class="w-full"><span class="muted text-xs">Loading…</span></div>
               </div>
             </div>
@@ -196,7 +196,7 @@
                 </div>
                 <div class="rail-group">
                   <span class="rail-title">Kit</span>
-                  <div class="flex gap-2">
+                  <div class="flex gap-2 flex-wrap">
                     <button data-palette="neutral" class="ptab btn px-3 py-1.5 text-xs">ntrl</button>
                     <button data-palette="home" class="ptab btn-ghost px-3 py-1.5 text-xs">home</button>
                     <button data-palette="away" class="ptab btn-ghost px-3 py-1.5 text-xs">away</button>
@@ -468,6 +468,7 @@
           '<div data-role="preview" class="min-h-[80px]">' +
           (d.cardKind ? '<div class="muted text-xs">Loading preview…</div>' : '<div class="muted text-xs">No image for this draft.</div>') +
           "</div></div>" +
+          '<div data-role="cardform" class="card rounded-xl p-4" style="display:none"></div>' +
           (isScheduled
             ? '<div class="flex gap-2 flex-wrap items-center">' +
               '<button data-role="post" class="btn px-4 py-2 text-sm">Post now</button>' +
@@ -490,6 +491,7 @@
               (d.cardKind
                 ? '<label class="btn-ghost px-3 py-2 text-sm" style="cursor:pointer">📷 add photo<input type="file" data-role="photo" accept="image/*" style="display:none"></label>' +
                   '<button data-role="editcard" class="btn-ghost px-3 py-2 text-sm">✎ edit card</button>' +
+                  '<button data-role="editjson" class="btn-ghost px-3 py-2 text-sm" title="Raw JSON, for power edits">{ } json</button>' +
                   '<button data-role="download" class="btn-ghost px-3 py-2 text-sm">⬇ download</button>'
                 : "") +
               '<button data-role="copytext" class="btn-ghost px-3 py-2 text-sm" title="Copy the tweet text for manual posting">📋 copy text</button>' +
@@ -528,20 +530,46 @@
         }
         renderPreview();
         const editBtn = root.querySelector('[data-role="editcard"]');
+        const cardFormEl = root.querySelector('[data-role="cardform"]');
         const cardJsonEl = root.querySelector('[data-role="cardjson"]');
-        if (editBtn && cardJsonEl)
+        let cardTimer = null;
+        const cardTouched = () => {
+          svgText = null; // force re-render from edited data on post/schedule
+          clearTimeout(cardTimer);
+          cardTimer = setTimeout(renderPreview, 350);
+        };
+        if (editBtn && cardFormEl)
           editBtn.addEventListener("click", () => {
+            const open = cardFormEl.style.display !== "none";
+            if (open) {
+              cardFormEl.style.display = "none";
+              editBtn.textContent = "✎ edit card";
+              return;
+            }
+            cardData = cardData || {};
+            sfRenderForm(cardFormEl, cardData, null, cardTouched);
+            cardFormEl.style.display = "";
+            editBtn.textContent = "✕ close editor";
+            // add-item templates come from the kind's demo shape
+            fetchDemoData(d.cardKind)
+              .then((tmpl) => { if (cardFormEl.style.display !== "none") sfRenderForm(cardFormEl, cardData, tmpl, cardTouched); })
+              .catch(() => {});
+          });
+        const jsonBtn = root.querySelector('[data-role="editjson"]');
+        if (jsonBtn && cardJsonEl)
+          jsonBtn.addEventListener("click", () => {
             const open = cardJsonEl.style.display !== "none";
             if (!open) {
               cardJsonEl.value = JSON.stringify(cardData || {}, null, 2);
               cardJsonEl.style.display = "";
-              editBtn.textContent = "✓ apply card";
+              jsonBtn.textContent = "✓ apply json";
             } else {
               try {
                 cardData = JSON.parse(cardJsonEl.value);
                 cardJsonEl.style.display = "none";
-                editBtn.textContent = "✎ edit card";
-                renderPreview();
+                jsonBtn.textContent = "{ } json";
+                if (cardFormEl && cardFormEl.style.display !== "none") sfRenderForm(cardFormEl, cardData, null, cardTouched);
+                cardTouched();
               } catch (e) {
                 alert("Card JSON invalid: " + e.message);
               }
@@ -905,7 +933,7 @@
         renderStudio();
       });
 
-      // ---------- studio form builder (drag & drop) ----------
+      // ---------- form engine (shared by Studio + queue card editor) ----------
       const studioFormEl = document.getElementById("studioForm");
       let studioDemo = null;   // pristine demo copy for the current kind (add-item templates)
       let studioDirty = false; // false until the operator edits something
@@ -933,7 +961,7 @@
         sfTimer = setTimeout(renderStudio, 350);
       }
       function sfLabel(k) { return k.replace(/([A-Z])/g, " $1").replace(/_/g, " ").toLowerCase(); }
-      function sfPrimitiveInput(value, onSet) {
+      function sfPrimitiveInput(value, onSet, touched) {
         const wasNumber = typeof value === "number";
         const inp = document.createElement(String(value).length > 60 ? "textarea" : "input");
         if (inp.tagName === "INPUT") inp.type = "text";
@@ -943,7 +971,7 @@
           let v = inp.value;
           if (wasNumber && v.trim() !== "" && !isNaN(Number(v))) v = Number(v);
           onSet(v);
-          sfTouched();
+          touched();
         });
         return inp;
       }
@@ -956,7 +984,7 @@
         row.appendChild(inputEl);
         return row;
       }
-      function sfItemRow(list, idx, rebuild) {
+      function sfItemRow(list, idx, rebuild, touched) {
         const item = list[idx];
         const row = document.createElement("div");
         row.className = "sf-item";
@@ -976,17 +1004,17 @@
               cb.checked = v;
               cb.title = sfLabel(fk);
               cb.style.flex = "0";
-              cb.addEventListener("change", () => { item[fk] = cb.checked; sfTouched(); });
+              cb.addEventListener("change", () => { item[fk] = cb.checked; touched(); });
               fields.appendChild(cb);
             } else if (v == null || typeof v !== "object") {
-              const inp = sfPrimitiveInput(v, (nv) => { item[fk] = nv; });
+              const inp = sfPrimitiveInput(v, (nv) => { item[fk] = nv; }, touched);
               inp.placeholder = sfLabel(fk);
               inp.title = sfLabel(fk);
               fields.appendChild(inp);
             }
           }
         } else {
-          const inp = sfPrimitiveInput(item, (nv) => { list[row._sfIndex] = nv; });
+          const inp = sfPrimitiveInput(item, (nv) => { list[row._sfIndex] = nv; }, touched);
           fields.appendChild(inp);
         }
         row._sfIndex = idx;
@@ -995,16 +1023,18 @@
         del.className = "sf-del";
         del.textContent = "✕";
         del.title = "Remove";
-        del.addEventListener("click", () => { list.splice(row._sfIndex, 1); rebuild(); sfTouched(); });
+        del.addEventListener("click", () => { list.splice(row._sfIndex, 1); rebuild(); touched(); });
         row.appendChild(del);
         return row;
       }
-      function buildStudioForm() {
-        if (!studioData || !studioFormEl) return;
-        studioFormEl.innerHTML = "";
-        for (const key of Object.keys(studioData)) {
+      /** Render an edit form for `data` into `container`. Mutates `data` in
+       *  place; `template` supplies add-item shapes; `touched` fires on edit. */
+      function sfRenderForm(container, data, template, touched) {
+        if (!data || !container) return;
+        container.innerHTML = "";
+        for (const key of Object.keys(data)) {
           if (SF_SKIP(key)) continue;
-          const val = studioData[key];
+          const val = data[key];
           if (Array.isArray(val)) {
             const group = document.createElement("div");
             group.className = "sf-group";
@@ -1016,7 +1046,7 @@
             listEl.className = "sf-list";
             const rebuild = () => {
               listEl.innerHTML = "";
-              val.forEach((_, i) => listEl.appendChild(sfItemRow(val, i, rebuild)));
+              val.forEach((_, i) => listEl.appendChild(sfItemRow(val, i, rebuild, touched)));
               [...listEl.children].forEach((row, i) => (row._sfIndex = i));
             };
             rebuild();
@@ -1030,20 +1060,20 @@
                   const moved = val.splice(ev.oldIndex, 1)[0];
                   val.splice(ev.newIndex, 0, moved);
                   [...listEl.children].forEach((row, i) => (row._sfIndex = i));
-                  sfTouched();
+                  touched();
                 },
               });
             const add = document.createElement("button");
             add.className = "btn-ghost px-3 py-1.5 text-xs sf-add";
             add.textContent = "+ add " + sfLabel(key).replace(/s$/, "");
             add.addEventListener("click", () => {
-              const tmpl = val[val.length - 1] ?? (studioDemo && Array.isArray(studioDemo[key]) ? studioDemo[key][0] : "");
+              const tmpl = val[val.length - 1] ?? (template && Array.isArray(template[key]) ? template[key][0] : "");
               val.push(typeof tmpl === "object" && tmpl !== null ? JSON.parse(JSON.stringify(tmpl)) : tmpl);
               rebuild();
-              sfTouched();
+              touched();
             });
             group.appendChild(add);
-            studioFormEl.appendChild(group);
+            container.appendChild(group);
           } else if (val && typeof val === "object") {
             const group = document.createElement("div");
             group.className = "sf-group";
@@ -1051,27 +1081,62 @@
             title.className = "sf-title";
             title.textContent = "[ " + sfLabel(key) + " ]";
             group.appendChild(title);
-            for (const nk of Object.keys(val)) {
-              if (typeof val[nk] === "object" && val[nk] !== null) continue;
-              group.appendChild(sfRow(sfLabel(nk), sfPrimitiveInput(val[nk], (nv) => { val[nk] = nv; })));
-            }
-            studioFormEl.appendChild(group);
+            const rebuildObj = () => {
+              [...group.querySelectorAll(".sf-row, .sf-objadd")].forEach((n) => n.remove());
+              for (const nk of Object.keys(val)) {
+                if (typeof val[nk] === "object" && val[nk] !== null) continue;
+                group.appendChild(sfRow(sfLabel(nk), sfPrimitiveInput(val[nk], (nv) => { val[nk] = nv; }, touched)));
+              }
+              // add-field: how xG lands on a card whose stats came back empty
+              const addRow = document.createElement("div");
+              addRow.className = "sf-item sf-objadd";
+              const kIn = document.createElement("input");
+              kIn.type = "text";
+              kIn.placeholder = "field (e.g. xg)";
+              const vIn = document.createElement("input");
+              vIn.type = "text";
+              vIn.placeholder = "value";
+              const go = document.createElement("button");
+              go.className = "sf-del";
+              go.textContent = "+";
+              go.title = "Add field";
+              go.addEventListener("click", () => {
+                const k = kIn.value.trim();
+                if (!k) return kIn.focus();
+                const raw = vIn.value.trim();
+                val[k] = raw !== "" && !isNaN(Number(raw)) ? Number(raw) : raw;
+                rebuildObj();
+                touched();
+              });
+              const fw = document.createElement("div");
+              fw.className = "sf-fields";
+              fw.appendChild(kIn);
+              fw.appendChild(vIn);
+              addRow.appendChild(fw);
+              addRow.appendChild(go);
+              group.appendChild(addRow);
+            };
+            rebuildObj();
+            container.appendChild(group);
           } else if (typeof val === "boolean") {
             const wrap = document.createElement("div");
             wrap.className = "sf-check";
             const cb = document.createElement("input");
             cb.type = "checkbox";
             cb.checked = val;
-            cb.addEventListener("change", () => { studioData[key] = cb.checked; sfTouched(); });
+            cb.addEventListener("change", () => { data[key] = cb.checked; touched(); });
             const lab = document.createElement("label");
             lab.textContent = sfLabel(key);
             wrap.appendChild(cb);
             wrap.appendChild(lab);
-            studioFormEl.appendChild(wrap);
+            container.appendChild(wrap);
           } else {
-            studioFormEl.appendChild(sfRow(sfLabel(key), sfPrimitiveInput(val, (nv) => { studioData[key] = nv; })));
+            container.appendChild(sfRow(sfLabel(key), sfPrimitiveInput(val, (nv) => { data[key] = nv; }, touched)));
           }
         }
+      }
+      function buildStudioForm() {
+        sfRenderForm(studioFormEl, studioData, studioDemo, sfTouched);
       }
       async function openStudioBuilder() {
         try {
@@ -1080,6 +1145,18 @@
         } catch (e) {
           studioFormEl.innerHTML = '<div class="muted text-xs">Builder unavailable: ' + escapeHtml(e.message) + "</div>";
         }
+      }
+      /** Analytics → Studio handoff: load real data into the visual editor. */
+      function openInStudio(kind, data) {
+        studioKind = kind;
+        studioData = data;
+        studioDemo = JSON.parse(JSON.stringify(data));
+        studioDirty = true;
+        document.querySelectorAll("#cardKinds .kind-btn").forEach((b) => b.classList.toggle("active", b.dataset.kind === kind));
+        showPanel("studio");
+        studioRendered = true;
+        renderStudio();
+        buildStudioForm();
       }
 
       // photo drag & drop straight onto the stage
@@ -1281,11 +1358,13 @@
         });
         return svgWrap(W, H, g);
       }
+      let lastAnalytics = null;
       async function loadAnalytics() {
         try {
           const res = await fetch("/api/analytics", { headers: authHeaders() });
           if (!res.ok) throw new Error("analytics " + res.status);
           const a = await res.json();
+          lastAnalytics = a;
           document.getElementById("analyticsMeta").textContent =
             a.club.fullName + " · " + a.season + " · xG: Understat";
           const myName = (a.club.name || "").toLowerCase();
@@ -1318,6 +1397,73 @@
           document.getElementById("chartForm").innerHTML = "";
         }
       }
+
+      // Analytics → Studio: turn a live panel into an editable card.
+      document.querySelectorAll("[data-anastudio]").forEach((btn) =>
+        btn.addEventListener("click", (ev) => {
+          ev.preventDefault();
+          const a = lastAnalytics;
+          if (!a) return alert("Analytics still loading — try again in a second.");
+          const mine = (t) => (t || "").toLowerCase().includes((a.club.name || "").toLowerCase());
+          const which = btn.dataset.anastudio;
+          if (which === "league" && (a.leagueXg || []).length) {
+            const rows = [...a.leagueXg].slice(0, 22);
+            const diffs = rows.map((t) => t.xG - t.xGA);
+            const lo = Math.min.apply(null, diffs), hi = Math.max.apply(null, diffs);
+            openInStudio("scatter", {
+              title: "The league map",
+              context: a.club.league + " " + a.season + " · attack vs defence",
+              xLabel: "xG created",
+              yLabel: "xG conceded",
+              yInvert: true,
+              quadrants: { tl: "Blunt but solid", tr: "Title material", bl: "In trouble", br: "Chaos merchants" },
+              points: rows.map((t) => ({
+                label: t.team, x: t.xG, y: t.xGA,
+                score: hi > lo ? (t.xG - t.xGA - lo) / (hi - lo) : 0.5,
+                highlight: mine(t.team),
+              })),
+              footnote: "xG: Understat",
+              palette: "terminal",
+            });
+          } else if (which === "squad" && (a.squad || []).length) {
+            const rows = (a.squad || []).filter((q) => q.minutes >= 200).slice(0, 20);
+            const top = Math.max.apply(null, rows.map((q) => q.goals));
+            openInStudio("scatter", {
+              title: "Squad finishing",
+              context: a.club.name + " " + a.season + " · goals vs expected",
+              xLabel: "expected goals (xG)",
+              yLabel: "goals",
+              quadrants: { tr: "Clinical", br: "Overperforming", tl: "Due goals", bl: "Quiet" },
+              points: rows.map((q) => ({ label: q.player, x: q.xG, y: q.goals, score: top ? q.goals / top : 0.5, highlight: q.goals === top && top > 0 })),
+              footnote: "xG: Understat",
+              palette: "terminal",
+            });
+          } else if (which === "shot" && a.shotMap) {
+            openInStudio("shot_map", {
+              player: a.shotMap.player,
+              context: a.club.league + " " + a.season + " · all shots",
+              shots: a.shotMap.shots,
+              remark: "",
+              footnote: "xG: Understat",
+              palette: "terminal",
+            });
+          } else if (which === "form" && (a.recentForm || []).length) {
+            const team = a.standings && a.standings.team;
+            openInStudio("form", {
+              seasonLabel: a.season,
+              results: (a.recentForm || []).slice(0, 5).map((r) => ({ opponent: r.opponent, score: r.score, outcome: r.outcome })),
+              position: team ? team.rank : undefined,
+              points: team ? team.points : undefined,
+              goalsFor: team ? team.goalsFor : undefined,
+              goalsAgainst: team ? team.goalsAgainst : undefined,
+              competition: a.club.league,
+              palette: "terminal",
+            });
+          } else {
+            alert("No data loaded for this panel yet.");
+          }
+        })
+      );
 
       // ---------- stat sources (research directory + launcher) ----------
       const gsite = (host) => (q) => "https://www.google.com/search?q=" + encodeURIComponent("site:" + host + " " + q);

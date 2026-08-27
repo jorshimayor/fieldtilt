@@ -112,7 +112,7 @@ async function nodePlan(state: GraphState, deps: GraphDeps): Promise<void> {
     `You plan data-gathering for a ${c.fullName} social post. Reply ONLY with JSON:
 {"intent": "<one line>", "tweet_kind": one of ${JSON.stringify(TWEET_KINDS)},
  "tools": [{"name": "<tool>", "args": {…}} …] (1-5 items, choose from ${JSON.stringify(GATHER_TOOLS)};
-   web_lookup args: {"question": "…"} — use it ONLY for facts outside league data: cup fixtures, kickoff times, lower-league opponents),
+   web_lookup args: {"question": "…"} — REQUIRED whenever the request involves a cup match, a specific match's player performance, or anything the league tools cannot see; also for cup fixtures, kickoff times, lower-league opponents),
  "card_candidates": up to 2 of ${JSON.stringify(CARD_KINDS)}}`,
     `Request: ${state.request}\nToday: ${new Date().toISOString().slice(0, 10)}`
   );
