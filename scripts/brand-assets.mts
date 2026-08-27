@@ -190,4 +190,90 @@ ${pitch(1150, 262, 0.92, { shots: true, tagSize: 13 })}
 </svg>`;
 render("x-banner-1500x500.png", banner);
 
+
+// ═══ Photo era (v3): the roaring lion across the pitch ══════════════════════
+// Source: brand/source/lion.png (user-supplied stadium lion, 1500x500).
+// Banner: full-bleed photo, wordmark block on a left scrim, the tilted pitch
+// drawn line-only OVER the lion so the roar crosses the gold 62% line.
+// Avatar/icon: tight head crop + gold tilt line + wordmark.
+import { existsSync } from "node:fs";
+
+function photoData(path: string): string {
+  return `data:image/png;base64,${readFileSync(path).toString("base64")}`;
+}
+
+const LION = "brand/source/lion.png";
+const LION_HEAD = "brand/source/lion-head-1024.png";
+
+if (existsSync(LION) && existsSync(LION_HEAD)) {
+  // pitch drawn line-only (no fill) so the photo shows through
+  function pitchLines(cx: number, cy: number, scale: number, alpha: number): string {
+    const W = 600 * scale, H = 390 * scale;
+    const x = cx - W / 2, y = cy - H / 2;
+    const lw = 3 * scale;
+    const ccR = 0.087 * W;
+    const tiltX = x + W * TILT;
+    return `
+    <g transform="rotate(-8 ${cx} ${cy})" opacity="${alpha}">
+      <rect x="${x}" y="${y}" width="${W}" height="${H}" rx="${6 * scale}" fill="none" stroke="${INK}" stroke-width="${lw}"/>
+      <line x1="${cx}" y1="${y}" x2="${cx}" y2="${y + H}" stroke="${INK}" stroke-width="${lw * 0.8}"/>
+      <circle cx="${cx}" cy="${cy}" r="${ccR}" fill="none" stroke="${INK}" stroke-width="${lw * 0.8}"/>
+      <line x1="${tiltX}" y1="${y - 14 * scale}" x2="${tiltX}" y2="${y + H + 14 * scale}" stroke="${GOLD}" stroke-width="${lw * 1.5}" stroke-dasharray="${10 * scale} ${8 * scale}"/>
+      <rect x="${tiltX - 110 * scale}" y="${y - 44 * scale}" width="${220 * scale}" height="${26 * scale}" rx="${4 * scale}" fill="${GOLD}"/>
+      <text x="${tiltX}" y="${y - 25 * scale}" font-family="Montserrat" font-size="${14 * scale}" font-weight="800" fill="${NAVY_DEEP}" text-anchor="middle" letter-spacing="${2.2 * scale}">FIELD TILT ${Math.round(TILT * 100)}%</text>
+    </g>`;
+  }
+
+  const lionUri = photoData(LION);
+  const headUri = photoData(LION_HEAD);
+
+  // ---- Banner v3: lion roars across the pitch ----
+  const bannerV3 = `<svg width="1500" height="500" viewBox="0 0 1500 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="lscrim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="${NAVY_DEEP}" stop-opacity="0.96"/>
+      <stop offset="0.34" stop-color="${NAVY_DEEP}" stop-opacity="0.82"/>
+      <stop offset="0.58" stop-color="${NAVY_DEEP}" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="bscrim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0.72" stop-color="${NAVY_DEEP}" stop-opacity="0"/>
+      <stop offset="1" stop-color="${NAVY_DEEP}" stop-opacity="0.55"/>
+    </linearGradient>
+  </defs>
+  <image href="${lionUri}" x="0" y="0" width="1500" height="500" preserveAspectRatio="xMidYMid slice"/>
+  <rect width="1500" height="500" fill="url(#lscrim)"/>
+  <rect width="1500" height="500" fill="url(#bscrim)"/>
+  ${pitchLines(955, 280, 1.02, 0.9)}
+  <text x="96" y="222" font-family="Montserrat" font-size="120" font-weight="800" fill="${INK}" letter-spacing="-3">${BRAND}.</text>
+  <text x="102" y="284" font-family="Montserrat" font-size="26" font-weight="700" fill="#B9C6DC" letter-spacing="7">${TAGLINE}</text>
+  <rect x="100" y="312" width="64" height="5" rx="2.5" fill="${GOLD}"/>
+  <text x="102" y="366" font-family="Montserrat" font-size="23" fill="#9FB6D6">${MICRO}</text>
+  <text x="102" y="424" font-family="Montserrat" font-size="17" font-weight="700" fill="#7d8da6" letter-spacing="4">DATA: UNDERSTAT \u00b7 FOOTBALL-DATA.ORG \u00b7 FBREF</text>
+  </svg>`;
+  render("x-banner-1500x500.png", bannerV3);
+
+  // ---- Avatar / app icon v3: the roar, tight ----
+  const avatarV3 = `<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ascrim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0.55" stop-color="${NAVY_DEEP}" stop-opacity="0"/>
+      <stop offset="1" stop-color="${NAVY_DEEP}" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+  <clipPath id="sq"><rect width="1024" height="1024" rx="180"/></clipPath>
+  <g clip-path="url(#sq)">
+    <image href="${headUri}" x="0" y="0" width="1024" height="1024"/>
+    <rect width="1024" height="1024" fill="url(#ascrim)"/>
+    <line x1="700" y1="-40" x2="560" y2="1064" stroke="${GOLD}" stroke-width="10" stroke-dasharray="34 26" opacity="0.85"/>
+    <text x="512" y="920" font-family="Montserrat" font-size="118" font-weight="800" fill="${INK}" text-anchor="middle" letter-spacing="-2">${BRAND}.</text>
+    <text x="512" y="984" font-family="Montserrat" font-size="27" font-weight="700" fill="${GOLD}" text-anchor="middle" letter-spacing="10">CHELSEA FIRST</text>
+  </g>
+  </svg>`;
+  render("icon-1024.png", avatarV3, undefined, NAVY_DEEP);
+  render("x-avatar-400.png", avatarV3, 400, NAVY_DEEP);
+  console.log("photo-era lion assets generated");
+} else {
+  console.log("no brand/source/lion.png — vector assets only");
+}
+
 console.log(`\nassets in ${outDir}/`);
