@@ -13,6 +13,7 @@
  */
 
 import { BRAND, font, type, formats, layout, palettes, Palette } from "./theme";
+import { LION_HEAD_URI } from "./lion";
 
 export const PORTRAIT = formats.portrait;
 export const LANDSCAPE = formats.landscape;
@@ -184,12 +185,13 @@ ${photo}`;
  * a fieldtilt graphic recognizable at feed speed — it appears on EVERY card.
  */
 function brandChip(x: number, y: number): string {
-  const w = 36, h = 23;
-  return `<g transform="rotate(-8 ${x + w / 2} ${y + h / 2})">
-<rect x="${x}" y="${y}" width="${w * 0.62}" height="${h}" fill="${P.accent}" opacity="0.85"/>
-<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="none" stroke="${P.ink}" stroke-width="2.2"/>
-<line x1="${x + w * 0.62}" y1="${y}" x2="${x + w * 0.62}" y2="${y + h}" stroke="${P.ink}" stroke-width="1.8"/>
-</g>`;
+  // The fieldtilt lion in a crest-gold ring — the feed-speed signature.
+  const r = 15;
+  const cx = x + 18, cy = y + 11;
+  const id = `lh${Math.round(cx)}x${Math.round(cy)}`;
+  return `<clipPath id="${id}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath>
+<image href="${LION_HEAD_URI}" x="${cx - r}" y="${cy - r}" width="${r * 2}" height="${r * 2}" clip-path="url(#${id})" preserveAspectRatio="xMidYMid slice"/>
+<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#D9A31A" stroke-width="2.4"/>`;
 }
 
 /** Brand wordmark (with the pitch chip). Corner-anchored, always the same size. */
