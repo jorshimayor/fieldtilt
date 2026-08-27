@@ -255,3 +255,27 @@ check("scoreTint endpoints", scoreTint(0, "#E5484D", "#8FE3A1") === "#e5484d" &&
 check("scatter no dashes", !/[—–]/.test(sc));
 
 if (failures) process.exit(1);
+
+// ---- match stat sheet + tolerant post_match keys ----
+import { matchStatsCard } from "../../packages/render/cards";
+const ms = matchStatsCard({
+  home: "Chelsea", away: "Luton Town", homeGoals: 2, awayGoals: 0,
+  statusLabel: "FULL TIME", competition: "Carabao Cup",
+  rows: [
+    { label: "Expected goals (xG)", home: "2.41", away: "0.38" },
+    { label: "Distance covered", home: "108.2 km", away: "112.6 km" },
+    { label: "Passes completed", home: "612/688", away: "241/310" },
+  ],
+});
+check("match_stats renders teams + score", ms.includes("CHELSEA") && ms.includes("2-0"));
+check("match_stats arbitrary rows render", ms.includes("DISTANCE COVERED") && ms.includes("108.2 km"));
+check("match_stats bars for numeric rows", (ms.match(/rx="3.5"/g) || []).length >= 4);
+
+const pmTolerant = postMatchCard({
+  home: "Chelsea", away: "Luton", homeGoals: 2, awayGoals: 0,
+  competition: "Carabao Cup", statusLabel: "FULL TIME",
+  stats: { xG: 2.41, Possession: "66%" } as any,
+});
+check("post_match accepts xG/Possession key variants", pmTolerant.includes("2.41") && pmTolerant.includes("66%"));
+
+if (failures) process.exit(1);

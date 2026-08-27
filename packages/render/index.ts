@@ -19,6 +19,8 @@ import {
   HeadToHeadData,
   scatterCard,
   ScatterData,
+  matchStatsCard,
+  MatchStatsData,
   MilestoneData,
   ComparisonData,
   LeaderboardData,
@@ -46,7 +48,8 @@ export type CardKind =
   | "leaderboard"
   | "shot_map"
   | "head_to_head"
-  | "scatter";
+  | "scatter"
+  | "match_stats";
 
 export function buildCardSvg(kind: CardKind, data: unknown): string {
   switch (kind) {
@@ -76,6 +79,8 @@ export function buildCardSvg(kind: CardKind, data: unknown): string {
       return headToHeadCard(data as HeadToHeadData);
     case "scatter":
       return scatterCard(data as ScatterData);
+    case "match_stats":
+      return matchStatsCard(data as MatchStatsData);
     default:
       throw new Error(`unknown card kind: ${kind}`);
   }

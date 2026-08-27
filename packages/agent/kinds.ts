@@ -26,4 +26,5 @@ export const CARD_KINDS: CardKind[] = [
   "shot_map",
   "head_to_head",
   "scatter",
+  "match_stats",
 ];

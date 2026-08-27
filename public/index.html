@@ -165,8 +165,14 @@
               <div id="srcLaunch" class="flex gap-2 mt-3 flex-wrap"></div>
             </div>
             <div class="card rounded-xl p-4 mb-4">
-              <span class="rail-title">[ STAT FINDER · WHAT LIVES WHERE ]</span>
+              <span class="rail-title">[ STAT FINDER · WHAT LIVES WHERE ] <button id="statFinderToggle" class="btn-ghost px-2 py-0.5 text-xs" style="margin-left:0.5rem">hide</button></span>
               <div id="statFinder" class="mt-2"></div>
+            </div>
+            <div class="flex gap-2 mb-3 flex-wrap" id="srcTabs">
+              <button data-group="all" class="stab btn px-3 py-1.5 text-xs">all</button>
+              <button data-group="0" class="stab btn-ghost px-3 py-1.5 text-xs">matchday</button>
+              <button data-group="1" class="stab btn-ghost px-3 py-1.5 text-xs">cups · official</button>
+              <button data-group="2" class="stab btn-ghost px-3 py-1.5 text-xs">deep research</button>
             </div>
             <div id="sourceGroups" class="space-y-6"></div>
             <p class="muted text-xs mt-3">Citing well is part of the brand: every claim with receipts. Understat and FBref/Opta data power this app's own analytics — always credit "xG: Understat" when a post uses the xG layer.</p>
@@ -190,6 +196,7 @@
                     <button data-kind="comparison" class="kind-btn">comparison</button>
                     <button data-kind="head_to_head" class="kind-btn">head to head</button>
                     <button data-kind="scatter" class="kind-btn">scatter</button>
+                    <button data-kind="match_stats" class="kind-btn">match stats</button>
                     <button data-kind="leaderboard" class="kind-btn">leaderboard</button>
                     <button data-kind="shot_map" class="kind-btn">shot map</button>
                   </div>
@@ -994,7 +1001,56 @@
       let studioDemo = null;   // pristine demo copy for the current kind (add-item templates)
       let studioDirty = false; // false until the operator edits something
       let sfTimer = null;
-      const SF_SKIP = (k) => k === "palette" || /DataUri$/.test(k);
+      const SF_SKIP = (k) => k === "palette";
+      const SF_PHOTO = (k) => /DataUri$/.test(k);
+      function sfPhotoRow(data, key, touched) {
+        const row = document.createElement("div");
+        row.className = "sf-row";
+        const lab = document.createElement("label");
+        lab.textContent = sfLabel(key).replace(/ data uri$/, " photo");
+        row.appendChild(lab);
+        const wrap = document.createElement("div");
+        wrap.className = "flex gap-2 items-center";
+        const pick = document.createElement("label");
+        pick.className = "btn-ghost px-3 py-1.5 text-xs";
+        pick.style.cursor = "pointer";
+        pick.textContent = data[key] ? "📷 replace" : "📷 upload";
+        const file = document.createElement("input");
+        file.type = "file";
+        file.accept = "image/*";
+        file.style.display = "none";
+        pick.appendChild(file);
+        const status = document.createElement("span");
+        status.className = "muted text-xs";
+        status.textContent = data[key] ? "set ✓" : "";
+        const clear = document.createElement("button");
+        clear.className = "sf-del";
+        clear.textContent = "✕";
+        clear.title = "Remove photo";
+        clear.style.display = data[key] ? "" : "none";
+        file.addEventListener("change", async () => {
+          const f = file.files && file.files[0];
+          if (!f) return;
+          try {
+            data[key] = await readPhotoFile(f);
+            status.textContent = "set ✓";
+            pick.firstChild.textContent = "📷 replace";
+            clear.style.display = "";
+            touched();
+          } catch (e) { alert("Photo failed: " + e.message); }
+        });
+        clear.addEventListener("click", () => {
+          delete data[key];
+          status.textContent = "";
+          clear.style.display = "none";
+          touched();
+        });
+        wrap.appendChild(pick);
+        wrap.appendChild(status);
+        wrap.appendChild(clear);
+        row.appendChild(wrap);
+        return row;
+      }
 
       async function fetchDemoData(kind) {
         const res = await fetch("/api/render?kind=" + encodeURIComponent(kind) + "&format=json", { headers: authHeaders() });
@@ -1088,8 +1144,12 @@
       function sfRenderForm(container, data, template, touched) {
         if (!data || !container) return;
         container.innerHTML = "";
+        // photo fields first (upload player pictures for any card slot),
+        // including wiki-fetch slots not present in the data yet
+        const photoKeys = [...new Set(Object.keys(data).filter(SF_PHOTO))];
+        for (const pk of photoKeys) container.appendChild(sfPhotoRow(data, pk, touched));
         for (const key of Object.keys(data)) {
-          if (SF_SKIP(key)) continue;
+          if (SF_SKIP(key) || SF_PHOTO(key)) continue;
           const val = data[key];
           if (Array.isArray(val)) {
             const group = document.createElement("div");
@@ -1598,6 +1658,24 @@
           ).join("") +
           "</div></div>"
       ).join("");
+      // filters: keep the shelf tidy
+      document.getElementById("statFinderToggle").addEventListener("click", (ev) => {
+        const el = document.getElementById("statFinder");
+        const open = el.style.display !== "none";
+        el.style.display = open ? "none" : "";
+        ev.target.textContent = open ? "show" : "hide";
+      });
+      document.querySelectorAll("#srcTabs .stab").forEach((tab) =>
+        tab.addEventListener("click", () => {
+          document.querySelectorAll("#srcTabs .stab").forEach((t) => (t.className = "stab btn-ghost px-3 py-1.5 text-xs"));
+          tab.className = "stab btn px-3 py-1.5 text-xs";
+          const which = tab.dataset.group;
+          [...document.getElementById("sourceGroups").children].forEach((g, i) => {
+            g.style.display = which === "all" || String(i) === which ? "" : "none";
+          });
+        })
+      );
+
       // launcher: one query, open in any source
       (function () {
         const input = document.getElementById("srcQuery");

@@ -420,7 +420,28 @@ export type PostMatchData = {
 export function postMatchCard(d: PostMatchData): string {
   setPalette(d.palette, Boolean(d.photoDataUri));
   const { w, h } = PORTRAIT;
-  const s = d.stats || {};
+  // Operators hand-edit stats with keys like "xG"/"Possession"/"66%": fold
+  // keys case-insensitively and strip % so those edits always land.
+  const rawStats = (d.stats || {}) as Record<string, unknown>;
+  const statLookup: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(rawStats)) {
+    const key = k.toLowerCase().replace(/[^a-z]/g, "");
+    const num = typeof v === "string" ? Number(v.replace(/%/g, "").trim()) : v;
+    statLookup[key] = typeof num === "number" && Number.isFinite(num) ? num : v;
+  }
+  const st = (...names: string[]) => {
+    for (const n of names) if (statLookup[n] != null) return statLookup[n] as number;
+    return null;
+  };
+  const s = {
+    xg: st("xg", "expectedgoals"),
+    possession: st("possession", "possessionpct", "ballpossession"),
+    shotsTotal: st("shotstotal", "shots", "totalshots"),
+    shotsOnTarget: st("shotsontarget", "ontarget"),
+    corners: st("corners", "cornerkicks"),
+    passAccuracy: st("passaccuracy", "passespct", "passaccuracypct"),
+    fouls: st("fouls"),
+  };
   const cx = w / 2;
 
   // Hero row: xG — SCORE — possession
@@ -1179,5 +1200,75 @@ ${dots}
 ${text(px + pw / 2, py + ph + 44, d.xLabel.toUpperCase(), { size: 15, weight: 700, tracking: 2.2, fill: P.inkMute, anchor: "middle" })}
 <g transform="rotate(-90 ${M - 4} ${py + ph / 2})">${text(M - 4, py + ph / 2, d.yLabel.toUpperCase(), { size: 15, weight: 700, tracking: 2.2, fill: P.inkMute, anchor: "middle" })}</g>
 ${d.footnote ? text(M, h - 40, d.footnote.toUpperCase(), { size: 13, weight: 700, tracking: 2, fill: P.inkMute }) : ""}
+</svg>`;
+}
+
+
+// ------------------------------------------------------------------ match stat sheet (portrait)
+
+export type MatchStatsData = {
+  home: string;
+  away: string;
+  homeGoals?: number;
+  awayGoals?: number;
+  competition?: string;
+  statusLabel?: string; // "FULL TIME" / "HALF TIME"
+  /** Up to 12 arbitrary rows: xG, shots, distance covered, anything.
+   *  home/away accept "12", "58%", "2.41", "112.4 km" — bars draw when both
+   *  sides parse to numbers. */
+  rows: { label: string; home: string | number; away: string | number }[];
+  footnote?: string;
+  photoDataUri?: string;
+  palette?: Palette;
+};
+
+const numOf = (v: string | number): number | null => {
+  const n = typeof v === "number" ? v : Number(String(v).replace(/[^0-9.\-]/g, ""));
+  return Number.isFinite(n) ? n : null;
+};
+
+/** The Sofascore-style full match sheet: split bars per stat, any metric. */
+export function matchStatsCard(d: MatchStatsData): string {
+  setPalette(d.palette, Boolean(d.photoDataUri));
+  const { w, h } = PORTRAIT;
+  const cx = w / 2;
+  const rows = (d.rows || []).slice(0, 12);
+  const hasScore = d.homeGoals != null && d.awayGoals != null;
+
+  const header = `${eyebrow(M, 100, d.statusLabel || "Match stats")}
+${d.competition ? text(w - M, 104, truncate(d.competition, 30).toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute, anchor: "end" }) : ""}
+${text(M, 200, truncate(d.home, 18).toUpperCase(), { size: fitFont(d.home, 44, 16), weight: 800, tracking: -0.5 })}
+${text(w - M, 200, truncate(d.away, 18).toUpperCase(), { size: fitFont(d.away, 44, 16), weight: 800, tracking: -0.5, anchor: "end", fill: P.inkDim })}
+${hasScore ? text(cx, 206, `${d.homeGoals}-${d.awayGoals}`, { size: 56, weight: 800, tracking: -1, anchor: "middle", fill: P.accent }) : ""}`;
+
+  const top = 268;
+  const step = Math.min(74, Math.floor((h - top - 120) / Math.max(rows.length, 1)));
+  const barW = w - 2 * M;
+  const body = rows
+    .map((r, i) => {
+      const y = top + i * step;
+      const hn = numOf(r.home);
+      const an = numOf(r.away);
+      const total = hn != null && an != null ? hn + an : 0;
+      const share = total > 0 ? hn! / total : 0.5;
+      const bar =
+        hn != null && an != null
+          ? `<rect x="${M}" y="${y + 34}" width="${barW}" height="7" rx="3.5" fill="${P.line}"/>
+<rect x="${M}" y="${y + 34}" width="${Math.max(barW * share, 6)}" height="7" rx="3.5" fill="${P.accent}"/>`
+          : `<line x1="${M}" y1="${y + 37}" x2="${w - M}" y2="${y + 37}" stroke="${P.line}" stroke-width="1.5"/>`;
+      return `
+${text(M, y + 20, String(r.home), { size: 30, weight: 800, tracking: -0.5 })}
+${text(cx, y + 16, truncate(r.label, 28).toUpperCase(), { size: 15, weight: 700, tracking: 2, anchor: "middle", fill: P.inkMute })}
+${text(w - M, y + 20, String(r.away), { size: 30, weight: 800, tracking: -0.5, anchor: "end", fill: P.inkDim })}
+${bar}`;
+    })
+    .join("");
+
+  return `${frame(w, h, d.photoDataUri)}
+${header}
+${hairline(M, 238, w - M, 238)}
+${body}
+${d.footnote ? text(M, h - 44, d.footnote.toUpperCase(), { size: 13, weight: 700, tracking: 2, fill: P.inkMute }) : ""}
+${brandMark(w - M, h - 44, "end")}
 </svg>`;
 }
