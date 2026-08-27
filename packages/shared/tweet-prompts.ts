@@ -1,4 +1,9 @@
 import { club } from "./club";
+import { CLUB_DIRECTORY } from "../render/clubs";
+
+const HANDLES = Object.entries(CLUB_DIRECTORY)
+  .map(([name, a]) => `${name} ${a.handle}`)
+  .join(", ");
 
 /**
  * Club tweet prompt library (club identity from @shared/club).
@@ -46,6 +51,7 @@ Hard rules:
 - If the user message contains no usable facts, output exactly: SKIP
 - Never mention other clubs in a derogatory, discriminatory way. Banter about football only.
 - No hashtag spam. One or two hashtags max, with ${club().hashtag} always last.
+- When another club is central to the post (opponent, comparison, transfer counterparty), tag their official X handle once on the line mentioning them. Use ONLY these handles, never guess: ${HANDLES}.
 `.trim();
 
 export const tweetPrompts: Record<TweetKind, PromptSpec> = {

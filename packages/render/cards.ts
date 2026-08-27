@@ -890,3 +890,153 @@ ${d.remark ? text(M, py + ph + 190, d.remark, { size: 27, italic: true, fill: P.
 ${d.footnote ? text(M, h - 64, d.footnote.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute }) : ""}
 </svg>`;
 }
+
+// ------------------------------------------------------------------ head to head (portrait)
+
+export type HeadToHeadData = {
+  /** Headline, e.g. "New signing. New competition." (max 2 lines) */
+  title?: string;
+  /** e.g. "Martinez vs Sanchez, 2025/26 stats" */
+  context?: string;
+  playerA: string;
+  playerB: string;
+  /** Small tag under each name, e.g. "New signing" / "Chelsea No. 1" */
+  roleA?: string;
+  roleB?: string;
+  photoADataUri?: string;
+  photoBDataUri?: string;
+  crestADataUri?: string;
+  crestBDataUri?: string;
+  /** Up to 8 rows. Winner value is tinted green; set higherIsBetter:false for
+   *  stats where the lower number wins (goals conceded, cards, errors). */
+  metrics: { label: string; a: number; b: number; aDisplay?: string; bDisplay?: string; higherIsBetter?: boolean }[];
+  /** Footer panels, e.g. "PL career". Up to 3 rows each. */
+  careerTitle?: string;
+  careerA?: { label: string; value: string }[];
+  careerB?: { label: string; value: string }[];
+  /** Closing line, e.g. "The battle for the No. 1 spot is on." */
+  tagline?: string;
+  footnote?: string;
+  palette?: Palette;
+};
+
+/** Which side wins a head-to-head row (null = tie / not comparable). */
+export function betterOf(m: { a: number; b: number; higherIsBetter?: boolean }): "a" | "b" | null {
+  const a = Number(m.a);
+  const b = Number(m.b);
+  if (!Number.isFinite(a) || !Number.isFinite(b) || a === b) return null;
+  const higher = m.higherIsBetter !== false;
+  return (a > b) === higher ? "a" : "b";
+}
+
+/** Circular headshot with an accent ring; initials monogram when no photo. */
+function duelPortrait(cx: number, cy: number, r: number, photo: string | undefined, name: string, id: string): string {
+  const img = photo
+    ? `<clipPath id="${id}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath>
+<image href="${photo}" x="${cx - r}" y="${cy - r}" width="${r * 2}" height="${r * 2}" clip-path="url(#${id})" preserveAspectRatio="xMidYMid slice"/>`
+    : `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${P.bgAlt}"/>
+${text(cx, cy + r * 0.28, initials(name), { size: r * 0.82, weight: 800, tracking: -1, anchor: "middle", fill: P.inkDim })}`;
+  return `${img}
+<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${P.accent}" stroke-width="3.5"/>`;
+}
+
+/** Small crest chip on a quiet disc (crest PNGs carry transparency). */
+function crestChip(cx: number, cy: number, r: number, crest: string | undefined, id: string): string {
+  if (!crest) return "";
+  return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${P.bgAlt}" stroke="${P.line}" stroke-width="2"/>
+<clipPath id="${id}"><circle cx="${cx}" cy="${cy}" r="${r - 5}"/></clipPath>
+<image href="${crest}" x="${cx - r + 7}" y="${cy - r + 7}" width="${(r - 7) * 2}" height="${(r - 7) * 2}" clip-path="url(#${id})" preserveAspectRatio="xMidYMid meet"/>`;
+}
+
+/** The GK-battle pattern: portraits + crests up top, a winner-tinted stat
+ *  table down the middle, career panels and a tagline to close. */
+export function headToHeadCard(d: HeadToHeadData): string {
+  setPalette(d.palette);
+  const { w, h } = PORTRAIT;
+  const cxA = Math.round(w * 0.26);
+  const cxB = Math.round(w * 0.74);
+  const mid = w / 2;
+  const metrics = (d.metrics || []).slice(0, 8);
+
+  // header ---------------------------------------------------------------
+  const titleLines = wrapText(d.title || `${d.playerA} vs ${d.playerB}`, 20, 2);
+  const header = `${eyebrow(M, 100, "Head to head")}
+${brandMark(w - M, 104, "end")}
+${titleLines
+    .map((ln, i) =>
+      text(mid, 176 + i * 58, ln.toUpperCase(), {
+        size: fitFont(ln, 52, 19),
+        weight: 800,
+        tracking: -1,
+        anchor: "middle",
+        fill: i === titleLines.length - 1 && titleLines.length > 1 ? P.accent : P.ink,
+      })
+    )
+    .join("\n")}
+${d.context ? text(mid, 176 + titleLines.length * 58 + 6, d.context.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute, anchor: "middle" }) : ""}`;
+
+  // duel block -----------------------------------------------------------
+  const pr = 76;
+  const py = 392;
+  const nameY = py + pr + 54;
+  const nameOf = (n: string, x: number) =>
+    text(x, nameY, truncate(n, 22).toUpperCase(), { size: fitFont(n, 36, 15), weight: 800, tracking: -0.5, anchor: "middle" });
+  const roleY = nameY + 40;
+  const duel = `${duelPortrait(cxA, py, pr, d.photoADataUri, d.playerA, "h2hA")}
+${duelPortrait(cxB, py, pr, d.photoBDataUri, d.playerB, "h2hB")}
+${crestChip(cxA + pr - 16, py + pr - 16, 30, d.crestADataUri, "h2hCa")}
+${crestChip(cxB - pr + 16, py + pr - 16, 30, d.crestBDataUri, "h2hCb")}
+${text(mid, py + 12, "VS", { size: 30, weight: 800, tracking: 1, anchor: "middle", fill: P.inkMute })}
+${nameOf(d.playerA, cxA)}
+${nameOf(d.playerB, cxB)}
+${d.roleA ? text(cxA, roleY, d.roleA.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.accent, anchor: "middle" }) : ""}
+${d.roleB ? text(cxB, roleY, d.roleB.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.accent, anchor: "middle" }) : ""}`;
+
+  // stat table -----------------------------------------------------------
+  const hasCareer = Boolean(d.careerA?.length || d.careerB?.length);
+  const tableTop = roleY + 28;
+  const tableBottom = hasCareer ? h - 282 : h - 128;
+  const step = Math.min(54, Math.floor((tableBottom - tableTop) / Math.max(metrics.length, 1)));
+  const valSize = step >= 48 ? 32 : 27;
+  const rows = metrics
+    .map((m, i) => {
+      const y = tableTop + i * step + step / 2 + valSize * 0.36;
+      const winner = betterOf(m);
+      const colA = winner === "a" ? P.win : winner === "b" ? P.inkMute : P.ink;
+      const colB = winner === "b" ? P.win : winner === "a" ? P.inkMute : P.ink;
+      return `
+${text(M + 96, y, m.aDisplay ?? String(m.a), { size: valSize, weight: 800, tracking: -0.5, anchor: "middle", fill: colA })}
+${text(mid, y - 3, m.label.toUpperCase(), { size: 15, weight: 700, tracking: 2.2, anchor: "middle", fill: P.inkMute })}
+${text(w - M - 96, y, m.bDisplay ?? String(m.b), { size: valSize, weight: 800, tracking: -0.5, anchor: "middle", fill: colB })}
+${i < metrics.length - 1 ? hairline(M, tableTop + (i + 1) * step, w - M, tableTop + (i + 1) * step) : ""}`;
+    })
+    .join("");
+
+  // career panels --------------------------------------------------------
+  const panelW = (w - 2 * M - 28) / 2;
+  const panelY = tableBottom + 22;
+  const panelH = 150;
+  const careerPanel = (x: number, rowsIn: { label: string; value: string }[] | undefined) => {
+    if (!rowsIn?.length) return "";
+    const inner = rowsIn
+      .slice(0, 3)
+      .map(
+        (r, i) => `${text(x + 24, panelY + 66 + i * 34, truncate(r.label, 18).toUpperCase(), { size: 15, weight: 700, tracking: 1.8, fill: P.inkMute })}
+${text(x + panelW - 24, panelY + 66 + i * 34, r.value, { size: 24, weight: 800, anchor: "end", fill: P.ink })}`
+      )
+      .join("\n");
+    return `<rect x="${x}" y="${panelY}" width="${panelW}" height="${panelH}" rx="14" fill="${P.bgAlt}" stroke="${P.line}" stroke-width="1.5"/>
+${text(x + 24, panelY + 34, (d.careerTitle || "Career").toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.accent })}
+${inner}`;
+  };
+  const careers = hasCareer ? `${careerPanel(M, d.careerA)}${careerPanel(M + panelW + 28, d.careerB)}` : "";
+
+  return `${frame(w, h)}
+${header}
+${duel}
+${rows}
+${careers}
+${d.tagline ? text(mid, h - 66, truncate(d.tagline, 44).toUpperCase(), { size: 25, weight: 800, tracking: 0.5, anchor: "middle" }) : ""}
+${d.footnote ? text(M, h - 26, d.footnote.toUpperCase(), { size: 13, weight: 700, tracking: 2, fill: P.inkMute }) : ""}
+</svg>`;
+}

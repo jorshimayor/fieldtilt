@@ -24,4 +24,5 @@ export const CARD_KINDS: CardKind[] = [
   "comparison",
   "leaderboard",
   "shot_map",
+  "head_to_head",
 ];

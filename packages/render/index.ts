@@ -1,5 +1,7 @@
 export * from "./cards";
 export { svgToPng } from "./png";
+export { resolveCardImages } from "./images";
+export { clubAssets, CLUB_DIRECTORY } from "./clubs";
 
 import {
   matchPreviewCard,
@@ -13,6 +15,8 @@ import {
   comparisonCard,
   leaderboardCard,
   shotMapCard,
+  headToHeadCard,
+  HeadToHeadData,
   MilestoneData,
   ComparisonData,
   LeaderboardData,
@@ -38,7 +42,8 @@ export type CardKind =
   | "milestone"
   | "comparison"
   | "leaderboard"
-  | "shot_map";
+  | "shot_map"
+  | "head_to_head";
 
 export function buildCardSvg(kind: CardKind, data: unknown): string {
   switch (kind) {
@@ -64,6 +69,8 @@ export function buildCardSvg(kind: CardKind, data: unknown): string {
       return leaderboardCard(data as LeaderboardData);
     case "shot_map":
       return shotMapCard(data as ShotMapData);
+    case "head_to_head":
+      return headToHeadCard(data as HeadToHeadData);
     default:
       throw new Error(`unknown card kind: ${kind}`);
   }

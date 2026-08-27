@@ -25,7 +25,7 @@ import { once } from "./redis";
 import { db } from "@db/client";
 import { messages, postedItems, drafts } from "@db/schema";
 import { eq } from "drizzle-orm";
-import { renderCardPng, CardKind } from "@render/index";
+import { renderCardPng, resolveCardImages, CardKind } from "@render/index";
 import flags from "../../config/flags.json";
 
 export type PostResult = {
@@ -125,7 +125,8 @@ export async function postDraftNow(
 
   let image = opts?.image;
   if (!image && draft.cardKind && flags.image_generation_enabled) {
-    image = await renderCardPng(draft.cardKind as CardKind, draft.cardData);
+    const cardData = await resolveCardImages((draft.cardData || {}) as Record<string, unknown>);
+    image = await renderCardPng(draft.cardKind as CardKind, cardData);
   }
 
   const res = await publishTweetForUser(content, image);

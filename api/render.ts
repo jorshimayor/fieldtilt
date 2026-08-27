@@ -14,7 +14,7 @@ export const config = { runtime: "edge" };
  * and runs fine on the free plan.
  */
 
-import { buildCardSvg, svgToPng, embedFontsInSvg, CardKind } from "../packages/render/index";
+import { buildCardSvg, svgToPng, embedFontsInSvg, resolveCardImages, CardKind } from "../packages/render/index";
 import { fontBuffers } from "../packages/render/fonts";
 import { withErrorLogging } from "../packages/observability/index";
 import { requireOpsAuth } from "../packages/shared/auth";
@@ -139,6 +139,41 @@ const DEMO: Record<CardKind, unknown> = {
     ],
     footnote: "matchday 1 · source: football-data",
   },
+  head_to_head: {
+    title: "New keeper. Same standard.",
+    context: "Martinez vs Sanchez, 2025/26 league stats",
+    playerA: "Emiliano Martinez",
+    playerB: "Robert Sanchez",
+    roleA: "New signing",
+    roleB: "Chelsea No. 1",
+    photoAWiki: "Emiliano Martinez goalkeeper",
+    photoBWiki: "Robert Sanchez goalkeeper",
+    crestAClub: "Aston Villa",
+    crestBClub: "Chelsea",
+    metrics: [
+      { label: "Appearances", a: 35, b: 35 },
+      { label: "Clean sheets", a: 7, b: 9 },
+      { label: "Goals conceded", a: 47, b: 47, higherIsBetter: false },
+      { label: "Saves made", a: 95, b: 98 },
+      { label: "Penalties saved", a: 1, b: 0, aDisplay: "1 (100%)", bDisplay: "0 (0%)" },
+      { label: "Passes completed", a: 74, b: 67, aDisplay: "1,211 (74%)", bDisplay: "1,305 (67%)" },
+      { label: "Yellow cards", a: 2, b: 3, higherIsBetter: false },
+      { label: "Red cards", a: 0, b: 1, higherIsBetter: false },
+    ],
+    careerTitle: "PL career",
+    careerA: [
+      { label: "Appearances", value: "228" },
+      { label: "Clean sheets", value: "66" },
+      { label: "Saves made", value: "668" },
+    ],
+    careerB: [
+      { label: "Appearances", value: "171" },
+      { label: "Clean sheets", value: "49" },
+      { label: "Saves made", value: "465" },
+    ],
+    tagline: "The battle for the No. 1 spot is on.",
+    footnote: "photos: Wikimedia Commons · crests: football-data",
+  },
   shot_map: {
     player: "Cole Palmer",
     context: "Premier League 26/27 · all shots",
@@ -200,6 +235,10 @@ export default withErrorLogging(async function handler(req: Request): Promise<Re
     const qp = url.searchParams.get("palette");
     if (qp && ["neutral", "home", "away"].includes(qp)) data = { ...(data as Record<string, unknown>), palette: qp };
   }
+
+  // Inline any image URLs / wiki-photo / crest-club fields before building
+  // the SVG — canvas and resvg both refuse external hrefs.
+  data = await resolveCardImages(data as Record<string, unknown>);
 
   let svg = buildCardSvg(kind, data);
   if (format === "svg") {

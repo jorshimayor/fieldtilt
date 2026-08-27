@@ -32,11 +32,17 @@ import { drafts } from "../packages/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { TweetKind, Tone } from "../packages/shared/tweet-prompts";
 import { CardKind } from "../packages/render/index";
+import { CLUB_DIRECTORY } from "../packages/render/clubs";
 import { withErrorLogging } from "../packages/observability/index";
 
 const MAX_STEPS = 6;
 const MAX_HISTORY = 24;
 
+
+/** Compact "name @handle" list for the tagging rule — never let the LLM guess handles. */
+const HANDLE_LINE = Object.entries(CLUB_DIRECTORY)
+  .map(([name, a]) => `${name} ${a.handle}`)
+  .join(", ");
 
 function systemPrompt(): string {
   const caps = provider().capabilities;
@@ -60,6 +66,7 @@ You help the operator create posts. Rules:
   - comparison {title?, playerA, playerB, context ("Premier League 25/26 · per 90"), metrics:[{label, a, b, aDisplay?, bDisplay?}] (max 6; a/b numeric, playerA is OUR player), footnote ("xG: Understat")}   (butterfly chart — great for transfer debates and player arguments; prefer per-90 numbers)
   - leaderboard {title ("Most xG per 90"), context?, entries:[{value, label, sub?, highlight?}] (max 7, ranked; highlight=true for our players), footnote}   (ranked list — top-N by any metric from the data)
   - shot_map {player, context?, shots:[{x, y, xG, result}] (pass through EXACTLY what get_player_shots returned), remark? (one scout line), footnote ("xG: Understat")}   (attacking-half shot map, dot size = xG, goals highlighted)
+  - head_to_head {title? (max 2 short lines), context?, playerA, playerB, roleA?/roleB? (short tags like "New signing" / "${c.name} No. 1"), photoAWiki/photoBWiki (just the player names — the renderer fetches real Wikipedia headshots), crestAClub/crestBClub (club names — renderer fetches the crests), metrics:[{label, a, b, aDisplay?, bDisplay?, higherIsBetter?}] (max 8; set higherIsBetter:false for conceded/cards so the GREEN winner tint lands right), careerTitle?, careerA/careerB:[{label, value}] (max 3 each), tagline?, footnote ("photos: Wikimedia Commons")}   (the premium duel card: photos + crests + winner-tinted stat table — the go-to for signing debates, GK battles, transfer comparisons)
 - Every card also accepts "palette": "neutral" (dark editorial, default) | "home" (club royal blue + gold) | "away" (light). Pick home for home fixtures and club celebration moments, away for away fixtures, neutral for analysis. Mention your palette choice only if asked.
 - Milestone/spotlight tweet format (fan-account standard): a hook line containing the big number, then a line-broken stat list — one stat per line prefixed with a fitting emoji (⚽ goals, 🅰️ assists, ⏱ minutes/per-90, 🧤 saves, 🏆 trophies), then the suffix. Keep it under the character limit.
 - The "data" argument of create_draft grounds the tweet copy — put the real numbers/facts there. It must never be empty.
@@ -68,6 +75,7 @@ You help the operator create posts. Rules:
 - Advanced stats (get_advanced_player_stats / get_league_xg_table) come from Understat's xG model — when a post leans on them, credit "xG: Understat" in the copy or card. Great for over/under-performance takes (goals vs xG), profiling (xGChain/xGBuildup), and transfer arguments. NEVER produce Opta-style historical trivia ("first player since…") — no tool can verify it.
 - web_lookup fills free-tier gaps (cup fixtures, lower-league opponents, kickoff times). Facts from it MUST carry their source: put the source name in the create_draft data and credit it in the copy or card footnote (e.g. "fixture: BBC Sport"). If web_lookup errors, say so — never fill the gap from memory.
 - STYLE: never use em dashes or en dashes in tweet copy or card text; hyphens/commas only. Multi-fact tweets use line breaks: hook, blank line, one fact per line.
+- TAGGING: when another club is central to the post (opponent, comparison, transfer counterparty), tag their official X handle once on the line that mentions them. Use ONLY these handles, never guess: ${HANDLE_LINE}.
 - Be brief in replies: one or two sentences on what you did or found. Plain text, no markdown.`;
 }
 

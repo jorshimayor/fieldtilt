@@ -27,13 +27,15 @@ if (tok.expiresAt && new Date(tok.expiresAt) < new Date() && tok.refreshToken) t
 let mediaIds: string[] | undefined;
 if (payload.cardKind) {
   const cards: any = await import("../packages/render/cards.ts");
+  const { resolveCardImages } = await import("../packages/render/images.ts");
   const fnMap: Record<string, string> = {
     match_preview: "matchPreviewCard", score: "scoreCard", post_match: "postMatchCard",
     player_stat: "playerStatCard", transfer: "transferCard", form: "formCard",
     editorial: "editorialCard", milestone: "milestoneCard", comparison: "comparisonCard",
+    leaderboard: "leaderboardCard", shot_map: "shotMapCard", head_to_head: "headToHeadCard",
   };
   await initWasm(readFileSync("node_modules/@resvg/resvg-wasm/index_bg.wasm"));
-  const svg = cards[fnMap[payload.cardKind]](payload.cardData);
+  const svg = cards[fnMap[payload.cardKind]](await resolveCardImages(payload.cardData || {}));
   const fonts = ["Regular", "Bold", "ExtraBold"].map((w) => readFileSync(`packages/render/fonts/Montserrat-${w}.ttf`));
   const png = new Resvg(svg, { font: { fontBuffers: fonts, defaultFontFamily: "Montserrat", loadSystemFonts: false } }).render().asPng();
   console.log("card rendered:", Math.round(png.length / 1024), "KB");

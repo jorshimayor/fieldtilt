@@ -187,3 +187,38 @@ if (failures) {
   process.exit(1);
 }
 console.log("\nAll render tests passed");
+
+// ---- head-to-head card ----
+import { headToHeadCard, betterOf } from "../../packages/render/cards";
+import { clubAssets } from "../../packages/render/clubs";
+
+check("betterOf: higher wins by default", betterOf({ a: 9, b: 7 }) === "a");
+check("betterOf: lower wins when flagged", betterOf({ a: 47, b: 45, higherIsBetter: false }) === "b");
+check("betterOf: tie is null", betterOf({ a: 35, b: 35 }) === null);
+check("betterOf: NaN is null", betterOf({ a: Number.NaN, b: 1 }) === null);
+
+const h2h = headToHeadCard({
+  title: "New keeper. Same standard.",
+  playerA: "Emiliano Martinez",
+  playerB: "Robert Sanchez",
+  roleA: "New signing",
+  roleB: "Chelsea No. 1",
+  metrics: [
+    { label: "Clean sheets", a: 7, b: 9 },
+    { label: "Goals conceded", a: 47, b: 45, higherIsBetter: false },
+  ],
+  careerA: [{ label: "Appearances", value: "228" }],
+  careerB: [{ label: "Appearances", value: "171" }],
+  tagline: "The battle for the No. 1 spot is on.",
+});
+check("h2h renders both names", h2h.includes("MARTINEZ") && h2h.includes("SANCHEZ"));
+check("h2h renders metric labels", h2h.includes("CLEAN SHEETS") && h2h.includes("GOALS CONCEDED"));
+check("h2h falls back to initials without photos", h2h.includes("EM") && h2h.includes("RS"));
+check("h2h renders tagline", h2h.includes("THE BATTLE FOR THE NO. 1 SPOT IS ON."));
+check("h2h no em/en dashes", !/[—–]/.test(h2h));
+
+check("clubAssets resolves aliases", clubAssets("Man City")?.handle === "@ManCity");
+check("clubAssets resolves fuzzy", clubAssets("Aston Villa FC")?.crestUrl.includes("/58.png") === true);
+check("clubAssets unknown is null", clubAssets("Real Madrid") === null);
+
+if (failures) process.exit(1);

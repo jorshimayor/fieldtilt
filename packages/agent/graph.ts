@@ -176,7 +176,10 @@ transfer {player, direction:"in"|"out", counterparty, transferType?, dateLabel?}
 form {seasonLabel, results:[{opponent, score, outcome}] (max 5), position?, points?, goalsFor?, goalsAgainst?, competition?}
 editorial {eyebrow, lines:[{text, em?}] (max 7)}
 milestone {player, value, milestoneLabel, context?, stats:[{label, value}] (max 6), dateLabel?, competition?}
-comparison {title?, playerA, playerB, context, metrics:[{label, a, b, aDisplay?, bDisplay?}] (max 6), footnote}`;
+comparison {title?, playerA, playerB, context, metrics:[{label, a, b, aDisplay?, bDisplay?}] (max 6), footnote}
+leaderboard {title, context?, entries:[{value, label, sub?, highlight?}] (max 7, ranked), footnote?}
+shot_map {player, context?, shots:[{x, y, xG, result}] (pass through EXACTLY what get_player_shots returned), remark?, footnote}
+head_to_head {title? (max 2 short lines), context?, playerA, playerB, roleA?, roleB?, photoAWiki/photoBWiki (player names — renderer fetches Wikipedia headshots), crestAClub/crestBClub (club names — renderer fetches crests), metrics:[{label, a, b, aDisplay?, bDisplay?, higherIsBetter?}] (max 8; higherIsBetter:false for conceded/cards), careerTitle?, careerA/careerB:[{label, value}] (max 3), tagline?, footnote ("photos: Wikimedia Commons")}`;
   for (const attempt of [0, 1]) {
     const d = await deps.llmJson(
       `You are the DESIGN stage of a football graphics pipeline. Choose the infographic for this post and fill its data — every value MUST come from the gathered data below, never invented. Reply ONLY with JSON:
