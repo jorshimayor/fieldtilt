@@ -29,7 +29,7 @@ import {
   getHeadToHead,
   provider,
 } from "../../packages/tools/football";
-import { runHalftimeBurst, BurstResult } from "../../packages/agent/halftime";
+import { runHalftimeBurst, runFulltimeBurst, BurstResult } from "../../packages/agent/bursts";
 import { getCache, setCache } from "../../packages/tools/cache";
 import { composeAndPost } from "../../packages/shared/poster";
 import { withErrorLogging } from "../../packages/observability/index";
@@ -193,8 +193,41 @@ export default withErrorLogging(async function handler(): Promise<Response> {
     idKey: `tweet:postmatch:${fixture.id}`,
     idTtlSec: 24 * 60 * 60,
   });
+  // ---- full-time burst: the rest of the 10+ stat drop --------------------
+  let fulltime: BurstResult[] | null = null;
+  if (!(await getCache(`ftburst:${fixture.id}`))) {
+    const season = currentSeason();
+    const [standings, lastFixtures, performers, h2h, nextFx, pointsProgression] = await Promise.all([
+      getLeagueStandings(season).catch(() => null),
+      getTeamFixtures({ last: 10 })
+        .then((r) => [...r.fixtures].sort((a, b) => b.date.localeCompare(a.date)))
+        .catch(() => null),
+      getTeamTopPerformers(season).then((r) => r.players).catch(() => null),
+      getHeadToHead({ fixtureId: fixture.id }).catch(() => null),
+      getTeamFixtures({ next: 1 }).then((r) => r.fixtures[0] || null).catch(() => null),
+      import("../../packages/tools/history")
+        .then((m) => m.getPointsVsPastSeasons(3))
+        .then((r) => ("error" in r ? null : r))
+        .catch(() => null),
+    ]);
+    fulltime = await runFulltimeBurst({
+      fixture,
+      goals,
+      scorers,
+      standings,
+      lastFixtures,
+      performers,
+      h2h,
+      pointsProgression,
+      nextFixture: nextFx,
+      seasonLbl: seasonLabel(),
+    });
+    if (fulltime.some((h) => !h.error)) {
+      await setCache(`ftburst:${fixture.id}`, true, 24 * 60 * 60 * 1000);
+    }
+  }
   await setCache(`ftdone:${fixture.id}`, true, 24 * 60 * 60 * 1000);
-  return json({ type: "post_match", ...result });
+  return json({ type: "post_match", ...result, fulltime });
 });
 
 function json(obj: unknown, status = 200): Response {

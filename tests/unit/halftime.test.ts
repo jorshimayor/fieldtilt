@@ -2,7 +2,7 @@
  * Half-time burst planner tests — pure specs, no LLM/network/wasm.
  * Run: tsx tests/unit/halftime.test.ts
  */
-import { halftimePlan, pickClubScorer, HalftimeContext } from "../../packages/agent/halftime";
+import { halftimePlan, pickClubScorer, HalftimeContext } from "../../packages/agent/bursts";
 
 let failures = 0;
 function check(name: string, cond: boolean) {
@@ -81,3 +81,69 @@ check("ignores opponent goals", pickClubScorer([{ minute: 12, player: "Saka", as
 
 if (failures) process.exit(1);
 console.log("All halftime tests passed");
+
+// ---- full-time burst ----
+import { fulltimePlan, computeStreaks, FulltimeContext } from "../../packages/agent/bursts";
+
+const fx = (over: any = {}) => ({
+  id: 900, date: "2026-08-30T13:00:00Z", competition: "Premier League", venue: "Stamford Bridge",
+  home: "Chelsea FC", away: "Fulham FC", isHome: true, opponent: "Fulham", opponentId: 63,
+  status: "FINISHED", goalsHome: 3, goalsAway: 0, outcome: "W" as const, ...over,
+});
+const lastTen = [
+  fx(),
+  fx({ id: 899, goalsHome: 2, goalsAway: 0, opponent: "West Ham" }),
+  fx({ id: 898, goalsHome: 1, goalsAway: 0, opponent: "Everton" }),
+  fx({ id: 897, goalsHome: 1, goalsAway: 1, outcome: "D", opponent: "Leeds" }),
+  fx({ id: 896, goalsHome: 0, goalsAway: 2, outcome: "L", opponent: "Arsenal", isHome: true }),
+];
+
+console.log("computeStreaks()");
+const st = computeStreaks(lastTen);
+check("win run 3", st.winRun === 3);
+check("unbeaten run 4", st.unbeatenRun === 4);
+check("clean sheet run 3", st.cleanSheetRun === 3);
+check("scoring run 4", st.scoringRun === 4);
+
+console.log("fulltimePlan()");
+const ftCtx: FulltimeContext = {
+  fixture: fx(),
+  goals: [
+    { minute: 12, player: "Cole Palmer", assist: null, team: "Chelsea FC", detail: "Normal Goal" },
+    { minute: 55, player: "Joao Pedro", assist: null, team: "Chelsea FC", detail: "Normal Goal" },
+    { minute: 80, player: "Cole Palmer", assist: null, team: "Chelsea FC", detail: "Penalty" },
+  ],
+  scorers: ["Palmer 12'", "Pedro 55'", "Palmer 80' (P)"],
+  standings: full.standings,
+  lastFixtures: lastTen,
+  performers,
+  h2h: full.h2h,
+  pointsProgression: {
+    current: { season: "2026/27", points: 6, position: 2, played: 2 },
+    past: [{ season: "2025/26", points: 4, position: 8, played: 2 }],
+    note: "n",
+  },
+  nextFixture: fx({ id: 901, opponent: "Brentford", home: "Brentford FC", away: "Chelsea FC", isHome: false, outcome: null, goalsHome: null, goalsAway: null, status: "SCHEDULED" }),
+  seasonLbl: "2026/27",
+};
+const ft = fulltimePlan(ftCtx);
+const fslots = ft.map((s) => s.slot);
+check("ft ships 8 slots when fully grounded", ft.length >= 8);
+check("two scorers max, deduped", fslots.includes("scorer_1") && fslots.includes("scorer_2") && !fslots.includes("scorer_3"));
+check("streak slot claims 3 straight wins", JSON.stringify(ft.find((s) => s.slot === "streak_history")).includes('"3"'));
+check("biggest win detected (+3 > +2)", fslots.includes("biggest_win"));
+check("league slots present", fslots.includes("table_after") && fslots.includes("season_start_compare"));
+check("h2h + next up present", fslots.includes("h2h_ledger") && fslots.includes("next_up"));
+check("combined HT+FT >= 10", plan.length + ft.length >= 10);
+check("ft no dashes", !/[—–]/.test(JSON.stringify(ft)));
+
+const cup = fulltimePlan({ ...ftCtx, fixture: fx({ competition: "EFL Cup" }), pointsProgression: null });
+const cupSlots = cup.map((s) => s.slot);
+check("cup drops league-table slots", !cupSlots.includes("table_after") && !cupSlots.includes("season_start_compare"));
+check("cup still ships 5+", cup.length >= 5);
+
+const loss = fulltimePlan({ ...ftCtx, fixture: fx({ goalsHome: 0, goalsAway: 1, outcome: "L" }), goals: [], scorers: [], lastFixtures: [fx({ goalsHome: 0, goalsAway: 1, outcome: "L" }), ...lastTen.slice(1)] });
+check("loss: no streak/biggest-win/scorer slots", !loss.some((s) => ["streak_history", "biggest_win", "scorer_1"].includes(s.slot)));
+
+if (failures) process.exit(1);
+console.log("All burst tests passed");
