@@ -4,11 +4,12 @@ import { env } from "./env";
 type Model = { id: string; maxOutputTokens: number; priceRank: number };
 
 export const models: Model[] = [
-  // grok-4.1-fast was deprecated by xAI (OpenRouter 404s it) — 4.3 is the successor.
-  { id: "x-ai/grok-4.3", maxOutputTokens: 1200, priceRank: 1 },
-  { id: "anthropic/claude-3-5-sonnet-20241022", maxOutputTokens: 1200, priceRank: 2 },
-  { id: "meta/llama-3.1-405b", maxOutputTokens: 1200, priceRank: 3 },
-  { id: "qwen/qwen-2.5-110b", maxOutputTokens: 1200, priceRank: 4 }
+  // Haiku 4.5 first: best JSON/tool-call discipline per dollar for the
+  // agent's plan/design nodes. Chain degrades by price, ending free.
+  { id: "anthropic/claude-haiku-4-5", maxOutputTokens: 1200, priceRank: 1 },
+  { id: "x-ai/grok-4.3", maxOutputTokens: 1200, priceRank: 2 },
+  { id: "deepseek/deepseek-chat", maxOutputTokens: 1200, priceRank: 3 },
+  { id: "meta-llama/llama-3.3-70b-instruct:free", maxOutputTokens: 1200, priceRank: 4 }
 ];
 
 export type ChatInput = { messages: { role: string; content: string }[] };
