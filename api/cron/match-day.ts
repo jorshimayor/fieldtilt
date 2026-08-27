@@ -23,8 +23,13 @@ import {
   getFixtureGoalEvents,
   formatScorers,
   seasonLabel,
+  currentSeason,
+  getLeagueStandings,
+  getTeamTopPerformers,
+  getHeadToHead,
   provider,
 } from "../../packages/tools/football";
+import { runHalftimeBurst, BurstResult } from "../../packages/agent/halftime";
 import { getCache, setCache } from "../../packages/tools/cache";
 import { composeAndPost } from "../../packages/shared/poster";
 import { withErrorLogging } from "../../packages/observability/index";
@@ -99,7 +104,33 @@ export default withErrorLogging(async function handler(): Promise<Response> {
       idKey: `tweet:live:${live.fixtureId}:${live.homeGoals}-${live.awayGoals}`,
       idTtlSec: 20 * 60,
     });
-    return json({ type: "live", phase: live.phase, ...result });
+
+    // ---- half-time burst: at least 5 first-half posts, once per fixture ----
+    let halftime: BurstResult[] | null = null;
+    if (live.phase === "ht" && !(await getCache(`htdone:${live.fixtureId}`))) {
+      const season = currentSeason();
+      const [standings, lastFixtures, performers, h2h] = await Promise.all([
+        getLeagueStandings(season).catch(() => null),
+        getTeamFixtures({ last: 5 }).then((r) => r.fixtures).catch(() => null),
+        getTeamTopPerformers(season).then((r) => r.players).catch(() => null),
+        getHeadToHead({ fixtureId: live.fixtureId }).catch(() => null),
+      ]);
+      halftime = await runHalftimeBurst({
+        live,
+        goals,
+        scorers,
+        standings,
+        lastFixtures,
+        performers,
+        h2h,
+        seasonLbl: seasonLabel(),
+      });
+      // Retry next tick only if EVERY slot errored (idKeys stop duplicates).
+      if (halftime.some((h) => !h.error)) {
+        await setCache(`htdone:${live.fixtureId}`, true, 6 * 60 * 60 * 1000);
+      }
+    }
+    return json({ type: "live", phase: live.phase, ...result, halftime });
   }
 
   // ---- no live feed entry: maybe the match just finished ----
