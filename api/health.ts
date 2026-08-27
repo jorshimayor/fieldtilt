@@ -14,8 +14,10 @@ function has(key: string): boolean {
 }
 
 export default async function handler(): Promise<Response> {
+  const cupOverlay = has("API_FOOTBALL_KEY");
   const checks = {
     llm_openrouter: has("OPENROUTER_API_KEY"),
+    cup_coverage: cupOverlay,
     football_data: has("API_FOOTBALL_KEY") || has("FOOTBALL_DATA_KEY"),
     database_neon: has("NEON_DATABASE_URL"),
     cache_upstash: has("UPSTASH_REDIS_URL") && has("UPSTASH_REDIS_TOKEN"),

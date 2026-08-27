@@ -30,6 +30,7 @@ import {
   provider,
 } from "../../packages/tools/football";
 import { runHalftimeBurst, runFulltimeBurst, BurstResult } from "../../packages/agent/bursts";
+import { getNextFixtureAny, getLiveMatchAny, providerFor, FixtureSrc } from "../../packages/tools/cup-overlay";
 import { getCache, setCache } from "../../packages/tools/cache";
 import { composeAndPost } from "../../packages/shared/poster";
 import { withErrorLogging } from "../../packages/observability/index";
@@ -42,15 +43,16 @@ const FT_EARLIEST_MS = 100 * 60 * 1000;
 
 export default withErrorLogging(async function handler(): Promise<Response> {
   // ---- window gate (no API spend outside match windows) ----
-  let next = await getCache<{ id: number; date: string }>(nextFixtureKey());
+  let next = await getCache<{ id: number; date: string; src?: FixtureSrc }>(nextFixtureKey());
   if (!next) {
-    const { fixtures } = await getTeamFixtures({ next: 1 });
-    if (fixtures[0]) {
-      next = { id: fixtures[0].id, date: fixtures[0].date };
+    const nextAny = await getNextFixtureAny();
+    if (nextAny) {
+      next = { id: nextAny.fixture.id, date: nextAny.fixture.date, src: nextAny.src };
       await setCache(nextFixtureKey(), next, 6 * 60 * 60 * 1000);
     }
   }
   if (!next) return json({ skipped: "no known upcoming fixture" });
+  const src: FixtureSrc = next.src || "primary";
 
   const kickoff = new Date(next.date).getTime();
   const now = Date.now();
@@ -58,14 +60,17 @@ export default withErrorLogging(async function handler(): Promise<Response> {
     return json({ skipped: "outside match window", kickoff: next.date });
   }
 
-  // ---- inside the window: live feed first ----
-  const live = await getLiveTeamMatch();
+  // ---- inside the window: live feed first (league feed, then cup overlay) ----
+  const liveAny = await getLiveMatchAny();
+  const live = liveAny?.live || null;
+  const liveSrc: FixtureSrc = liveAny?.src || "primary";
+  const liveProv = providerFor(liveSrc);
 
   if (live && (live.phase === "live" || live.phase === "ht")) {
-    const caps = provider().capabilities;
+    const caps = liveProv.capabilities;
     const [{ goals }, stats] = await Promise.all([
-      getFixtureGoalEvents(live.fixtureId, { ttlMs: 60 * 1000 }),
-      caps.liveStats ? getMatchStats(live.fixtureId).catch(() => null) : Promise.resolve(null),
+      liveProv.getGoalEvents(live.fixtureId, { ttlMs: 60 * 1000 }),
+      caps.liveStats ? liveProv.getMatchStats(live.fixtureId).catch(() => null) : Promise.resolve(null),
     ]);
     const scorers = formatScorers(goals);
     const statusLabel =
@@ -113,7 +118,7 @@ export default withErrorLogging(async function handler(): Promise<Response> {
         getLeagueStandings(season).catch(() => null),
         getTeamFixtures({ last: 5 }).then((r) => r.fixtures).catch(() => null),
         getTeamTopPerformers(season).then((r) => r.players).catch(() => null),
-        getHeadToHead({ fixtureId: live.fixtureId }).catch(() => null),
+        liveSrc === "primary" ? getHeadToHead({ fixtureId: live.fixtureId }).catch(() => null) : Promise.resolve(null),
       ]);
       halftime = await runHalftimeBurst({
         live,
@@ -142,16 +147,16 @@ export default withErrorLogging(async function handler(): Promise<Response> {
     return json({ skipped: "full-time recap already handled", fixtureId: next.id });
   }
 
-  const fixture = await getFixtureById(next.id);
+  const fixture = await providerFor(src).getFixtureById(next.id);
   if (!fixture) return json({ skipped: "fixture lookup failed", fixtureId: next.id });
   if (fixture.outcome === null) {
     return json({ skipped: `not finished yet (status=${fixture.status})`, fixtureId: next.id });
   }
 
-  const caps = provider().capabilities;
+  const caps = providerFor(src).capabilities;
   const [stats, { goals }] = await Promise.all([
-    getMatchStats(fixture.id).catch(() => null),
-    getFixtureGoalEvents(fixture.id, { ttlMs: 60 * 60 * 1000 }),
+    caps.liveStats ? providerFor(src).getMatchStats(fixture.id).catch(() => null) : Promise.resolve(null),
+    providerFor(src).getGoalEvents(fixture.id, { ttlMs: 60 * 60 * 1000 }),
   ]);
   const scorers = formatScorers(goals);
   const result = await composeAndPost({
@@ -203,7 +208,7 @@ export default withErrorLogging(async function handler(): Promise<Response> {
         .then((r) => [...r.fixtures].sort((a, b) => b.date.localeCompare(a.date)))
         .catch(() => null),
       getTeamTopPerformers(season).then((r) => r.players).catch(() => null),
-      getHeadToHead({ fixtureId: fixture.id }).catch(() => null),
+      src === "primary" ? getHeadToHead({ fixtureId: fixture.id }).catch(() => null) : Promise.resolve(null),
       getTeamFixtures({ next: 1 }).then((r) => r.fixtures[0] || null).catch(() => null),
       import("../../packages/tools/history")
         .then((m) => m.getPointsVsPastSeasons(3))

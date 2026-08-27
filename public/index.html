@@ -164,6 +164,10 @@
               </div>
               <div id="srcLaunch" class="flex gap-2 mt-3 flex-wrap"></div>
             </div>
+            <div class="card rounded-xl p-4 mb-4">
+              <span class="rail-title">[ STAT FINDER · WHAT LIVES WHERE ]</span>
+              <div id="statFinder" class="mt-2"></div>
+            </div>
             <div id="sourceGroups" class="space-y-6"></div>
             <p class="muted text-xs mt-3">Citing well is part of the brand: every claim with receipts. Understat and FBref/Opta data power this app's own analytics — always credit "xG: Understat" when a post uses the xG layer.</p>
           </section>
@@ -1354,6 +1358,27 @@
           ],
         },
       ];
+      const STAT_FINDER = [
+        { need: "Cup match stats (possession, shots)", where: "Sofascore match page · FotMob", note: "auto once the API-Football key is set" },
+        { need: "League xG, shot maps, xGChain", where: "Understat", note: "⚡ already automatic" },
+        { need: "Cup + European xG", where: "FotMob match page · Sofascore", note: "manual read" },
+        { need: "Player ratings, any competition", where: "Sofascore · FotMob · WhoScored", note: "" },
+        { need: "Heatmaps, touch maps, momentum", where: "Sofascore", note: "screenshot-worthy" },
+        { need: "Duels, aerials, carries, defensive per-90", where: "FBref scouting report", note: "❯ bookmarklet pipes it in" },
+        { need: "Side-by-side player comparison", where: "Squawka comparison matrix · FBref", note: "head_to_head card inputs" },
+        { need: "Career history, market value, contracts", where: "Transfermarkt", note: "former-club angles" },
+        { need: "European official numbers", where: "UEFA stat centre", note: "" },
+        { need: "Records, honours, historic seasons", where: "Wikipedia · Premier League", note: "⚡ web_lookup reads Wikipedia" },
+        { need: "Verified line-ups + facts to cite", where: "BBC Sport · chelseafc.com", note: "the safe citation" },
+      ];
+      document.getElementById("statFinder").innerHTML = STAT_FINDER.map(
+        (r) =>
+          '<div class="flex justify-between gap-3 py-1.5" style="border-bottom:1px solid var(--line)">' +
+          '<span class="text-xs" style="color:var(--ink)">' + r.need + "</span>" +
+          '<span class="text-xs" style="text-align:right"><span style="color:var(--accent)">' + r.where + "</span>" +
+          (r.note ? ' <span class="muted">· ' + r.note + "</span>" : "") +
+          "</span></div>"
+      ).join("");
       const FEED_BADGE = { auto: "⚡ feeds fieldtilt", bookmarklet: "❯ via bookmarklet" };
       document.getElementById("sourceGroups").innerHTML = SOURCE_GROUPS.map(
         (g) =>

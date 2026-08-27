@@ -10,12 +10,12 @@ export const config = { runtime: "edge" };
  */
 
 import {
-  getTeamFixtures,
   getHeadToHead,
   activeProviderName,
   club,
 } from "../../packages/tools/football";
 import { setCache } from "../../packages/tools/cache";
+import { getNextFixtureAny } from "../../packages/tools/cup-overlay";
 import { composeAndPost } from "../../packages/shared/poster";
 import { withErrorLogging } from "../../packages/observability/index";
 
@@ -25,12 +25,15 @@ export function nextFixtureKey(): string {
 }
 
 export default withErrorLogging(async function handler(): Promise<Response> {
-  const { fixtures } = await getTeamFixtures({ next: 1 });
-  const next = fixtures[0];
-  if (!next) return json({ skipped: "no upcoming fixture" });
+  // Cup-aware: earliest fixture across the primary feed AND the API-Football
+  // cup overlay (inert without a key). src rides along so the poller reads
+  // the fixture back from the provider that owns its id.
+  const nextAny = await getNextFixtureAny();
+  if (!nextAny) return json({ skipped: "no upcoming fixture" });
+  const next = nextAny.fixture;
 
   // Gate for the match-day poller (24h TTL, refreshed daily).
-  await setCache(nextFixtureKey(), { id: next.id, date: next.date }, 24 * 60 * 60 * 1000);
+  await setCache(nextFixtureKey(), { id: next.id, date: next.date, src: nextAny.src }, 24 * 60 * 60 * 1000);
 
   const kickoff = new Date(next.date).getTime();
   const hoursAway = (kickoff - Date.now()) / 36e5;
@@ -50,7 +53,8 @@ export default withErrorLogging(async function handler(): Promise<Response> {
   // Historical context: head-to-head over the last 10 meetings.
   let h2hSummary = "";
   try {
-    h2hSummary = (await getHeadToHead({ opponentId: next.opponentId, fixtureId: next.id })).summary;
+    // h2h ids are primary-provider scoped; skip for overlay (cup) fixtures.
+    if (nextAny.src === "primary") h2hSummary = (await getHeadToHead({ opponentId: next.opponentId, fixtureId: next.id })).summary;
   } catch {
     // preview still posts without it
   }

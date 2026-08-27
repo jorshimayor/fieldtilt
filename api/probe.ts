@@ -19,6 +19,54 @@ const TARGETS: Record<string, string> = {
 export default withErrorLogging(async function handler(req: Request): Promise<Response> {
   const denied = requireOpsAuth(req);
   if (denied) return denied;
+  // ---- API-Football key validator: answers "does my plan see the current
+  // season (and therefore live cups)?" the empirical way. ----
+  if (new URL(req.url).searchParams.get("target") === "api-football") {
+    const key = (globalThis as any).process?.env?.API_FOOTBALL_KEY || "";
+    if (!key) {
+      return new Response(
+        JSON.stringify({ configured: false, note: "no API_FOOTBALL_KEY set. Sign up free at api-football.com, then: wrangler secret put API_FOOTBALL_KEY. The cup overlay activates automatically." }),
+        { headers: { "Content-Type": "application/json" } }
+      );
+    }
+    try {
+      const teamId = (await import("../packages/shared/club")).club().ids.apiFootball;
+      const res = await fetch(`https://v3.football.api-sports.io/fixtures?team=${teamId}&next=5`, {
+        headers: { "x-apisports-key": key },
+      });
+      const j = (await res.json()) as any;
+      const fixtures = (j?.response || []).map((r: any) => ({
+        date: r?.fixture?.date,
+        competition: r?.league?.name,
+        home: r?.teams?.home?.name,
+        away: r?.teams?.away?.name,
+      }));
+      const cupCount = fixtures.filter((f: any) => f.competition && !/premier league/i.test(f.competition)).length;
+      return new Response(
+        JSON.stringify(
+          {
+            configured: true,
+            status: res.status,
+            planErrors: j?.errors && Object.keys(j.errors).length ? j.errors : null,
+            currentSeasonVisible: fixtures.length > 0,
+            upcoming: fixtures,
+            cupFixturesVisible: cupCount,
+            verdict:
+              fixtures.length > 0
+                ? `plan sees the current season (${cupCount} cup fixture(s) in the next 5) - the overlay is LIVE`
+                : "key works but returned no upcoming fixtures - the plan likely excludes the current season; cup coverage needs their paid tier",
+          },
+          null,
+          1
+        ),
+        { headers: { "Content-Type": "application/json" } }
+      );
+    } catch (e) {
+      return new Response(JSON.stringify({ configured: true, error: String((e as Error).message || e).slice(0, 160) }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }
   const u = new URL(req.url);
   const key = u.searchParams.get("target") || "";
   const raw = u.searchParams.get("url") || "";

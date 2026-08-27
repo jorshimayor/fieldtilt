@@ -44,7 +44,11 @@ function coerceObject(v: unknown): Record<string, unknown> | null {
 export async function execTool(name: string, args: any): Promise<any> {
   switch (name) {
     case "get_upcoming_fixtures": {
-      const { fixtures } = await getTeamFixtures({ next: clamp(args?.count, 1, 10, 3) });
+      const n = clamp(args?.count, 1, 10, 3);
+      const { fixtures: league } = await getTeamFixtures({ next: n });
+      const { getUpcomingCupFixtures } = await import("../tools/cup-overlay");
+      const cups = await getUpcomingCupFixtures(n);
+      const fixtures = [...league, ...cups].sort((a, b) => a.date.localeCompare(b.date)).slice(0, n);
       return fixtures.map((f) => ({
         fixtureId: f.id,
         dateUtc: f.date,
