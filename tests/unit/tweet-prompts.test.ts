@@ -49,3 +49,16 @@ import { normalizeTweet, buildTweetMessages } from "../../packages/shared/tweet-
 }
 
 console.log("ok tweet-prompts");
+
+// ---- catch-all facts reach the writer (operator-supplied metrics) ----
+import { buildTweetMessages } from "../../packages/shared/tweet-prompts";
+const msgs = buildTweetMessages("player_stat", "professional", {
+  player: "Valentino Barco",
+  season: "2026/27",
+  rating: "8.5",
+  touches: 119,
+  passesIntoFinalThird: "30/34",
+  source: "Sofascore",
+});
+assert.ok(msgs[1].content.includes("touches: 119") && msgs[1].content.includes("rating: 8.5") && msgs[1].content.includes("Sofascore"), "extra metrics appended to user msg");
+console.log("  ✓ extra metrics appended to user msg");

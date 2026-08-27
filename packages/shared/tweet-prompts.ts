@@ -187,8 +187,16 @@ export function buildTweetMessages(
   data: Record<string, unknown>
 ): { role: "system" | "user"; content: string }[] {
   const spec = tweetPrompts[kind];
+  // Catch-all: the per-kind template surfaces its named fields, but operators
+  // supply arbitrary metrics (rating, touches, distance covered...). Append
+  // EVERY provided fact so nothing real ever falls to "n/a" -> SKIP.
+  const extras = Object.entries(data)
+    .filter(([, v]) => v != null && v !== "" && typeof v !== "object")
+    .map(([k, v]) => `${k}: ${v}`)
+    .join("; ");
+  const user = `${spec.user(data)}${extras ? `\n\nAll provided facts (use any that fit): ${extras}` : ""}`;
   return [
     { role: "system", content: spec.system(tone) },
-    { role: "user", content: spec.user(data) },
+    { role: "user", content: user },
   ];
 }
