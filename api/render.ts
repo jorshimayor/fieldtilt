@@ -139,6 +139,26 @@ const DEMO: Record<CardKind, unknown> = {
     ],
     footnote: "matchday 1 · source: football-data",
   },
+  shot_map: {
+    player: "Cole Palmer",
+    context: "Premier League 26/27 · all shots",
+    shots: [
+      { x: 0.93, y: 0.48, xG: 0.55, result: "Goal" },
+      { x: 0.88, y: 0.44, xG: 0.31, result: "Goal" },
+      { x: 0.9, y: 0.55, xG: 0.12, result: "SavedShot" },
+      { x: 0.85, y: 0.38, xG: 0.09, result: "MissedShots" },
+      { x: 0.79, y: 0.5, xG: 0.06, result: "BlockedShot" },
+      { x: 0.86, y: 0.62, xG: 0.18, result: "Goal" },
+      { x: 0.76, y: 0.42, xG: 0.04, result: "MissedShots" },
+      { x: 0.82, y: 0.52, xG: 0.11, result: "SavedShot" },
+      { x: 0.71, y: 0.57, xG: 0.03, result: "MissedShots" },
+      { x: 0.89, y: 0.41, xG: 0.24, result: "ShotOnPost" },
+      { x: 0.94, y: 0.5, xG: 0.42, result: "SavedShot" },
+      { x: 0.68, y: 0.36, xG: 0.02, result: "MissedShots" },
+    ],
+    remark: "A wide event map. A very narrow destination.",
+    footnote: "xG: Understat",
+  },
 };
 
 const KINDS = Object.keys(DEMO) as CardKind[];

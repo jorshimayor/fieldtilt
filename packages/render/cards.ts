@@ -806,3 +806,87 @@ ${rows}
 ${d.footnote ? text(M, h - 64, d.footnote.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute }) : ""}
 </svg>`;
 }
+
+// ------------------------------------------------------------------ shot map (portrait)
+
+export type ShotMapData = {
+  player: string;
+  /** e.g. "Premier League 26/27" */
+  context?: string;
+  /** Understat coordinates: x 0..1 toward goal, y 0..1 across. */
+  shots: { x: number; y: number; xG: number; result: string }[];
+  /** One scout line, e.g. "A wide event map. A very narrow destination." */
+  remark?: string;
+  footnote?: string;
+  photoDataUri?: string;
+  palette?: Palette;
+};
+
+/** Attacking-half shot map (the @RdScouting pattern): goal at the top,
+ *  dot area = xG, goals filled in the accent with a ring. */
+export function shotMapCard(d: ShotMapData): string {
+  setPalette(d.palette, Boolean(d.photoDataUri));
+  const { w, h } = PORTRAIT;
+  // pitch area: attacking half, goal line at top
+  const px = M, pw = w - 2 * M;
+  const nameLines = (d.player || "").trim().split(/\s+/).length > 1 ? 2 : 1;
+  const ctxY = 178 + (nameLines - 1) * 56 + 44;
+  const py = ctxY + 30, ph = 900 - py;
+  const lw = 2.5;
+  const line = P.inkDim;
+  // penalty box: 40.3m of 68 wide, 16.5m of 52.5 deep (half-pitch)
+  const boxW = pw * 0.593, boxD = ph * 0.314;
+  const sixW = pw * 0.269, sixD = ph * 0.105;
+  const spotY = py + ph * 0.21;
+  const ccR = pw * 0.087;
+  const arcDy = Math.sqrt(Math.max(ccR * ccR - Math.pow(py + boxD - spotY, 2), 1));
+  const shots = (d.shots || []).filter((s) => s.x >= 0.5);
+  const dots = shots
+    .map((s) => {
+      // goal at top: screen-x from Understat y (mirrored), screen-y from x
+      const cx = px + (1 - s.y) * pw;
+      const cy = py + (1 - s.x) * 2 * ph;
+      if (cy > py + ph) return "";
+      const r = 5 + Math.sqrt(Math.max(s.xG, 0.005)) * 34;
+      const goal = s.result === "Goal";
+      return goal
+        ? `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${P.accent}" opacity="0.95"/><circle cx="${cx}" cy="${cy}" r="${r + 3}" fill="none" stroke="${P.ink}" stroke-width="2"/>`
+        : `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${P.inkDim}" opacity="0.28"/><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${P.inkDim}" stroke-width="1.6" opacity="0.8"/>`;
+    })
+    .join("");
+  const goals = shots.filter((s) => s.result === "Goal").length;
+  const xg = shots.reduce((a, s) => a + s.xG, 0);
+  const stats: [string, string][] = [
+    ["Shots", String(shots.length)],
+    ["Goals", String(goals)],
+    ["xG", xg.toFixed(2)],
+    ["xG / shot", shots.length ? (xg / shots.length).toFixed(2) : "0"],
+  ];
+  const statRow = stats
+    .map(([label, value], i) => {
+      const sx = M + (i * (w - 2 * M)) / 4;
+      return `${text(sx, py + ph + 96, value, { size: 46, weight: 800, tracking: -1 })}
+${text(sx, py + ph + 128, label.toUpperCase(), { size: 15, weight: 700, tracking: 2.2, fill: P.inkMute })}`;
+    })
+    .join("");
+  return `${frame(w, h, d.photoDataUri)}
+${eyebrow(M, 106, "Shot map")}
+${brandMark(w - M, 110, "end")}
+${stackedName(M, 178, d.player.toUpperCase(), 54)}
+${d.context ? text(M, ctxY, d.context.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute }) : ""}
+<clipPath id="smclip"><rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="10"/></clipPath>
+<rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="10" fill="${P.bgAlt}" opacity="0.5"/>
+<g clip-path="url(#smclip)">
+  <rect x="${px}" y="${py}" width="${pw}" height="${ph}" fill="none"/>
+  <rect x="${px + (pw - boxW) / 2}" y="${py}" width="${boxW}" height="${boxD}" fill="none" stroke="${line}" stroke-width="${lw}" opacity="0.7"/>
+  <rect x="${px + (pw - sixW) / 2}" y="${py}" width="${sixW}" height="${sixD}" fill="none" stroke="${line}" stroke-width="${lw}" opacity="0.7"/>
+  <circle cx="${px + pw / 2}" cy="${spotY}" r="3.5" fill="${line}" opacity="0.7"/>
+  <path d="M ${px + pw / 2 - arcDy} ${py + boxD} A ${ccR} ${ccR} 0 0 0 ${px + pw / 2 + arcDy} ${py + boxD}" fill="none" stroke="${line}" stroke-width="${lw}" opacity="0.7"/>
+  ${dots}
+</g>
+<rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="10" fill="none" stroke="${line}" stroke-width="${lw}" opacity="0.85"/>
+${statRow}
+${d.remark ? text(M, py + ph + 190, d.remark, { size: 27, italic: true, fill: P.inkDim }) : ""}
+${d.footnote ? text(M, h - 64, d.footnote.toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute }) : ""}
+</svg>`;
+}

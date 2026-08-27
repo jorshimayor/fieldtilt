@@ -403,3 +403,133 @@ input, textarea { font-family: var(--font-mono); font-size: 0.85em; }
   opacity: 0.55;
   pointer-events: none;
 }
+
+/* =============================================================================
+   Terminal-agentic controls — rectangular, mono, uppercase; accent primary
+   with glow, framed ghosts. Replaces the pill language everywhere.
+   ============================================================================= */
+
+.btn, .btn-ghost, .btn-danger {
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  transition: all 0.14s;
+}
+.btn {
+  background: var(--accent);
+  color: #fff;
+  border: 1px solid var(--accent);
+}
+.btn:hover { opacity: 1; box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 55%, transparent); }
+.btn-ghost { background: transparent; color: var(--ink-dim); border: 1px solid var(--line); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--ink); }
+.btn-danger { border-radius: 5px; }
+.chip { border-radius: 5px; font-family: var(--font-mono); font-size: 0.72rem; }
+input, textarea, select { border-radius: 5px; }
+
+/* ── Compose: Claude-style chat ─────────────────────────────────────────── */
+.chat-shell {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 175px);
+  min-height: 420px;
+}
+.chat-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem 1.25rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.chat-row { display: flex; gap: 0.7rem; align-items: flex-start; }
+.chat-row.user { flex-direction: row-reverse; }
+.chat-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  flex: 0 0 30px;
+  overflow: hidden;
+  border: 2px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  background: var(--bg-alt);
+}
+.chat-row.assistant .chat-avatar { border-color: #D9A31A; }
+.chat-row.user .chat-avatar { border-color: var(--accent); color: var(--accent); }
+.chat-msg {
+  max-width: 78%;
+  padding: 0.7rem 0.95rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.chat-row.assistant .chat-msg { background: var(--bg-alt); border: 1px solid var(--line); color: var(--ink-dim); border-top-left-radius: 3px; }
+.chat-row.user .chat-msg { background: color-mix(in srgb, var(--accent) 14%, var(--bg)); border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); color: var(--ink); border-top-right-radius: 3px; }
+.chat-tool {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--ink-mute);
+  padding-left: 44px;
+  letter-spacing: 0.05em;
+}
+.chat-tool .ok { color: var(--win); }
+.chat-tool .err { color: var(--loss); }
+.chat-welcome { text-align: center; color: var(--ink-mute); font-size: 0.8rem; padding: 2rem 1rem; font-family: var(--font-mono); }
+.chat-suggest { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.6rem 1.25rem; border-top: var(--hairline); }
+.chat-inputbar {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-end;
+  padding: 0.75rem 1rem;
+  border-top: var(--hairline);
+  background: color-mix(in srgb, var(--bg-alt) 60%, var(--bg));
+}
+.chat-inputbar textarea {
+  flex: 1;
+  resize: none;
+  max-height: 8.5rem;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  background: var(--bg);
+}
+.chat-prompt { font-family: var(--font-mono); color: var(--accent); font-weight: 700; padding-bottom: 0.7rem; }
+.thinking::after { content: "▊"; animation: cursor-blink 1s steps(1) infinite; color: var(--accent); }
+
+/* ── Studio: production two-column ──────────────────────────────────────── */
+.studio-grid { display: grid; grid-template-columns: 250px 1fr; gap: 1.25rem; align-items: start; }
+@media (max-width: 919px) { .studio-grid { grid-template-columns: 1fr; } }
+.studio-rail { display: flex; flex-direction: column; gap: 1rem; position: sticky; top: 74px; }
+.rail-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.rail-title { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-mute); }
+.kind-btn {
+  text-align: left;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: var(--ink-dim);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.kind-btn:hover { background: var(--bg-alt); color: var(--ink); }
+.kind-btn.active { border-color: var(--accent); color: var(--ink); background: color-mix(in srgb, var(--accent) 10%, var(--bg-alt)); }
+.kind-btn.active::before { content: "❯ "; color: var(--accent); }
+.studio-stage { border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-alt); padding: 1rem; }
+.stage-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+.studio-stage img { max-height: 70vh; width: auto; max-width: 100%; margin: 0 auto; display: block; border-radius: 8px; }
+#studioJson { width: 100%; font-family: var(--font-mono); font-size: 0.72rem; min-height: 10rem; }
+
+/* ── Analytics: production panel grid ───────────────────────────────────── */
+.ana-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+@media (max-width: 919px) { .ana-grid { grid-template-columns: 1fr; } }
+.ana-panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-alt); padding: 1rem 1.1rem; }
+.ana-panel.wide { grid-column: 1 / -1; }
+.ana-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.6rem; }
+.ana-title { font-family: var(--font-mono); font-size: 0.76rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.ana-sub { font-family: var(--font-mono); font-size: 0.64rem; color: var(--ink-mute); letter-spacing: 0.06em; }

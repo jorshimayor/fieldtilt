@@ -17,7 +17,7 @@ import {
   seasonLabel,
   club,
 } from "../packages/tools/football";
-import { getTeamAdvancedStats, getLeagueXgTable } from "../packages/tools/understat";
+import { getTeamAdvancedStats, getLeagueXgTable, getPlayerShots } from "../packages/tools/understat";
 import { withErrorLogging } from "../packages/observability/index";
 
 export default withErrorLogging(async function handler(): Promise<Response> {
@@ -30,6 +30,12 @@ export default withErrorLogging(async function handler(): Promise<Response> {
     getTeamFixtures({ last: 10 }).catch(() => ({ fixtures: [] })),
   ]);
 
+  // Shot map for the squad's top-xG player (cached 12h in the data layer).
+  const topByXg = (squad.players || [])[0];
+  const shotMap = topByXg
+    ? await getPlayerShots(topByXg.player, season).catch(() => null)
+    : null;
+
   const c = club();
   return new Response(
     JSON.stringify({
@@ -39,6 +45,13 @@ export default withErrorLogging(async function handler(): Promise<Response> {
         ? { team: standings.team, table: standings.table.slice(0, 20) }
         : null,
       leagueXg: leagueXg.table,
+      shotMap: shotMap
+        ? {
+            player: shotMap.player,
+            summary: shotMap.summary,
+            shots: shotMap.shots.slice(0, 120).map((sh) => ({ x: sh.x, y: sh.y, xG: Math.round(sh.xG * 1000) / 1000, result: sh.result })),
+          }
+        : null,
       squad: (squad.players || []).map((p) => ({
         player: p.player,
         position: p.position,

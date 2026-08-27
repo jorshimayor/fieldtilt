@@ -10,7 +10,7 @@ import {
   getHeadToHead,
   currentSeason,
 } from "../tools/football";
-import { getTeamAdvancedStats, getLeagueXgTable } from "../tools/understat";
+import { getTeamAdvancedStats, getLeagueXgTable, getPlayerShots } from "../tools/understat";
 import { groundedLookup } from "../tools/websearch";
 import { composeAndPost } from "../shared/poster";
 import { db } from "../db/client";
@@ -104,6 +104,19 @@ export async function execTool(name: string, args: any): Promise<any> {
         return { error: "no league xG data available yet (early season or Understat unreachable)" };
       }
       return { table, source: "Understat", url: source };
+    }
+    case "get_player_shots": {
+      const who = String(args?.player || "").trim();
+      if (!who) return { error: "player required" };
+      const res = await getPlayerShots(who, currentSeason());
+      if (!res) return { error: `no Understat player matched "${who}"` };
+      return {
+        player: res.player,
+        summary: res.summary,
+        shots: res.shots.slice(0, 80).map((sh) => ({ x: sh.x, y: sh.y, xG: Math.round(sh.xG * 1000) / 1000, result: sh.result })),
+        source: "Understat",
+        url: res.source,
+      };
     }
     case "web_lookup": {
       const q = String(args?.question || "").trim();

@@ -28,6 +28,8 @@ const TTL_MS = 12 * 60 * 60 * 1000;
 // ------------------------------------------------------------------ types
 
 export type AdvancedPlayerStats = {
+  /** Understat player id — feeds getPlayerShots. */
+  id?: string;
   player: string;
   position: string;
   matches: number;
@@ -87,12 +89,14 @@ function round2(n: number): number {
 
 export function mapUnderstatPlayer(r: any): AdvancedPlayerStats {
   const minutes = num(r?.time);
+  const id = String(r?.id ?? "");
   const per90 = (v: number) => (minutes > 0 ? round2((v * 90) / minutes) : 0);
   const xG = num(r?.xG);
   const xA = num(r?.xA);
   const shots = num(r?.shots);
   const keyPasses = num(r?.key_passes);
   return {
+    id,
     player: r?.player_name || "",
     position: r?.position || "",
     matches: num(r?.games),
@@ -210,5 +214,75 @@ export async function getLeagueXgTable(
   }
   const data = { table, source };
   await setCache(key, data, table.length ? TTL_MS : 60 * 60 * 1000);
+  return data;
+}
+
+// ------------------------------------------------------------------ shots
+
+export type UnderstatShot = {
+  /** 0..1 along the pitch toward the goal being attacked. */
+  x: number;
+  /** 0..1 across the pitch. */
+  y: number;
+  xG: number;
+  result: string; // Goal | SavedShot | MissedShots | BlockedShot | ShotOnPost | OwnGoal
+  minute: number;
+  situation: string;
+  shotType: string;
+  date: string;
+};
+
+export function mapUnderstatShot(r: any): UnderstatShot {
+  return {
+    x: Number(r?.X ?? 0),
+    y: Number(r?.Y ?? 0),
+    xG: Number(r?.xG ?? 0),
+    result: String(r?.result ?? ""),
+    minute: Number(r?.minute ?? 0),
+    situation: String(r?.situation ?? ""),
+    shotType: String(r?.shotType ?? ""),
+    date: String(r?.date ?? "").slice(0, 10),
+  };
+}
+
+/**
+ * A player's shot map for a season — /getPlayerData/{id} carries the full
+ * career shot list (X/Y/xG/result); we filter to the requested season.
+ * Accepts a player name (resolved against the squad) or an Understat id.
+ */
+export async function getPlayerShots(
+  playerNameOrId: string,
+  season: number
+): Promise<{ player: string; shots: UnderstatShot[]; summary: { shots: number; goals: number; xG: number }; source: string } | null> {
+  let id = /^\d+$/.test(playerNameOrId.trim()) ? playerNameOrId.trim() : "";
+  let playerName = playerNameOrId;
+  if (!id) {
+    const { players } = await getTeamAdvancedStats(season);
+    const fold = (v: string) => v.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+    const needle = fold(playerNameOrId);
+    const hit =
+      players.find((pl) => fold(pl.player).includes(needle)) ||
+      players.find((pl) => fold(pl.player).includes(needle.split(/\s+/).pop() || needle));
+    if (!hit?.id) return null;
+    id = hit.id;
+    playerName = hit.player;
+  }
+  const key = `understat:shots:${id}:${season}`;
+  const cached = await getCache<any>(key);
+  if (cached) return cached;
+
+  const source = `${BASE}/player/${id}`;
+  const json = await fetchJson(`/getPlayerData/${id}`, source);
+  const raw: any[] = Array.isArray(json?.shots) ? json.shots : [];
+  if (!raw.length && !json) return null;
+  const name = json?.player?.name || playerName;
+  const shots = raw.filter((r) => String(r?.season) === String(season)).map(mapUnderstatShot);
+  const summary = {
+    shots: shots.length,
+    goals: shots.filter((sh) => sh.result === "Goal").length,
+    xG: Math.round(shots.reduce((a, sh) => a + sh.xG, 0) * 100) / 100,
+  };
+  const data = { player: name, shots, summary, source };
+  await setCache(key, data, shots.length ? TTL_MS : 60 * 60 * 1000);
   return data;
 }

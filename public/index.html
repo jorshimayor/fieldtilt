@@ -103,48 +103,50 @@
 
           <!-- ======== Compose — agentic chat ======== -->
           <section class="panel" data-panel="compose">
-            <div class="card rounded-xl p-5 space-y-3">
-              <div class="flex items-center justify-between flex-wrap gap-2">
-                <span class="label">chat with the agent — grounded in live football data; drafts land in the queue</span>
+            <div class="chat-shell card rounded-xl">
+              <div id="chatLog" class="chat-log">
+                <div class="chat-welcome" id="chatWelcome">fieldtilt agent · grounded in live club data<br/>ask for a post, a stat, a card. drafts land in the approval queue.</div>
               </div>
-              <div>
-                <p class="label mb-2">Suggested — computed from today's numbers</p>
-                <div id="suggestList" class="flex flex-wrap gap-2"><span class="muted text-xs">Loading suggestions…</span></div>
+              <div class="chat-suggest">
+                <span class="label mono" style="align-self:center">angles</span>
+                <span id="suggestList" class="flex flex-wrap gap-2"><span class="muted text-xs">Loading…</span></span>
+                <span id="chatSuggestions" class="flex flex-wrap gap-2">
+                  <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Create a match preview post for the next fixture, with a card and the head-to-head record.">next fixture</button>
+                  <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Make a shot map card for our top scorer this season with a one-line scout remark.">shot map</button>
+                  <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Build a leaderboard card of our top 5 by xG per 90 this season.">xG leaderboard</button>
+                </span>
               </div>
-              <div id="chatLog" class="space-y-3 max-h-[26rem] overflow-y-auto pr-1"></div>
-              <div class="flex flex-wrap gap-2" id="chatSuggestions">
-                <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Create a match preview post for the next fixture, with a card and the head-to-head record.">Preview next fixture</button>
-                <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Make a weekly form review post with a form card from the last 5 results and our league position.">Weekly form post</button>
-                <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Who are our top performers this season? Draft a player spotlight for the best one with a stat card.">Player spotlight</button>
-              </div>
-              <form id="chatForm" class="flex gap-2 items-center">
-                <input id="chatInput" class="flex-1 p-2.5 text-sm" placeholder='e.g. "Draft a preview for the next game with a card"' autocomplete="off" />
-                <label class="chip px-3 py-2 text-xs" style="cursor: pointer; white-space: nowrap" title="Run the engineered compose graph: plan → gather → verify → design → draft, with a full node trace">
+              <form id="chatForm" class="chat-inputbar">
+                <span class="chat-prompt">❯</span>
+                <textarea id="chatInput" rows="1" placeholder="message the agent…  (Enter to send · Shift+Enter for newline)"></textarea>
+                <label class="chip px-3 py-2 text-xs" style="cursor: pointer; white-space: nowrap; align-self: flex-end" title="Engineered compose graph: plan → gather → verify → design → draft with full trace">
                   <input type="checkbox" id="graphMode" style="accent-color: var(--accent); vertical-align: -1px" /> ⚡ graph
                 </label>
-                <button id="chatSend" class="btn px-5 py-2 text-sm" type="submit">Send</button>
+                <button id="chatSend" class="btn px-5 py-2 text-sm" type="submit" style="align-self: flex-end">send</button>
               </form>
             </div>
           </section>
 
           <!-- ======== Analytics ======== -->
           <section class="panel" data-panel="analytics">
-            <div class="card rounded-xl p-5 space-y-4">
-              <div class="flex items-center justify-between flex-wrap gap-2">
-                <span id="analyticsMeta" class="label">xG: Understat · refreshed with the page</span>
+            <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+              <span id="analyticsMeta" class="label mono">xG: Understat · refreshed with the page</span>
+            </div>
+            <div class="ana-grid">
+              <div class="ana-panel">
+                <div class="ana-head"><span class="ana-title">League map</span><span class="ana-sub">xG created vs conceded</span></div>
+                <div id="chartLeague" class="w-full"><span class="muted text-xs">Loading…</span></div>
               </div>
-              <div class="grid md:grid-cols-2 gap-6">
-                <div>
-                  <p class="label mb-2">League map — xG created vs conceded</p>
-                  <div id="chartLeague" class="w-full"><span class="muted text-xs">Loading…</span></div>
-                </div>
-                <div>
-                  <p class="label mb-2">Squad — goals vs expected goals</p>
-                  <div id="chartSquad" class="w-full"><span class="muted text-xs">Loading…</span></div>
-                </div>
+              <div class="ana-panel">
+                <div class="ana-head"><span class="ana-title">Squad finishing</span><span class="ana-sub">goals vs expected goals</span></div>
+                <div id="chartSquad" class="w-full"><span class="muted text-xs">Loading…</span></div>
               </div>
-              <div class="hairline pt-4">
-                <p class="label mb-2">Form timeline — last 10</p>
+              <div class="ana-panel">
+                <div class="ana-head"><span class="ana-title">Shot map</span><span class="ana-sub" id="shotMapSub">top xG player · season</span></div>
+                <div id="chartShotMap" class="w-full"><span class="muted text-xs">Loading…</span></div>
+              </div>
+              <div class="ana-panel">
+                <div class="ana-head"><span class="ana-title">Form timeline</span><span class="ana-sub">last 10 results</span></div>
                 <div id="chartForm" class="w-full"><span class="muted text-xs">Loading…</span></div>
               </div>
             </div>
@@ -159,32 +161,59 @@
 
           <!-- ======== Card studio ======== -->
           <section class="panel" data-panel="studio">
-            <div class="card rounded-xl p-5 space-y-4">
-              <p class="label">card templates with demo data — try a photo, download the PNG</p>
-              <div class="flex flex-wrap gap-2" id="cardKinds">
-                <button data-kind="match_preview" class="btn-ghost px-3 py-1.5 text-xs">Match preview</button>
-                <button data-kind="score" class="btn-ghost px-3 py-1.5 text-xs">Live score</button>
-                <button data-kind="post_match" class="btn-ghost px-3 py-1.5 text-xs">Post-match</button>
-                <button data-kind="player_stat" class="btn-ghost px-3 py-1.5 text-xs">Player stat</button>
-                <button data-kind="transfer" class="btn-ghost px-3 py-1.5 text-xs">Transfer</button>
-                <button data-kind="form" class="btn-ghost px-3 py-1.5 text-xs">Weekly form</button>
-                <button data-kind="editorial" class="btn-ghost px-3 py-1.5 text-xs">Editorial</button>
-                <button data-kind="milestone" class="btn-ghost px-3 py-1.5 text-xs">Milestone</button>
-                <button data-kind="comparison" class="btn-ghost px-3 py-1.5 text-xs">Comparison</button>
-                <button data-kind="leaderboard" class="btn-ghost px-3 py-1.5 text-xs">Leaderboard</button>
-                <label class="btn-ghost px-3 py-1.5 text-xs" style="cursor: pointer" title="Try any template over your own photo — stadium, player, fans, trophy">
-                  📷 use photo<input type="file" id="studioPhoto" accept="image/*" style="display: none" />
-                </label>
-                <button id="studioPhotoClear" class="btn-ghost px-3 py-1.5 text-xs" style="display: none">clear photo</button>
-                <button id="studioDownload" class="btn-ghost px-3 py-1.5 text-xs">⬇ download PNG</button>
+            <div class="studio-grid">
+              <aside class="studio-rail">
+                <div class="rail-group">
+                  <span class="rail-title">Template</span>
+                  <div id="cardKinds" class="rail-group">
+                    <button data-kind="match_preview" class="kind-btn">match preview</button>
+                    <button data-kind="score" class="kind-btn">live score</button>
+                    <button data-kind="post_match" class="kind-btn">post match</button>
+                    <button data-kind="player_stat" class="kind-btn active">player stat</button>
+                    <button data-kind="transfer" class="kind-btn">transfer</button>
+                    <button data-kind="form" class="kind-btn">weekly form</button>
+                    <button data-kind="editorial" class="kind-btn">editorial</button>
+                    <button data-kind="milestone" class="kind-btn">milestone</button>
+                    <button data-kind="comparison" class="kind-btn">comparison</button>
+                    <button data-kind="leaderboard" class="kind-btn">leaderboard</button>
+                    <button data-kind="shot_map" class="kind-btn">shot map</button>
+                  </div>
+                </div>
+                <div class="rail-group">
+                  <span class="rail-title">Kit</span>
+                  <div class="flex gap-2">
+                    <button data-palette="neutral" class="ptab btn px-3 py-1.5 text-xs">ntrl</button>
+                    <button data-palette="home" class="ptab btn-ghost px-3 py-1.5 text-xs">home</button>
+                    <button data-palette="away" class="ptab btn-ghost px-3 py-1.5 text-xs">away</button>
+                  </div>
+                </div>
+                <div class="rail-group">
+                  <span class="rail-title">Photo</span>
+                  <div class="flex gap-2 flex-wrap">
+                    <label class="btn-ghost px-3 py-1.5 text-xs" style="cursor: pointer">📷 photo<input type="file" id="studioPhoto" accept="image/*" style="display: none" /></label>
+                    <button id="studioPhotoClear" class="btn-ghost px-3 py-1.5 text-xs" style="display: none">clear</button>
+                  </div>
+                </div>
+                <div class="rail-group">
+                  <span class="rail-title">Export</span>
+                  <button id="studioDownload" class="btn px-3 py-2 text-xs">⬇ download png</button>
+                </div>
+                <div class="rail-group">
+                  <span class="rail-title">Data <button id="studioJsonToggle" class="btn-ghost px-2 py-0.5 text-xs" style="margin-left:0.4rem">edit</button></span>
+                  <textarea id="studioJson" style="display:none" spellcheck="false"></textarea>
+                  <div class="flex gap-2" id="studioJsonActions" style="display:none">
+                    <button id="studioJsonApply" class="btn px-3 py-1.5 text-xs">apply</button>
+                    <button id="studioJsonReset" class="btn-ghost px-3 py-1.5 text-xs">demo data</button>
+                  </div>
+                </div>
+              </aside>
+              <div class="studio-stage">
+                <div class="stage-head">
+                  <span class="ana-title" id="stageTitle">player stat</span>
+                  <span class="ana-sub" id="stageMeta">demo data · neutral kit</span>
+                </div>
+                <div id="studioPreview"><div class="muted text-xs">Rendering…</div></div>
               </div>
-              <div class="flex flex-wrap gap-2 items-center">
-                <span class="label">Kit</span>
-                <button data-palette="neutral" class="ptab btn px-3 py-1.5 text-xs">Neutral</button>
-                <button data-palette="home" class="ptab btn-ghost px-3 py-1.5 text-xs">Home · royal</button>
-                <button data-palette="away" class="ptab btn-ghost px-3 py-1.5 text-xs">Away · light</button>
-              </div>
-              <div id="studioPreview" class="max-w-xl mt-3"></div>
             </div>
           </section>
 
@@ -553,32 +582,41 @@
       const chatInput = document.getElementById("chatInput");
       const chatSend = document.getElementById("chatSend");
 
+      const LION_URI = document.querySelector(".side-brand image")?.getAttribute("href") || "";
+      function clearWelcome() { document.getElementById("chatWelcome")?.remove(); }
       function chatBubble(role, text) {
-        const wrap = document.createElement("div");
-        wrap.className = role === "user" ? "flex justify-end" : "flex justify-start";
+        clearWelcome();
+        const row = document.createElement("div");
+        row.className = "chat-row " + (role === "user" ? "user" : "assistant");
+        const av = document.createElement("div");
+        av.className = "chat-avatar";
+        if (role === "user") av.textContent = "you";
+        else if (LION_URI) av.innerHTML = '<img src="' + LION_URI + '" style="width:100%;height:100%;object-fit:cover">';
+        else av.textContent = "ft";
         const b = document.createElement("div");
-        b.className =
-          role === "user"
-            ? "chip rounded-2xl px-4 py-2.5 text-sm max-w-[85%] whitespace-pre-wrap"
-            : "card rounded-2xl px-4 py-2.5 text-sm max-w-[85%] whitespace-pre-wrap dim";
+        b.className = "chat-msg";
         b.textContent = text;
-        wrap.appendChild(b);
-        chatLog.appendChild(wrap);
+        row.appendChild(av);
+        row.appendChild(b);
+        chatLog.appendChild(row);
         chatLog.scrollTop = chatLog.scrollHeight;
         return b;
       }
 
       function chatToolLine(t) {
+        clearWelcome();
         const el = document.createElement("div");
-        el.className = "label ml-1";
-        el.textContent = (t.ok ? "✓ " : "✗ ") + t.tool.replace(/_/g, " ") + (t.note ? " — " + t.note : "");
+        el.className = "chat-tool";
+        el.innerHTML = '<span class="' + (t.ok ? "ok" : "err") + '">' + (t.ok ? "✓" : "✗") + "</span> " +
+          t.tool.replace(/_/g, " ") + (t.note ? " · " + t.note.replace(/</g, "&lt;").slice(0, 90) : "");
         chatLog.appendChild(el);
         chatLog.scrollTop = chatLog.scrollHeight;
       }
 
       async function runGraph(msg) {
         chatBubble("user", msg);
-        const thinking = chatBubble("assistant", "⚡ running compose graph…");
+        const thinking = chatBubble("assistant", "⚡ compose graph running");
+          thinking.classList.add("thinking");
         try {
           const res = await fetch("/api/agent", {
             method: "POST",
@@ -587,12 +625,12 @@
           });
           const j = await res.json();
           if (!res.ok || j.error) throw new Error(j.error?.message || j.error || "agent failed (" + res.status + ")");
-          thinking.remove();
+          thinking.closest(".chat-row")?.remove();
           (j.trace || []).forEach((t) => {
             const el = document.createElement("div");
-            el.className = "label ml-1 mono";
+            el.className = "chat-tool";
             const mark = t.status === "ok" ? "✓" : t.status === "rework" ? "↻" : "✗";
-            el.textContent = "❯ " + t.node + " " + mark + " (" + t.ms + "ms) — " + (t.note || "");
+            el.innerHTML = '<span class="' + (t.status === "ok" ? "ok" : "err") + '">❯</span> ' + t.node + " " + mark + " (" + t.ms + "ms) · " + (t.note || "").replace(/</g, "&lt;");
             chatLog.appendChild(el);
           });
           chatBubble("assistant", j.reply || "(no reply)");
@@ -619,7 +657,8 @@
         chatSend.disabled = true;
         chatBubble("user", msg);
         chatHistory.push({ role: "user", content: msg });
-        const thinking = chatBubble("assistant", "…");
+        const thinking = chatBubble("assistant", "");
+        thinking.classList.add("thinking");
         try {
           const res = await fetch("/api/chat", {
             method: "POST",
@@ -628,7 +667,7 @@
           });
           const j = await res.json();
           if (!res.ok || j.error) throw new Error(j.error?.message || j.error || "chat failed (" + res.status + ")");
-          thinking.remove();
+          thinking.closest(".chat-row")?.remove();
           (j.toolLog || []).forEach(chatToolLine);
           chatBubble("assistant", j.reply || "(no reply)");
           chatHistory.push({ role: "assistant", content: j.reply || "" });
@@ -647,6 +686,13 @@
       document.getElementById("chatForm").addEventListener("submit", (ev) => {
         ev.preventDefault();
         sendChat(chatInput.value);
+      });
+      chatInput.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); sendChat(chatInput.value); }
+      });
+      chatInput.addEventListener("input", () => {
+        chatInput.style.height = "auto";
+        chatInput.style.height = Math.min(chatInput.scrollHeight, 136) + "px";
       });
       document.querySelectorAll("#chatSuggestions button").forEach((b) =>
         b.addEventListener("click", () => sendChat(b.dataset.q))
@@ -669,7 +715,8 @@
         const box = document.getElementById("studioPreview");
         box.innerHTML = '<div class="muted text-xs">Rendering…</div>';
         try {
-          const svg = await fetchCardSvg(studioKind, null, studioPhoto, studioPalette);
+          stageMeta();
+          const svg = await fetchCardSvg(studioKind, studioData, studioPhoto, studioPalette);
           const blob = new Blob([svg], { type: "image/svg+xml" });
           box.innerHTML = '<img class="rounded-lg border border-[#2a2e37] max-w-full" />';
           box.querySelector("img").src = URL.createObjectURL(blob);
@@ -677,12 +724,43 @@
           box.innerHTML = '<div class="muted text-xs">' + escapeHtml(e.message) + " — check the admin key.</div>";
         }
       }
+      let studioData = null; // null = server demo data
+      function stageMeta() {
+        document.getElementById("stageTitle").textContent = studioKind.replace(/_/g, " ");
+        document.getElementById("stageMeta").textContent = (studioData ? "custom data" : "demo data") + " · " + studioPalette + " kit" + (studioPhoto ? " · photo" : "");
+      }
       document.querySelectorAll("#cardKinds button[data-kind]").forEach((btn) =>
         btn.addEventListener("click", () => {
           studioKind = btn.dataset.kind;
+          studioData = null;
+          document.querySelectorAll("#cardKinds .kind-btn").forEach((b) => b.classList.toggle("active", b === btn));
+          document.getElementById("studioJson").style.display = "none";
+          document.getElementById("studioJsonActions").style.display = "none";
           renderStudio();
         })
       );
+      const jsonEl = document.getElementById("studioJson");
+      document.getElementById("studioJsonToggle").addEventListener("click", async () => {
+        const open = jsonEl.style.display !== "none";
+        if (open) { jsonEl.style.display = "none"; document.getElementById("studioJsonActions").style.display = "none"; return; }
+        if (!jsonEl.value) {
+          // seed the editor with the rendered data (server demo)
+          try {
+            const res = await fetch("/api/render", { method: "POST", headers: authHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ kind: studioKind, format: "svg" }) });
+            void res; // demo JSON isn't exposed; provide a scaffold instead
+          } catch {}
+          jsonEl.value = JSON.stringify(studioData || { note: "paste card data JSON here — shapes are documented in Compose (ask the agent) — or press demo data" }, null, 2);
+        }
+        jsonEl.style.display = "";
+        document.getElementById("studioJsonActions").style.display = "flex";
+      });
+      document.getElementById("studioJsonApply").addEventListener("click", () => {
+        try { studioData = JSON.parse(jsonEl.value); renderStudio(); }
+        catch (e) { alert("Invalid JSON: " + e.message); }
+      });
+      document.getElementById("studioJsonReset").addEventListener("click", () => {
+        studioData = null; jsonEl.value = ""; renderStudio();
+      });
       document.getElementById("studioPhoto").addEventListener("change", async (ev) => {
         const f = ev.target.files && ev.target.files[0];
         if (!f) return;
@@ -691,7 +769,7 @@
         renderStudio();
       });
       document.getElementById("studioDownload").addEventListener("click", async () => {
-        const svg = await fetchCardSvg(studioKind, null, studioPhoto, studioPalette);
+        const svg = await fetchCardSvg(studioKind, studioData, studioPhoto, studioPalette);
         await downloadCardPng(svg, studioKind + "-" + studioPalette + ".png");
       });
       document.getElementById("studioPhotoClear").addEventListener("click", () => {
@@ -847,6 +925,24 @@
         g += '<text x="14" y="24" fill="' + CH.mute + '" font-size="11" letter-spacing="1">↑ ' + escapeHtml(opts.yLabel) + "</text>";
         return svgWrap(W, H, g);
       }
+      function shotMapChart(sm) {
+        if (!sm || !sm.shots || !sm.shots.length) return '<span class="muted text-xs">No shots recorded yet this season.</span>';
+        const W = 520, H = 360, px = 20, pw = W - 40, py = 16, ph = H - 60;
+        const boxW = pw * 0.593, boxD = ph * 0.314, sixW = pw * 0.269, sixD = ph * 0.105;
+        let g = '<rect x="' + px + '" y="' + py + '" width="' + pw + '" height="' + ph + '" rx="8" fill="none" stroke="' + CH.line + '" stroke-width="1.5"/>';
+        g += '<rect x="' + (px + (pw - boxW) / 2) + '" y="' + py + '" width="' + boxW + '" height="' + boxD + '" fill="none" stroke="' + CH.line + '" stroke-width="1.2"/>';
+        g += '<rect x="' + (px + (pw - sixW) / 2) + '" y="' + py + '" width="' + sixW + '" height="' + sixD + '" fill="none" stroke="' + CH.line + '" stroke-width="1.2"/>';
+        sm.shots.filter(sh => sh.x >= 0.5).forEach(sh => {
+          const cx = px + (1 - sh.y) * pw;
+          const cy = py + (1 - sh.x) * 2 * ph;
+          if (cy > py + ph) return;
+          const r = 3 + Math.sqrt(Math.max(sh.xG, 0.005)) * 18;
+          if (sh.result === "Goal") g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#D9A31A" opacity="0.95"/><circle cx="' + cx + '" cy="' + cy + '" r="' + (r + 2) + '" fill="none" stroke="' + CH.ink + '" stroke-width="1.4"/>';
+          else g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + CH.dim + '" opacity="0.22"/><circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + CH.dim + '" stroke-width="1.1" opacity="0.7"/>';
+        });
+        g += '<text x="' + px + '" y="' + (H - 14) + '" fill="' + CH.mute + '" font-size="12" font-family="JetBrains Mono, monospace">' + escapeHtml(sm.player) + ' · ' + sm.summary.shots + ' shots · ' + sm.summary.goals + 'G · xG ' + sm.summary.xG + '</text>';
+        return svgWrap(W, H, g);
+      }
       function formStrip(rows) {
         if (!rows.length) return '<span class="muted text-xs">No finished matches yet.</span>';
         const W = 1040, H = 96, box = Math.min(88, (W - 20) / rows.length - 10);
@@ -890,6 +986,8 @@
             { xLabel: "expected goals (xG)", yLabel: "goals", parity: true }
           );
           document.getElementById("chartForm").innerHTML = formStrip((a.recentForm || []).slice(0, 10));
+          document.getElementById("chartShotMap").innerHTML = shotMapChart(a.shotMap);
+          if (a.shotMap) document.getElementById("shotMapSub").textContent = a.shotMap.player + " · all shots · xG: Understat";
         } catch (e) {
           document.getElementById("chartLeague").innerHTML = '<span class="muted text-xs">' + escapeHtml(e.message) + " — check the admin key.</span>";
           document.getElementById("chartSquad").innerHTML = "";

@@ -64,6 +64,7 @@ const GATHER_TOOLS = [
   "get_advanced_player_stats",
   "get_league_xg_table",
   "get_head_to_head",
+  "get_player_shots",
   "web_lookup",
 ];
 
