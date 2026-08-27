@@ -17,6 +17,7 @@ import cronMatchDay from "../api/cron/match-day";
 import cronTransfers from "../api/cron/transfers";
 import cronSpotlight from "../api/cron/spotlight";
 import cronAccountability from "../api/cron/accountability";
+import agentGraph from "../api/agent";
 import xAuth from "../api/x/auth";
 import xCallback from "../api/x/callback";
 import xPublish from "../api/x/publish";
@@ -90,6 +91,7 @@ const routes: Record<string, Route> = {
   "/api/cron/transfers": { handler: cronTransfers as any, protected: true },
   "/api/cron/spotlight": { handler: cronSpotlight as any, protected: true },
   "/api/cron/accountability": { handler: cronAccountability as any, protected: true },
+  "/api/agent": { handler: agentGraph as any, protected: true },
 
   "/api/x/auth": { handler: xAuth as any },
   "/api/x/callback": { handler: xCallback as any },

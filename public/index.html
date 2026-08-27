@@ -117,8 +117,11 @@
                 <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Make a weekly form review post with a form card from the last 5 results and our league position.">Weekly form post</button>
                 <button class="btn-ghost px-3 py-1.5 text-xs" data-q="Who are our top performers this season? Draft a player spotlight for the best one with a stat card.">Player spotlight</button>
               </div>
-              <form id="chatForm" class="flex gap-2">
+              <form id="chatForm" class="flex gap-2 items-center">
                 <input id="chatInput" class="flex-1 p-2.5 text-sm" placeholder='e.g. "Draft a preview for the next game with a card"' autocomplete="off" />
+                <label class="chip px-3 py-2 text-xs" style="cursor: pointer; white-space: nowrap" title="Run the engineered compose graph: plan → gather → verify → design → draft, with a full node trace">
+                  <input type="checkbox" id="graphMode" style="accent-color: var(--accent); vertical-align: -1px" /> ⚡ graph
+                </label>
                 <button id="chatSend" class="btn px-5 py-2 text-sm" type="submit">Send</button>
               </form>
             </div>
@@ -551,10 +554,45 @@
         chatLog.scrollTop = chatLog.scrollHeight;
       }
 
+      async function runGraph(msg) {
+        chatBubble("user", msg);
+        const thinking = chatBubble("assistant", "⚡ running compose graph…");
+        try {
+          const res = await fetch("/api/agent", {
+            method: "POST",
+            headers: authHeaders({ "Content-Type": "application/json" }),
+            body: JSON.stringify({ request: msg }),
+          });
+          const j = await res.json();
+          if (!res.ok || j.error) throw new Error(j.error?.message || j.error || "agent failed (" + res.status + ")");
+          thinking.remove();
+          (j.trace || []).forEach((t) => {
+            const el = document.createElement("div");
+            el.className = "label ml-1 mono";
+            const mark = t.status === "ok" ? "✓" : t.status === "rework" ? "↻" : "✗";
+            el.textContent = "❯ " + t.node + " " + mark + " (" + t.ms + "ms) — " + (t.note || "");
+            chatLog.appendChild(el);
+          });
+          chatBubble("assistant", j.reply || "(no reply)");
+          chatLog.scrollTop = chatLog.scrollHeight;
+          if (j.draftId) { queueStatus = "pending"; loadQueue(); }
+        } catch (e) {
+          thinking.textContent = "Graph error: " + e.message;
+        } finally {
+          chatSend.disabled = false;
+          chatInput.focus();
+        }
+      }
+
       async function sendChat(text) {
         const msg = (text || "").trim();
         if (!msg) return;
         showPanel("compose");
+        if (document.getElementById("graphMode")?.checked) {
+          chatInput.value = "";
+          chatSend.disabled = true;
+          return runGraph(msg);
+        }
         chatInput.value = "";
         chatSend.disabled = true;
         chatBubble("user", msg);
