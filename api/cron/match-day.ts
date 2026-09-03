@@ -104,8 +104,11 @@ export default withErrorLogging(async function handler(): Promise<Response> {
           statusLabel,
           scorers,
           statLine,
+          crestHomeClub: live.home,
+          crestAwayClub: live.away,
         },
       },
+      autoPost: true,
       idKey: `tweet:live:${live.fixtureId}:${live.homeGoals}-${live.awayGoals}`,
       idTtlSec: 20 * 60,
     });
@@ -181,6 +184,8 @@ export default withErrorLogging(async function handler(): Promise<Response> {
         competition: fixture.competition,
         statusLabel: "FULL TIME",
         scorers,
+        crestHomeClub: fixture.home,
+        crestAwayClub: fixture.away,
         seasonLabel: `${fixture.competition} ${seasonLabel()}`,
         stats: caps.liveStats
           ? {

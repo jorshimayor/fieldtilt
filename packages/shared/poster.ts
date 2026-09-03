@@ -7,9 +7,8 @@
  * drafts wait in the dashboard queue where you can edit the text, preview the
  * infographic, and post with one click. Set the flag false to auto-post.
  *
- * Auto-posting renders the PNG server-side (needs Workers Paid CPU). The
- * manual dashboard flow rasterizes in YOUR browser instead, which is why the
- * queue works on the free plan.
+ * Auto-posting renders the PNG server-side (verified working on the current
+ * Workers free plan). The dashboard flow rasterizes in the browser as well.
  */
 import { notifyAssistant } from "./assistant";
 import { routeAndChat } from "./openrouter";
@@ -46,6 +45,10 @@ export async function composeAndPost(opts: {
   longform?: boolean;
   /** Always queue as pending, even when auto-post is enabled (dashboard composes). */
   forceQueue?: boolean;
+  /** Post immediately even when publish_draft_only=true — for time-critical
+   *  match-day content (live scores, half-time burst). Server-side PNG render
+   *  is proven on the current free plan (~0.3-7s wall, IO-dominated). */
+  autoPost?: boolean;
   /** Redis idempotency key — claimed before posting. */
   idKey?: string;
   idTtlSec?: number;
@@ -98,7 +101,7 @@ export async function composeAndPost(opts: {
     `"${tweet.slice(0, 180)}"${opts.card?.kind ? `\n\ncard: ${opts.card.kind}` : ""}\n\nReview and post: https://fieldtilt.joelobafemii.workers.dev/#queue`
   );
 
-  if (flags.publish_draft_only || opts.forceQueue) {
+  if ((flags.publish_draft_only && !opts.autoPost) || opts.forceQueue) {
     return { draftId, tweet, posted: false, tweetId: "", imageAttached: false, skipped: "queued for approval" };
   }
 

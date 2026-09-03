@@ -51,7 +51,6 @@ import { normalizeTweet, buildTweetMessages } from "../../packages/shared/tweet-
 console.log("ok tweet-prompts");
 
 // ---- catch-all facts reach the writer (operator-supplied metrics) ----
-import { buildTweetMessages } from "../../packages/shared/tweet-prompts";
 const msgs = buildTweetMessages("player_stat", "professional", {
   player: "Valentino Barco",
   season: "2026/27",

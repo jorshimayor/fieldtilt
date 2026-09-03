@@ -84,7 +84,7 @@ export async function resolveCardImages(
           delete out[key];
         })
       );
-    } else if (/^photo[A-Z]?Wiki$/.test(key)) {
+    } else if (/^photo\w*Wiki$/.test(key)) {
       jobs.push(
         wikiPhotoUrl(value)
           .then((url) => (url ? fetchAsDataUri(url) : null))
@@ -93,7 +93,7 @@ export async function resolveCardImages(
             delete out[key];
           })
       );
-    } else if (/^crest[A-Z]?Club$/.test(key)) {
+    } else if (/^crest\w*Club$/.test(key)) {
       const assets = clubAssets(value);
       jobs.push(
         (assets ? fetchAsDataUri(assets.crestUrl) : Promise.resolve(null)).then((uri) => {

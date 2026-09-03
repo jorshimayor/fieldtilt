@@ -395,6 +395,8 @@ ${d.competition ? text(w - M, h - 64, d.competition.toUpperCase(), { size: type.
 // ------------------------------------------------------------------ post-match (portrait)
 
 export type PostMatchData = {
+  crestHomeDataUri?: string;
+  crestAwayDataUri?: string;
   home: string;
   away: string;
   homeGoals: number;
@@ -473,6 +475,8 @@ ${text(w - M, listTop + i * 66, value, { size: 30, weight: 800, anchor: "end" })
     : "";
 
   return `${frame(w, h, d.photoDataUri)}
+${crestChip(cx - 60, 152, 32, d.crestHomeDataUri, "pmCh")}
+${crestChip(cx + 60, 152, 32, d.crestAwayDataUri, "pmCa")}
 ${eyebrow(M, 106, d.statusLabel)}
 ${text(w - M, 110, truncate(d.competition, 34).toUpperCase(), { size: type.micro.size, weight: 700, tracking: type.micro.tracking, fill: P.inkMute, anchor: "end" })}
 ${hero}
@@ -525,6 +529,8 @@ ${text(w - M, h - 56, truncate(d.competition, 34).toUpperCase(), { size: type.mi
 // ------------------------------------------------------------------ live / final score (landscape)
 
 export type ScoreCardData = {
+  crestHomeDataUri?: string;
+  crestAwayDataUri?: string;
   home: string;
   away: string;
   homeGoals: number;
@@ -547,6 +553,8 @@ export function scoreCard(d: ScoreCardData): string {
   const dot = isLive ? `<circle cx="${cx - 74}" cy="98" r="9" fill="${P.loss}"/>` : "";
   const scorers = (d.scorers || []).slice(0, 4);
   return `${frame(w, h, d.photoDataUri)}
+${crestChip(cx - 330, 214, 38, d.crestHomeDataUri, "scCh")}
+${crestChip(cx + 330, 214, 38, d.crestAwayDataUri, "scCa")}
 ${dot}${text(cx + (isLive ? 14 : 0), 106, d.statusLabel.toUpperCase(), { size: type.micro.size + 3, weight: 700, tracking: type.micro.tracking, fill: P.inkDim, anchor: "middle" })}
 ${text(cx, 330, `${d.homeGoals}-${d.awayGoals}`, { size: 210, weight: 800, tracking: -6, anchor: "middle" })}
 ${text(cx - 330, 300, truncate(d.home, 14).toUpperCase(), { size: fitFont(d.home, 34, 12), weight: 700, tracking: 1, fill: P.inkDim, anchor: "middle" })}

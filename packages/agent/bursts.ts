@@ -74,6 +74,7 @@ export function halftimePlan(ctx: HalftimeContext): ComposeSpec[] {
   const specs: ComposeSpec[] = [];
 
   // 1 — the scoreline ------------------------------------------------------
+  const bgPlayer = pickClubScorer(ctx.goals, c.name)?.player || (ctx.performers || [])[0]?.player;
   specs.push({
     slot: "ht_score",
     kind: "live_update",
@@ -95,6 +96,9 @@ export function halftimePlan(ctx: HalftimeContext): ComposeSpec[] {
         competition: live.competition,
         statusLabel: "HALF TIME",
         scorers: ctx.scorers,
+        crestHomeClub: live.home,
+        crestAwayClub: live.away,
+        ...(bgPlayer ? { photoWiki: bgPlayer } : {}),
         palette: kit,
       },
     },
@@ -309,6 +313,7 @@ export async function runHalftimeBurst(ctx: HalftimeContext): Promise<BurstResul
           data: s.data,
           card: s.card,
           source: "cron:halftime",
+          autoPost: true, // half-time content is worthless after the restart
           idKey: `tweet:ht:${ctx.live.fixtureId}:${s.slot}`,
           idTtlSec: 6 * 60 * 60,
         });

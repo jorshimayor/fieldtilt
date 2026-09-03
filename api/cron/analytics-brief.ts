@@ -22,6 +22,7 @@ import { routeAndChat } from "../../packages/shared/openrouter";
 import { notifyAssistant } from "../../packages/shared/assistant";
 import { club } from "../../packages/shared/club";
 import { execTool } from "../../packages/agent/tools";
+import { composeAndPost } from "../../packages/shared/poster";
 
 export default withErrorLogging(async function handler(req: Request): Promise<Response> {
   const denied = requireOpsAuth(req);
@@ -101,5 +102,53 @@ HARD RULES:
   await db.insert(messages).values({ direction: "out", content: brief.slice(0, 8000), modelUsed: "analytics_brief" });
   await notifyAssistant(`${c.name} Daily Analytics Brief`, brief.slice(0, 3300));
 
-  return Response.json({ ok: true, items: (brief.match(/^\d+\./gm) || []).length, chars: brief.length });
+  // ---- STATS OF THE DAY: the brief's best items become approval-ready
+  // drafts (one per tier) with terminal editorial cards. Queued, never
+  // auto-posted: the operator approves, schedules, or rejects.
+  const items = [...brief.matchAll(/^(\d+)\.\s+(.+)$/gm)].map((m) => ({ n: Number(m[1]), text: m[2].trim() }));
+  const picks = [items.find((i) => i.n === 1), items.find((i) => i.n === 8), items.find((i) => i.n === 15)].filter(
+    (i): i is { n: number; text: string } => Boolean(i && i.text.length > 20)
+  );
+  const wrap = (t: string, width = 34, max = 4) => {
+    const words = t.split(/\s+/);
+    const lines: string[] = [];
+    let cur = "";
+    for (const wd of words) {
+      if ((cur + " " + wd).trim().length > width && cur) {
+        lines.push(cur.trim());
+        cur = wd;
+      } else cur = (cur + " " + wd).trim();
+      if (lines.length === max) break;
+    }
+    if (cur && lines.length < max) lines.push(cur.trim());
+    return lines;
+  };
+  const day = new Date().toISOString().slice(0, 10);
+  const statOfDay: Record<string, unknown>[] = [];
+  for (const [i, pick] of picks.entries()) {
+    try {
+      const r = await composeAndPost({
+        kind: "weekly_deep_dive",
+        source: "cron:stat-of-day",
+        data: { theme: "Stat of the day", numbers: pick.text, window: "today" },
+        card: {
+          kind: "editorial",
+          data: {
+            eyebrow: `Stat of the day ${picks.length > 1 ? i + 1 : ""}`.trim(),
+            lines: wrap(pick.text).map((line, li, arr) => ({ text: line, em: li === arr.length - 1 })),
+            dateLabel: today,
+            palette: "terminal",
+          },
+        },
+        forceQueue: true,
+        idKey: `tweet:statofday:${day}:${pick.n}`,
+        idTtlSec: 20 * 60 * 60,
+      });
+      statOfDay.push({ item: pick.n, draftId: r.draftId, skipped: r.skipped });
+    } catch (e) {
+      statOfDay.push({ item: pick.n, error: String((e as Error).message || e).slice(0, 120) });
+    }
+  }
+
+  return Response.json({ ok: true, items: (brief.match(/^\d+\./gm) || []).length, chars: brief.length, statOfDay });
 });
