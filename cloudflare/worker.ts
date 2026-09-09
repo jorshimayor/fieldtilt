@@ -1,4 +1,5 @@
 import dashboardHtml from "../public/index.html";
+import terminalHtml from "../public/terminal.html";
 import themeCss from "../public/theme.css";
 import sortableJs from "../public/sortable.min.js.txt";
 
@@ -24,6 +25,7 @@ import cronModelCall from "../api/cron/model-call";
 import probe from "../api/probe";
 import ingest from "../api/ingest";
 import agentGraph from "../api/agent";
+import apiGraphql from "../api/graphql";
 import xAuth from "../api/x/auth";
 import xCallback from "../api/x/callback";
 import xPublish from "../api/x/publish";
@@ -103,6 +105,7 @@ const routes: Record<string, Route> = {
   "/api/probe": { handler: probe as any, protected: true },
   "/api/ingest": { handler: ingest as any, protected: true },
   "/api/agent": { handler: agentGraph as any, protected: true },
+  "/api/graphql": { handler: apiGraphql as any }, // public read-only, cache-protected
 
   "/api/x/auth": { handler: xAuth as any },
   "/api/x/callback": { handler: xCallback as any },
@@ -126,6 +129,12 @@ export default {
     const p = url.pathname;
 
     if (p === "/" || p === "/index.html") return serveDashboard();
+    if (p === "/terminal") {
+      return new Response(terminalHtml, {
+        status: 200,
+        headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=300" },
+      });
+    }
     if (p === "/sortable.min.js") {
       return new Response(sortableJs, {
         status: 200,

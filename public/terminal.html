@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>fieldtilt terminal</title>
+<meta name="description" content="A public, read-only football intelligence terminal: live league data, xG, and season-forecast-v1's weekly model calls, scored in public." />
+<style>
+  :root {
+    --bg: #07090D; --surface: #0D1117; --ink: #E7EDF7; --dim: #A9B4C9;
+    --mute: #66738C; --line: #1B2230; --accent: #3D6BFF; --win: #3FDF8C; --loss: #FF5F56;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--mono); font-size: 13px;
+    line-height: 1.55; margin: 0; padding: 0 1rem 3rem; }
+  ::selection { background: var(--accent); color: #fff; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  header { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap;
+    padding: 1.4rem 0 1rem; border-bottom: 1px solid var(--line); }
+  .brand { font-weight: 700; font-size: 1.05rem; letter-spacing: 0.02em; }
+  .brand::after { content: "▍"; color: var(--accent); animation: blink 1.2s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .brand::after { animation: none; } }
+  .sub { color: var(--mute); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; }
+  header a { color: var(--accent); text-decoration: none; font-size: 0.72rem; margin-left: auto; }
+  .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 1rem; padding-top: 1rem; }
+  .panel { grid-column: span 6; border: 1px solid var(--line); background: var(--surface); padding: 0.9rem 1rem; }
+  .panel.wide { grid-column: span 12; }
+  .panel.third { grid-column: span 4; }
+  @media (max-width: 900px) { .panel, .panel.third { grid-column: span 12; } }
+  .ptitle { font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent);
+    margin: 0 0 0.7rem; }
+  .ptitle::before { content: "❯ "; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--mute); font-weight: 400; font-size: 0.68rem;
+    text-transform: uppercase; letter-spacing: 0.1em; padding: 0.15rem 0.4rem 0.35rem 0; }
+  td { padding: 0.22rem 0.4rem 0.22rem 0; border-top: 1px solid var(--line); color: var(--dim); }
+  td.num, th.num { text-align: right; }
+  tr.mine td { color: var(--ink); font-weight: 700; }
+  tr.mine td:first-child { color: var(--accent); }
+  .bar { display: flex; height: 8px; background: var(--line); overflow: hidden; min-width: 120px; }
+  .bar i { display: block; height: 100%; }
+  .bar .h { background: var(--accent); } .bar .d { background: var(--mute); } .bar .a { background: #8A94A8; }
+  .fx { display: grid; grid-template-columns: 1fr auto; gap: 0.2rem 0.8rem; align-items: center;
+    padding: 0.34rem 0; border-top: 1px solid var(--line); }
+  .fx:first-of-type { border-top: 0; }
+  .fx .teams { color: var(--dim); }
+  .fx .probs { color: var(--mute); font-size: 0.72rem; white-space: nowrap; }
+  .pill { display: inline-block; width: 1.35rem; text-align: center; font-weight: 700; margin-right: 0.2rem; }
+  .W { color: var(--win); } .L { color: var(--loss); } .D { color: var(--mute); }
+  .post { border-top: 1px solid var(--line); padding: 0.5rem 0; color: var(--dim); white-space: pre-wrap; }
+  .post:first-of-type { border-top: 0; }
+  .post a { color: var(--accent); text-decoration: none; font-size: 0.72rem; }
+  .meta { color: var(--mute); font-size: 0.7rem; }
+  .score-flag { font-weight: 700; }
+  footer { color: var(--mute); font-size: 0.7rem; padding-top: 1.4rem; letter-spacing: 0.05em; }
+  footer a { color: var(--accent); text-decoration: none; }
+  .loading { color: var(--mute); padding: 2rem 0; }
+  .err { color: var(--loss); }
+</style>
+</head>
+<body>
+<div class="wrap"><div id="root"><p class="loading">❯ connecting to fieldtilt…</p></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/htm/3.1.1/htm.min.js"></script>
+<script>
+const html = htm.bind(React.createElement);
+const QUERY = `{
+  clubInfo { name league season }
+  standings { rank team played points goalsFor goalsAgainst form }
+  xgTable { team xG xGA }
+  recentResults(count: 6) { opponent score outcome isHome dateUtc }
+  nextFixtures(count: 4) { home away competition dateUtc }
+  modelCall { gameweek predictedAt fixtures { home away kickoffUtc pHome pDraw pAway } }
+  modelScore { matches brier brierBaseline beatBaseline results { fixture final called actual } }
+  posts(count: 5) { content tweetId postedAt }
+}`;
+
+const pct = (x) => Math.round(x * 100) + "%";
+const when = (iso) => new Date(iso).toLocaleString([], { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
+function ModelCallPanel({ call, mine }) {
+  if (!call) return html`<section class="panel wide"><h2 class="ptitle">model call · season-forecast-v1</h2><p class="meta">No prediction batch published yet. Calls land every Friday, before kickoff.</p></section>`;
+  return html`<section class="panel wide">
+    <h2 class="ptitle">model call · season-forecast-v1 · MD${call.gameweek}</h2>
+    <p class="meta">published ${when(call.predictedAt)} — before kickoff, always. Bars: home / draw / away.</p>
+    ${call.fixtures.map((f) => html`<div class="fx" key=${f.home + f.away}>
+      <span class="teams">${f.home} <span class="meta">vs</span> ${f.away}</span>
+      <span class="probs">${pct(f.pHome)} / ${pct(f.pDraw)} / ${pct(f.pAway)}</span>
+      <div class="bar" style=${{ gridColumn: "1 / -1" }} aria-hidden="true">
+        <i class="h" style=${{ width: pct(f.pHome) }}></i><i class="d" style=${{ width: pct(f.pDraw) }}></i><i class="a" style=${{ width: pct(f.pAway) }}></i>
+      </div>
+    </div>`)}
+  </section>`;
+}
+
+function App({ d }) {
+  const mine = (t) => t.toLowerCase().includes(d.clubInfo.name.toLowerCase());
+  const fold = (t) => t.toLowerCase().replace(/ fc$| afc$/g, "").trim();
+  const xgList = d.xgTable.map((t) => [fold(t.team), t]);
+  const xg = (name) => { const f = fold(name); const hit = xgList.find(([k]) => f.includes(k) || k.includes(f)); return hit && hit[1]; };
+  return html`
+    <header>
+      <span class="brand">fieldtilt.</span>
+      <span class="sub">${d.clubInfo.league} · ${d.clubInfo.season} · public terminal</span>
+      <a href="/feed.xml">rss</a>
+    </header>
+    <div class="grid">
+      <${ModelCallPanel} call=${d.modelCall} mine=${mine} />
+      ${d.modelScore && html`<section class="panel wide">
+        <h2 class="ptitle">last round, scored in public</h2>
+        <p class="meta">
+          <span class="score-flag ${d.modelScore.beatBaseline ? "W" : "L"}">${d.modelScore.beatBaseline ? "BEAT" : "LOST TO"} baseline</span>
+          — Brier ${d.modelScore.brier} vs ${d.modelScore.brierBaseline} over ${d.modelScore.matches} matches (lower is better).
+          Called right: ${d.modelScore.results.filter((r) => r.called === r.actual).length}/${d.modelScore.matches}.
+        </p>
+      </section>`}
+      <section class="panel">
+        <h2 class="ptitle">league table</h2>
+        <table>
+          <thead><tr><th>#</th><th>team</th><th class="num">P</th><th class="num">GF</th><th class="num">GA</th><th class="num">xG</th><th class="num">Pts</th></tr></thead>
+          <tbody>
+            ${d.standings.slice(0, 12).map((t) => html`<tr class=${mine(t.team) ? "mine" : ""} key=${t.team}>
+              <td>${t.rank}</td><td>${t.team}</td><td class="num">${t.played}</td>
+              <td class="num">${t.goalsFor}</td><td class="num">${t.goalsAgainst}</td>
+              <td class="num">${xg(t.team) ? xg(t.team).xG.toFixed(1) : "-"}</td>
+              <td class="num">${t.points}</td>
+            </tr>`)}
+          </tbody>
+        </table>
+      </section>
+      <section class="panel">
+        <h2 class="ptitle">${d.clubInfo.name}: form + next</h2>
+        <p>${d.recentResults.map((r) => html`<span class="pill ${r.outcome}" title=${r.opponent + " " + r.score} key=${r.dateUtc}>${r.outcome}</span>`)} <span class="meta">most recent first</span></p>
+        <table>
+          <tbody>
+            ${d.recentResults.map((r) => html`<tr key=${"r" + r.dateUtc}><td>${r.isHome ? "vs" : "at"} ${r.opponent}</td><td class="num ${r.outcome}">${r.score}</td></tr>`)}
+          </tbody>
+        </table>
+        <h2 class="ptitle" style=${{ marginTop: "1rem" }}>next up</h2>
+        ${d.nextFixtures.map((f) => html`<div class="fx" key=${f.dateUtc}><span class="teams">${f.home} <span class="meta">vs</span> ${f.away}</span><span class="probs">${f.competition} · ${when(f.dateUtc)}</span></div>`)}
+      </section>
+      <section class="panel wide">
+        <h2 class="ptitle">latest from the account</h2>
+        ${d.posts.length ? d.posts.map((p, i) => html`<div class="post" key=${i}>${p.content}
+${p.tweetId && html`<a href=${"https://x.com/i/status/" + p.tweetId} rel="noopener">open on X ↗</a>`}</div>`) : html`<p class="meta">nothing published yet today</p>`}
+      </section>
+    </div>
+    <footer>
+      built in public · data: football-data.org · xG: Understat · model: season-forecast-v1 (shrunk Poisson, scored weekly) ·
+      <a href="https://github.com/jorshimayor/fieldtilt" rel="noopener">source</a> · <a href="/feed.xml">rss feed</a>
+    </footer>`;
+}
+
+fetch("/api/graphql", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: QUERY }) })
+  .then((r) => r.json())
+  .then((j) => {
+    if (!j.data) throw new Error((j.errors && j.errors[0] && j.errors[0].message) || "no data");
+    ReactDOM.createRoot(document.getElementById("root")).render(html`<${App} d=${j.data} />`);
+  })
+  .catch((e) => { document.getElementById("root").innerHTML = '<p class="err">❯ terminal offline: ' + e.message + "</p>"; });
+</script>
+</body>
+</html>
