@@ -72,6 +72,10 @@ export async function execTool(name: string, args: any): Promise<any> {
         competition: f.competition,
       }));
     }
+    case "get_club_news": {
+      const { getClubNews } = await import("../tools/rss");
+      return await getClubNews(clamp(args?.count, 1, 10, 6));
+    }
     case "get_standings": {
       const { team, table } = await getLeagueStandings(currentSeason());
       return { team, topSix: table.slice(0, 6) };

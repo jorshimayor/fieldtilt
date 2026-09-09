@@ -20,6 +20,7 @@ import cronSpotlight from "../api/cron/spotlight";
 import cronAccountability from "../api/cron/accountability";
 import cronAnalyticsBrief from "../api/cron/analytics-brief";
 import cronScheduledPosts from "../api/cron/scheduled-posts";
+import cronModelCall from "../api/cron/model-call";
 import probe from "../api/probe";
 import ingest from "../api/ingest";
 import agentGraph from "../api/agent";
@@ -98,6 +99,7 @@ const routes: Record<string, Route> = {
   "/api/cron/accountability": { handler: cronAccountability as any, protected: true },
   "/api/cron/analytics-brief": { handler: cronAnalyticsBrief as any, protected: true },
   "/api/cron/scheduled-posts": { handler: cronScheduledPosts as any, protected: true },
+  "/api/cron/model-call": { handler: cronModelCall as any, protected: true },
   "/api/probe": { handler: probe as any, protected: true },
   "/api/ingest": { handler: ingest as any, protected: true },
   "/api/agent": { handler: agentGraph as any, protected: true },
@@ -130,6 +132,22 @@ export default {
         headers: { "Content-Type": "application/javascript; charset=utf-8", "Cache-Control": "public, max-age=86400" },
       });
     }
+    if (p === "/feed.xml") {
+      const { db } = await import("../packages/db/client");
+      const { drafts } = await import("../packages/db/schema");
+      const { desc, eq } = await import("drizzle-orm");
+      const { buildPostsFeed } = await import("../packages/tools/rss");
+      const rows = await db
+        .select({ content: drafts.content, tweetId: drafts.tweetId, postedAt: drafts.postedAt })
+        .from(drafts)
+        .where(eq(drafts.status, "posted"))
+        .orderBy(desc(drafts.postedAt))
+        .limit(20);
+      return new Response(buildPostsFeed(rows), {
+        status: 200,
+        headers: { "Content-Type": "application/rss+xml; charset=utf-8", "Cache-Control": "public, max-age=900" },
+      });
+    }
     if (p === "/theme.css") {
       return new Response(themeCss, {
         status: 200,
@@ -159,6 +177,11 @@ export default {
 
     if (cron === "0 7 * * *") {
       await callHandler(cronFixtures as any, cronRequest("/api/cron/fixtures"));
+      return;
+    }
+
+    if (cron === "0 7 * * 5" || cron === "0 7 * * 2") {
+      await callHandler(cronModelCall as any, cronRequest("/api/cron/model-call"));
       return;
     }
 

@@ -1,0 +1,28 @@
+name: Season forecast
+
+on:
+  schedule:
+    - cron: "0 6 * * 5"   # predict Friday 06:00 UTC, BEFORE the weekend round
+    - cron: "30 6 * * 2"  # score Tuesday, after the round completes
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "predict | score"
+        default: "predict"
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      FOOTBALL_DATA_KEY: ${{ secrets.FOOTBALL_DATA_KEY }}
+      NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - name: decide mode
+        id: mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then echo "m=${{ inputs.mode }}" >> "$GITHUB_OUTPUT";
+          elif [ "${{ github.event.schedule }}" = "30 6 * * 2" ]; then echo "m=score" >> "$GITHUB_OUTPUT";
+          else echo "m=predict" >> "$GITHUB_OUTPUT"; fi
+      - run: cd analytics && PYTHONPATH=src uv run --no-project --with "psycopg[binary]" python -m bluebot_analytics.forecast ${{ steps.mode.outputs.m }}

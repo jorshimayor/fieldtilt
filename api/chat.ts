@@ -91,6 +91,9 @@ const TOOLS = [
   tool("get_upcoming_fixtures", "Next fixtures for the tracked club (date ISO, opponent, competition, venue, home/away).", {
     count: { type: "number", description: "1-10, default 3" },
   }),
+  tool("get_club_news", "Latest verified club headlines from BBC Sport's team RSS feed (title, link, date). Use for team news, injuries, pressers, transfer NEWS grounding. Cite 'BBC Sport'.", {
+    count: { type: "number", description: "1-10, default 6" },
+  }),
   tool("get_recent_results", "The tracked club's most recent finished matches with scores and W/D/L outcomes.", {
     count: { type: "number", description: "1-10, default 5" },
   }),

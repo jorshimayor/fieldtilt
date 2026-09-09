@@ -21,7 +21,7 @@ crons = [
   "0 8 * * *",   # transfer watch
   "0 9 * * 1",   # weekly form deep-dive
   "0 12 * * 3",  # player spotlight
-  "30 21 * * *", # posting accountability → nudges the personal assistant if <5 posts today
+  "30 21 * * *", "0 7 * * 5", "0 7 * * 2", # posting accountability → nudges the personal assistant if <5 posts today
   "45 5 * * *",  # daily analytics & research brief (20 items, 3 tiers) → Telegram/Slack via assistant
 ]
 
