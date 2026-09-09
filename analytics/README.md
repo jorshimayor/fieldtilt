@@ -42,3 +42,24 @@ cd analytics
 uv sync
 uv run python -m bluebot_analytics  # prints status
 ```
+
+
+## statsbomb.py (week 4 — the base)
+
+Loader for [StatsBomb open data](https://github.com/statsbomb/open-data):
+`competitions()`, `matches()`, `events()`, and a flattened shot table
+(`match_shots` / `season_shots`) whose contract is `SHOT_SCHEMA` — every row
+carries the two classic xG features (distance, goal-mouth angle), the freeze
+frame distilled to `defenders_in_cone` + keeper position, and StatsBomb's own
+`statsbomb_xg` for benchmarking xg-v1 against.
+
+- stdlib-only core (runs in a bare GitHub Action); `polars` optional.
+- dual-host fetch (raw.githubusercontent 503s on big event files; jsdelivr
+  fallback) + immutable disk cache under `BLUEBOT_CACHE_DIR`.
+- tests are offline: real fixture events vendored from match 3857276.
+- attribution: credit "data: StatsBomb" on anything published from it.
+
+```python
+from bluebot_analytics import statsbomb as sb
+rows = sb.season_shots(43, 106)   # every WC 2022 shot, cached after first run
+```
