@@ -69,10 +69,28 @@ try {
       };
     })
     .filter((x) => x.body.trim());
-  study = { sections, source: "onchainsuite infra handbook study guide", syncedAt: new Date().toISOString() };
+  study = { docs: [{ name: "Senior SWE guide", sections }], syncedAt: new Date().toISOString() };
   console.log(`study guide: ${sections.length} sections, ${Math.round(guide.length / 1024)}KB`);
 } catch (e) {
-  console.log("study guide not found - skipping (plan:study unchanged)");
+  console.log("study guide not found - skipping");
+}
+
+// ---- bounty & protocol mastery compilation (from the operator's docx) ----
+try {
+  const cc = readFileSync("docs/private/CRASH_COURSE.md", "utf8");
+  const chunks = cc.split(/\n(?=# )/).filter((c) => c.trim());
+  const sections = chunks
+    .map((chunk) => {
+      const title = (chunk.match(/^#\s+(.*)$/m) || [null, "Untitled"])[1]
+        .replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&gt;/g, ">").replace(/&lt;/g, "<").trim();
+      return { num: -1, title, body: chunk.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&gt;/g, ">").replace(/&lt;/g, "<") };
+    })
+    .filter((x) => x.title.toLowerCase() !== "contents" && x.body.length > 120);
+  if (study) study.docs.push({ name: "Bounty & Protocol Mastery", sections });
+  else study = { docs: [{ name: "Bounty & Protocol Mastery", sections }], syncedAt: new Date().toISOString() };
+  console.log(`crash course: ${sections.length} sections, ${Math.round(cc.length / 1024)}KB`);
+} catch (e) {
+  console.log("crash course not found - skipping");
 }
 
 const far = new Date("2028-01-01");
