@@ -109,7 +109,7 @@ const routes: Record<string, Route> = {
   "/api/ingest": { handler: ingest as any, protected: true },
   "/api/agent": { handler: agentGraph as any, protected: true },
   "/api/graphql": { handler: apiGraphql as any }, // public read-only, cache-protected
-  "/api/plan": { handler: apiPlan as any, protected: true },
+  "/api/plan": { handler: apiPlan as any }, // does its own auth (CORS preflight must pass unauthed)
 
   "/api/x/auth": { handler: xAuth as any },
   "/api/x/callback": { handler: xCallback as any },

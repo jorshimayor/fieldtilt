@@ -54,10 +54,32 @@ if (cur) weeks.push(cur);
 console.log(`editorial ledger: ${weeks.length} weeks`);
 if (!rows.length || weeks.length < 10) throw new Error("parse looks wrong - refusing to sync");
 
+// ---- senior-SWE study guide (onchain-backend, gitignored) -> plan:study ----
+let study: any = null;
+try {
+  const guide = readFileSync(`${process.env.HOME}/Code/onchain-backend/notes/private/senior-swe-study-guide.md`, "utf8");
+  const parts = guide.split(/\n(?=## )/);
+  const sections = parts
+    .map((chunk) => {
+      const m = chunk.match(/^##\s+(\d+)\.\s*(.*)$/m);
+      return {
+        num: m ? Number(m[1]) : -1,
+        title: m ? m[2].replace(/\s*\(.*?\)\s*$/, "").replace(/[*_`]/g, "").trim() : "Preamble",
+        body: chunk,
+      };
+    })
+    .filter((x) => x.body.trim());
+  study = { sections, source: "onchainsuite infra handbook study guide", syncedAt: new Date().toISOString() };
+  console.log(`study guide: ${sections.length} sections, ${Math.round(guide.length / 1024)}KB`);
+} catch (e) {
+  console.log("study guide not found - skipping (plan:study unchanged)");
+}
+
 const far = new Date("2028-01-01");
 for (const [key, data] of [
   ["plan:season", { header, rows, syncedAt: new Date().toISOString() }],
   ["plan:ledger", { start: "2026-09-14", weeks, syncedAt: new Date().toISOString() }],
+  ...(study ? ([["plan:study", study]] as const) : []),
 ] as const) {
   await db
     .insert(statCache)
