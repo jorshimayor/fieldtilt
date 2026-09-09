@@ -195,6 +195,14 @@ def cmd_predict() -> None:
         print("no fixtures inside the 8-day horizon; nothing to predict")
         return
     now = datetime.now(timezone.utc).isoformat()
+    # Subjects are keyed by Reep identity (offline distill); a club the
+    # register can't map stays visible as "fd" rather than silently wrong.
+    try:
+        from .reep_join import TeamResolver, fixture_subject
+
+        resolver: Any = TeamResolver()
+    except Exception:
+        resolver = None
     rows = []
     for m in upcoming:
         pred = predict_fixture(m["home"], m["away"], rates, league_avg)
@@ -207,7 +215,12 @@ def cmd_predict() -> None:
             "features": {"window": FORM_WINDOW, "shrink_k": SHRINK_K, "home_adv": HOME_ADV, "league_avg": round(league_avg, 3), "padded_with_last_season": padded},
             "predicted_at": now,
         }
-        rows.append((MODEL, f"fd:{m['id']} {m['home']} vs {m['away']}", season, m["matchday"], json.dumps(payload)))
+        if resolver:
+            payload["reep"] = {"home": resolver.reep_id(m["home"]), "away": resolver.reep_id(m["away"])}
+            subject = fixture_subject(m["home"], m["away"], resolver)
+        else:
+            subject = f"fd:{m['id']} {m['home']} vs {m['away']}"
+        rows.append((MODEL, subject, season, m["matchday"], json.dumps(payload)))
         p = payload["probs"]
         print(f"MD{m['matchday']} {m['home']} vs {m['away']}: H {p['home']:.0%} D {p['draw']:.0%} A {p['away']:.0%}")
     _insert(rows)

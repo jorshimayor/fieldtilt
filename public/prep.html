@@ -110,6 +110,14 @@
 <h2>application engine — the boring machine that gets interviews</h2>
 <div id="lane5"></div>
 
+<h2>lane 5 · technical writing — study becomes income</h2>
+<p class="why">The rule that makes the library below pay twice: every resource you finish produces one published artifact. Written tutorials are simultaneously interview evidence, distribution, and a paid lane — web2 publications pay $200-500 per piece, web3 docs bounties more.</p>
+<div id="lane6"></div>
+
+<h2>study library — curated, checkable, one artifact each</h2>
+<p class="why">Your reading list, organized junior → senior. Check a resource only when you've BOTH worked it and published something from it (notes thread, tutorial, or write-up). Collecting is not progress; publishing is.</p>
+<div id="lib"></div>
+
 <footer>❯ progress lives in this browser · reminder rides the assistant daily · fieldtilt.</footer>
 </div>
 <script>
@@ -140,6 +148,12 @@ lane4: [
   { b: "Audit contests as bounties", t: "Code4rena, Sherlock, Cantina, Immunefi (live-protocol bug bounties — only after contest reps). This lane compounds with lane 3; treat contest losses as paid-in training.", r: "" },
   { b: "One bounty rule", t: "Never more than one open bounty commitment at a time; they must not eat the model call, the applications, or the DSA cadence. Bounties are the side pot, not the game.", r: "" },
 ],
+lane6: [
+  { b: "The publish pipeline", t: "Finish resource → write the tutorial you wish existed → publish (blog/dev.to/Mirror) → distribute on X same day. One artifact per week minimum; it slots into the season calendar's long-form column.", r: "" },
+  { b: "Web2 paid programs", t: "Draft.dev, LogRocket blog, DigitalOcean Write for DOnations, Educative — all pay per piece and accept pitches from working engineers. Pitch topics you've ALREADY solved in fieldtilt/OpenClaw (agent graphs, free-tier engineering, multi-source fallbacks).", l: "https://draft.dev/write", r: "fieldtilt, openclaw-monster-agent" },
+  { b: "Web3 writing lane", t: "Protocol docs bounties (Algora/Gitcoin filtered to docs), plus publishing on Mirror. Your Panoptic mechanism deep-dive and StableArc architecture doc ARE the writing samples — ship those two first, then pitch protocols whose docs you found lacking while studying them.", l: "https://algora.io", r: "panoptic-v2-core, stablearc-settlement-agent" },
+  { b: "The samples shelf", t: "Maintain 3 pinned samples: one systems piece (the burst engine or scheduler), one blockchain piece (Panoptic study), one AI/agents piece (compose DAG). Every gig application links exactly these three.", r: "" },
+],
 lane5: [
   { b: "Pipeline discipline", t: "4 applications/week minimum (Thu 2, Fri 2), tracked in a sheet: company, role, date, status, follow-up date. Follow up once at day 7. Volume with tailoring beats either alone.", r: "" },
   { b: "The CV rule", t: "One page. Lead with fieldtilt + OpenClaw as production systems (numbers: tests, uptime, posts/day, model scored publicly). GitHub pinned repos: fieldtilt, openclaw-monster-agent, Goldgard, stablearc + the two write-up repos. Unpin the forks.", r: "" },
@@ -147,7 +161,64 @@ lane5: [
   { b: "Interview log", t: "After every real interview: same-day notes — questions asked, where you wobbled, one drill added to next week. Interviews are also reps; the log turns rejections into curriculum.", r: "" },
 ],
 };
-const order = ["lane1","lane2","lane3","lane4","lane5"];
+const LIB = [
+  { g: "foundations", items: [
+    ["Teach Yourself CS", "https://teachyourselfcs.com/", "the canonical self-taught map; pick ONE book per area, ignore the rest"],
+    ["CS DIY wiki", "https://csdiy.wiki/en/", "course-by-course walkthroughs with assignments; use for structured gaps"],
+    ["CS video courses index", "https://github.com/Developer-Y/cs-video-courses", "your own fork; index, not curriculum — pull one course at a time"],
+    ["Billion Dollar PDF", "https://billiondollarpdf.com/", "startup/engineering compilation; skim for narrative material"],
+  ]},
+  { g: "dsa", items: [
+    ["DSA patterns sheet (thita)", "https://thita.ai/dsa-patterns-sheet", "pattern-first framing; pairs with the NeetCode 75 cadence"],
+    ["Chai DSA course", "https://dsa.chaicode.com/", "JS-first DSA — matches your language; use for weak topics only"],
+  ]},
+  { g: "system design + distributed", items: [
+    ["Hello Interview: in a hurry", "https://www.hellointerview.com/learn/system-design/in-a-hurry/introduction", "THE grading rubric; read first, it changes how you narrate"],
+    ["System Design Handbook: in a hurry", "https://www.systemdesignhandbook.com/guides/system-design-in-a-hurry/", "second pass on the same compressed format"],
+    ["System Design School", "https://systemdesignschool.io/courses", "practice problems with solutions; one/week alongside your own systems"],
+    ["SDPD live", "https://sdpd.live/", "system design practice; use for mock-style reps"],
+    ["Mixu: Distributed systems for fun and profit", "http://book.mixu.net/distsys/single-page.html", "the best short distsys book; one sitting, take notes, publish them"],
+    ["Kleppmann (DDIA author)", "https://martin.kleppmann.com", "read DDIA itself chapter/week from week 6; his papers for depth"],
+    ["Build a Distributed System", "https://builddistributedsystem.com/", "build-along; candidate for a published tutorial series"],
+    ["Backend from first principles", "https://backend-from-first-principle.vercel.app/", "junior-level backend grounding; fast skim, fill gaps"],
+  ]},
+  { g: "databases", items: [
+    ["Postgres book (pgbook)", "https://pgbook.dev/", "you run Neon Postgres in prod - this converts usage into understanding; ship a 'Postgres for football data' article from it"],
+  ]},
+  { g: "ai + agents", items: [
+    ["AI Engineering from Scratch: prereqs", "https://aiengineeringfromscratch.com/prereqs.html", "checklist your gaps honestly before deeper AI study"],
+    ["DeepLearning.AI short courses", "https://learn.deeplearning.ai/", "one short course/week; the agents + evals ones first"],
+    ["CMU agents course", "https://www.cmu-agents.com/#/", "academic grounding for what you build daily; lecture notes → article"],
+    ["Stanford CS329Z", "https://cs329z.stanford.edu/", "current LLM systems course; readings list is the gold"],
+    ["LangChain", "https://www.langchain.com/", "know it to compare it: write 'graph engineering without a framework' citing your compose DAG"],
+    ["AnythingLLM", "https://anythingllm.com/", "local RAG stack; tutorial candidate for the web2 writing lane"],
+  ]},
+  { g: "tooling + ops", items: [
+    ["tmux course", "https://linuxhandbook.com/courses/tmux/", "one evening; permanent daily payoff"],
+    ["Learn Docker", "https://learndocker.online/", "you already ship containers (OpenClaw) — formalize, then write the 'Docker on Cloudflare containers' piece nobody has written"],
+  ]},
+  { g: "web3 security depth", items: [
+    ["RareSkills Solidity", "https://rareskills.io/learn-solidity", "the rigorous track: modules in order, exercises done, notes published"],
+    ["RareSkills proxy patterns", "https://rareskills.io/proxy-patterns", "UUPS vs Transparent - pair with the OZ function-clashing exploit post"],
+    ["OZ: proxy function clashing", "https://forum.openzeppelin.com/t/beware-of-the-proxy-learn-how-to-exploit-function-clashing/1070", "classic exploit class; do the ropsten exercise, write it up"],
+    ["RareSkills ZK book", "https://rareskills.io/zk-book", "the approachable-but-rigorous ZK path; one chapter per week from the ZK phase"],
+    ["RareSkills Uniswap V3 book", "https://rareskills.io/uniswap-v3-book", "ticks, Q64.96, sqrtPriceLimitX96 - each chapter is an article seed"],
+    ["Compound V3 book", "https://rareskills.io/compound-v3-book", "lending mechanics depth for the DeFi audits"],
+    ["Damn Vulnerable DeFi", "https://www.damnvulnerabledefi.xyz/", "order: Naive Receiver, Side Entrance, Truster, then Unstoppable; publish each solve"],
+    ["Speedrun Ethereum", "https://speedrunethereum.com/", "fast interactive Solidity reps between book chapters"],
+    ["Mr Steal Yo Crypto", "https://mrstealyocrypto.xyz/", "Flash Loaner after DVD - requires real ERC-4626 understanding"],
+    ["HackViz", "https://hackviz.shredsec.xyz/", "simulate PAST exploits visually; pairs with rekt.news post-mortems"],
+    ["rekt.news", "https://rekt.news/", "case-study spine: Beanstalk, Platypus, Deus, Jimbo, Inverse - one post-mortem retold per week"],
+    ["Solodit", "https://solodit.cyfrin.io/", "one real audit report per day during the contest ramp"],
+    ["Cyfrin detectors", "https://cyfrin.gitbook.io/cyfrin-docs/internals/detectors-quickstart", "how static detectors work - feeds the AI bug-bounty-agent project"],
+    ["zkSecurity blog", "https://blog.zksecurity.xyz/", "the bar for ZK security writing; study the SnarkSentinel piece"],
+  ]},
+  { g: "patterns + hygiene", items: [
+    ["Design patterns for humans", "https://github.com/nilbuild/design-patterns-for-humans", "interview vocabulary; map each pattern to where fieldtilt uses it"],
+    ["Privacy Guides tools", "https://www.privacyguides.org/en/tools/", "professional opsec pass before the application wave: email, 2FA, backups"],
+  ]},
+];
+const order = ["lane1","lane2","lane3","lane4","lane6","lane5"];
 let saved = {};
 try { saved = JSON.parse(localStorage.getItem("prep-progress") || "{}"); } catch {}
 let total = 0;
@@ -157,13 +228,33 @@ order.forEach((lane) => {
     const id = lane + ":" + i; total++;
     const row = document.createElement("div");
     row.className = "item" + (saved[id] ? " done" : "");
-    row.innerHTML = '<input type="checkbox" ' + (saved[id] ? "checked" : "") + ' aria-label="done"><div class="body"><b>' + it.b + ".</b> " + it.t + (it.r ? '<div class="repo">' + it.r + "</div>" : "") + "</div>";
+    const title = it.l ? '<a href="' + it.l + '" rel="noopener" target="_blank">' + it.b + "</a>" : it.b;
+    row.innerHTML = '<input type="checkbox" ' + (saved[id] ? "checked" : "") + ' aria-label="done"><div class="body"><b>' + title + ".</b> " + it.t + (it.r ? '<div class="repo">' + it.r + "</div>" : "") + "</div>";
     row.querySelector("input").addEventListener("change", (ev) => {
       saved[id] = ev.target.checked;
       try { localStorage.setItem("prep-progress", JSON.stringify(saved)); } catch {}
       row.classList.toggle("done", ev.target.checked); paint();
     });
     host.appendChild(row);
+  });
+});
+const libHost = document.getElementById("lib");
+LIB.forEach((group, gi) => {
+  const head = document.createElement("h2");
+  head.textContent = group.g;
+  head.style.marginTop = gi === 0 ? "0.6rem" : "1.6rem";
+  libHost.appendChild(head);
+  group.items.forEach(([name, url, note], i) => {
+    const id = "lib:" + gi + ":" + i; total++;
+    const row = document.createElement("div");
+    row.className = "item" + (saved[id] ? " done" : "");
+    row.innerHTML = '<input type="checkbox" ' + (saved[id] ? "checked" : "") + ' aria-label="studied and published"><div class="body"><b><a href="' + url + '" rel="noopener" target="_blank">' + name + "</a></b> — " + note + "</div>";
+    row.querySelector("input").addEventListener("change", (ev) => {
+      saved[id] = ev.target.checked;
+      try { localStorage.setItem("prep-progress", JSON.stringify(saved)); } catch {}
+      row.classList.toggle("done", ev.target.checked); paint();
+    });
+    libHost.appendChild(row);
   });
 });
 function paint() {
