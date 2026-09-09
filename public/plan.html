@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>fieldtilt plan</title>
+<meta name="robots" content="noindex" />
+<style>
+  :root { --bg:#07090D; --surface:#0D1117; --ink:#E7EDF7; --dim:#A9B4C9; --mute:#66738C;
+    --line:#1B2230; --accent:#3D6BFF; --win:#3FDF8C; --loss:#FF5F56;
+    --mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--mono); font-size: 13px;
+    line-height: 1.55; margin: 0; padding: 0 1rem 3rem; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  header { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap;
+    padding: 1.4rem 0 1rem; border-bottom: 1px solid var(--line); }
+  .brand { font-weight: 700; font-size: 1.05rem; }
+  .brand::after { content: "▍"; color: var(--accent); }
+  .sub { color: var(--mute); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; }
+  nav { margin-left: auto; display: flex; gap: 0.9rem; font-size: 0.72rem; }
+  a { color: var(--accent); text-decoration: none; }
+  h2 { font-size: 0.74rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent);
+    margin: 2rem 0 0.6rem; }
+  h2::before { content: "❯ "; }
+  .meta { color: var(--mute); font-size: 0.72rem; }
+  .week { border: 1px solid var(--line); background: var(--surface); margin-top: 0.7rem; padding: 0.7rem 0.9rem; }
+  .week.current { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .week.past { opacity: 0.55; }
+  .wk-head { display: flex; justify-content: space-between; font-size: 0.7rem;
+    letter-spacing: 0.1em; text-transform: uppercase; }
+  .wk-head .no { color: var(--accent); font-weight: 700; }
+  .now { color: var(--win); font-weight: 700; }
+  .slot { display: flex; gap: 0.6rem; padding-top: 0.45rem; align-items: flex-start; }
+  .slot input { accent-color: var(--win); width: 0.95rem; height: 0.95rem; margin-top: 0.15rem; flex: none; cursor: pointer; }
+  .tag { font-size: 0.6rem; letter-spacing: 0.1em; padding: 0.08rem 0.35rem; border: 1px solid var(--line);
+    color: var(--mute); flex: none; min-width: 3rem; text-align: center; margin-top: 0.12rem; }
+  .tag.deep { color: var(--accent); border-color: var(--accent); }
+  .tag.ship { color: var(--win); border-color: color-mix(in srgb, var(--win) 45%, var(--line)); }
+  .slot .t { color: var(--dim); }
+  .slot.done .t { color: var(--mute); text-decoration: line-through; text-decoration-color: var(--line); }
+  .season-wrap { overflow-x: auto; border: 1px solid var(--line); margin-top: 0.7rem; }
+  table { border-collapse: collapse; width: 100%; min-width: 1050px; font-size: 0.76rem; }
+  th { text-align: left; color: var(--mute); font-weight: 400; font-size: 0.62rem; text-transform: uppercase;
+    letter-spacing: 0.08em; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--line);
+    background: var(--surface); position: sticky; top: 0; }
+  td { padding: 0.5rem 0.6rem; border-top: 1px solid var(--line); color: var(--dim); vertical-align: top; max-width: 260px; }
+  td:first-child { color: var(--accent); font-weight: 700; white-space: nowrap; }
+  td:nth-child(5) { color: var(--ink); } /* BUILD, the mandatory column */
+  tr.current td { background: color-mix(in srgb, var(--accent) 9%, transparent); }
+  tr.current td:first-child::after { content: " ←"; color: var(--win); }
+  tr.done-row td { opacity: 0.55; }
+  .gate { border: 1px solid var(--line); background: var(--surface); padding: 1.2rem; margin-top: 1.4rem; max-width: 560px; }
+  .gate input { background: var(--bg); border: 1px solid var(--line); color: var(--ink);
+    font-family: var(--mono); padding: 0.5rem 0.7rem; width: 100%; margin: 0.6rem 0; }
+  .gate button { background: var(--accent); color: #fff; border: 0; font-family: var(--mono);
+    padding: 0.5rem 1rem; cursor: pointer; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.72rem; }
+  .err { color: var(--loss); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="brand">fieldtilt.</span>
+  <span class="sub">the plan · one place</span>
+  <nav>
+    <a href="/">dashboard</a><a href="/terminal">terminal</a><a href="/prep">prep</a><a href="/feed.xml">rss</a>
+  </nav>
+</header>
+<div id="root"><p class="meta" style="padding:1.5rem 0">❯ unlocking the plan…</p></div>
+</div>
+<script>
+const urlKey = new URLSearchParams(location.search).get("key");
+if (urlKey) { try { localStorage.setItem("adminKey", urlKey.trim()); } catch {}; history.replaceState({}, "", "/plan"); }
+let KEY = "";
+try { KEY = localStorage.getItem("adminKey") || ""; } catch {}
+const root = document.getElementById("root");
+
+function gate(msg) {
+  root.innerHTML = '<div class="gate"><p class="meta">' + (msg || "This page holds your private season + writing plan.") +
+    '</p><p class="meta">Open your usual magic link once, or paste the admin key:</p>' +
+    '<input id="k" type="password" placeholder="admin key (CRON_SECRET)"><button id="go">unlock</button></div>';
+  document.getElementById("go").addEventListener("click", () => {
+    try { localStorage.setItem("adminKey", document.getElementById("k").value.trim()); } catch {}
+    location.reload();
+  });
+}
+
+let done = {};
+try { done = JSON.parse(localStorage.getItem("ledger") || "{}"); } catch {}
+const saveDone = () => { try { localStorage.setItem("ledger", JSON.stringify(done)); } catch {} };
+let seasonDone = {};
+try { seasonDone = JSON.parse(localStorage.getItem("season-done") || "{}"); } catch {}
+
+function render(d) {
+  root.innerHTML = "";
+  // ---- writing ledger ----
+  const lh = document.createElement("div");
+  const L = d.ledger;
+  if (L) {
+    lh.innerHTML = '<h2>the writing ledger — 3 pieces a week</h2><p class="meta">deep article · fast thread · ship piece. current week lights up. synced ' + (L.syncedAt || "").slice(0, 10) + " · edit docs/private/EDITORIAL_CALENDAR.md then run plan-sync</p>";
+    const start = new Date(L.start + "T00:00:00Z");
+    const raw = Math.floor((Date.now() - start) / (7 * 864e5));
+    const cur = Math.max(0, raw); // before W1 starts, W1 is "up next"
+    const label = raw < 0 ? "← up next" : "← this week";
+    L.weeks.forEach((w, wi) => {
+      const sec = document.createElement("section");
+      sec.className = "week" + (wi === cur ? " current" : wi < cur ? " past" : "");
+      sec.innerHTML = '<div class="wk-head"><span class="no">W' + String(w.week).padStart(2, "0") +
+        (wi === cur ? ' <span class="now">' + label + "</span>" : "") + '</span><span class="meta">wk of ' + w.date + "</span></div>";
+      [["deep", w.deep], ["fast", w.fast], ["ship", w.ship]].forEach(([tag, text], si) => {
+        if (!text) return;
+        const id = wi + ":" + si;
+        const row = document.createElement("div");
+        row.className = "slot" + (done[id] ? " done" : "");
+        row.innerHTML = '<input type="checkbox" ' + (done[id] ? "checked" : "") + '><span class="tag ' + tag + '">' + tag + '</span><span class="t"></span>';
+        row.querySelector(".t").textContent = text;
+        row.querySelector("input").addEventListener("change", (ev) => {
+          done[id] = ev.target.checked; saveDone(); row.classList.toggle("done", ev.target.checked);
+        });
+        sec.appendChild(row);
+      });
+      lh.appendChild(sec);
+    });
+    root.appendChild(lh);
+    const curEl = lh.querySelector(".week.current");
+  }
+  // ---- season calendar ----
+  const S = d.season;
+  if (S) {
+    const sh = document.createElement("div");
+    sh.innerHTML = '<h2>the season calendar — 41 weeks, build column is law</h2><p class="meta">synced ' + (S.syncedAt || "").slice(0, 10) + " · tick Status in docs/private/SEASON_CALENDAR.md, then plan-sync</p>";
+    const wrapEl = document.createElement("div");
+    wrapEl.className = "season-wrap";
+    const tbl = document.createElement("table");
+    tbl.innerHTML = "<thead><tr>" + S.header.map((h) => "<th>" + h + "</th>").join("") + "</tr></thead>";
+    const tb = document.createElement("tbody");
+    const now = Date.now();
+    S.rows.forEach((r) => {
+      const tr = document.createElement("tr");
+      const startTs = Date.parse(r[1]);
+      const isCur = Number.isFinite(startTs) && now >= startTs && now < startTs + 7 * 864e5;
+      if (isCur) tr.className = "current";
+      const statusIdx = S.header.length - 1;
+      if ((r[statusIdx] || "").includes("✅")) tr.className += " done-row";
+      tr.innerHTML = r.map((c) => "<td></td>").join("");
+      [...tr.children].forEach((td, i) => (td.textContent = r[i]));
+      tb.appendChild(tr);
+      if (isCur) requestAnimationFrame(() => tr.scrollIntoView({ block: "center" }));
+    });
+    tbl.appendChild(tb);
+    wrapEl.appendChild(tbl);
+    sh.appendChild(wrapEl);
+    root.appendChild(sh);
+  }
+}
+
+if (!KEY) gate();
+else
+  fetch("/api/plan", { headers: { Authorization: "Bearer " + KEY } })
+    .then((r) => {
+      if (r.status === 401 || r.status === 403) throw new Error("gate");
+      return r.json();
+    })
+    .then((d) => {
+      if (d.error) root.innerHTML = '<p class="err" style="padding:1.5rem 0">❯ ' + d.error + "</p>";
+      else render(d);
+    })
+    .catch((e) => gate(e.message === "gate" ? "That key was rejected — paste the current one." : "Could not load the plan: " + e.message));
+</script>
+</body>
+</html>
