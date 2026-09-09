@@ -1,0 +1,2294 @@
+[
+{
+"reep_id": "rt3bdff329d36885",
+"label": "AFC Bournemouth",
+"country": "England",
+"understat": "73",
+"ids": {
+"clubelo/team": "Bournemouth",
+"understat/team": "73",
+"transfermarkt/verein": "989",
+"opta/team_numeric": "91",
+"opta/team": "1pse9ta7a45pi2w2grjim70ge"
+}
+},
+{
+"reep_id": "rt13f99514be4cfd",
+"label": "Arsenal",
+"country": "England",
+"understat": "83",
+"ids": {
+"clubelo/team": "Arsenal",
+"statsbomb/offline_team": "1",
+"understat/team": "83",
+"transfermarkt/verein": "11",
+"opta/team_numeric": "3",
+"uefa/team": "52280",
+"opta/team": "4dsgumo7d4zupm2ugsvm4zm4d"
+}
+},
+{
+"reep_id": "rt5ab67076de8cc1",
+"label": "Aston Villa",
+"country": "England",
+"understat": "71",
+"ids": {
+"clubelo/team": "AstonVilla",
+"statsbomb/offline_team": "59",
+"understat/team": "71",
+"transfermarkt/verein": "405",
+"opta/team_numeric": "7",
+"uefa/team": "52683",
+"opta/team": "b496gs285it6bheuikox6z9mj"
+}
+},
+{
+"reep_id": "rtdb4308cb351fa7",
+"label": "Brentford",
+"country": "England",
+"understat": "244",
+"ids": {
+"clubelo/team": "Brentford",
+"understat/team": "244",
+"transfermarkt/verein": "1148",
+"opta/team_numeric": "94",
+"opta/team": "7yx5dqhhphyvfisohikodajhv"
+}
+},
+{
+"reep_id": "rt78f360d6fde57e",
+"label": "Brighton & Hove Albion",
+"country": "England",
+"understat": "220",
+"ids": {
+"clubelo/team": "Brighton",
+"understat/team": "220",
+"transfermarkt/verein": "1237",
+"opta/team_numeric": "36",
+"opta/team": "e5p0ehyguld7egzhiedpdnc3w"
+}
+},
+{
+"reep_id": "rt8207c50b498ed3",
+"label": "Burnley",
+"country": "England",
+"understat": "92",
+"ids": {
+"clubelo/team": "Burnley",
+"understat/team": "92",
+"transfermarkt/verein": "1132",
+"opta/team_numeric": "90",
+"opta/team": "64bxxwu2mv2qqlv0monbkj1om"
+}
+},
+{
+"reep_id": "rt3763d29e7947d8",
+"label": "Chelsea",
+"country": "England",
+"understat": "80",
+"ids": {
+"clubelo/team": "Chelsea",
+"statsbomb/offline_team": "33",
+"understat/team": "80",
+"transfermarkt/verein": "631",
+"opta/team_numeric": "8",
+"uefa/team": "52914",
+"opta/team": "9q0arba2kbnywth8bkxlhgmdr"
+}
+},
+{
+"reep_id": "rtbaccc9912a7639",
+"label": "Crystal Palace",
+"country": "England",
+"understat": "78",
+"ids": {
+"clubelo/team": "CrystalPalace",
+"understat/team": "78",
+"transfermarkt/verein": "873",
+"opta/team_numeric": "31",
+"uefa/team": "52916",
+"opta/team": "1c8m2ko0wxq1asfkuykurdr0y"
+}
+},
+{
+"reep_id": "rt9a79cf4e54e278",
+"label": "Everton",
+"country": "England",
+"understat": "72",
+"ids": {
+"clubelo/team": "Everton",
+"statsbomb/offline_team": "29",
+"understat/team": "72",
+"transfermarkt/verein": "29",
+"opta/team_numeric": "11",
+"opta/team": "ehd2iemqmschhj2ec0vayztzz"
+}
+},
+{
+"reep_id": "rtcb5205b7f83a93",
+"label": "Fulham",
+"country": "England",
+"understat": "228",
+"ids": {
+"clubelo/team": "Fulham",
+"statsbomb/offline_team": "55",
+"understat/team": "228",
+"transfermarkt/verein": "931",
+"opta/team_numeric": "54",
+"opta/team": "hzqh7z0mdl3v7gwete66syxp"
+}
+},
+{
+"reep_id": "rt3e7253907e106a",
+"label": "Huddersfield Town",
+"country": "England",
+"understat": "219",
+"ids": {
+"understat/team": "219",
+"transfermarkt/verein": "1110",
+"opta/team_numeric": "38",
+"opta/team": "5n5baro467i8s8efkra3nhgux"
+}
+},
+{
+"reep_id": "rtf38678780871c4",
+"label": "Hull City",
+"country": "England",
+"understat": "91",
+"ids": {
+"clubelo/team": "Hull",
+"understat/team": "91",
+"transfermarkt/verein": "3008",
+"opta/team_numeric": "88",
+"opta/team": "f0figafm2v9h8ofo6slajj7xf"
+}
+},
+{
+"reep_id": "rt1874a32186f729",
+"label": "Ipswich Town",
+"country": "England",
+"understat": "285",
+"ids": {
+"clubelo/team": "Ipswich",
+"understat/team": "285",
+"transfermarkt/verein": "677",
+"opta/team_numeric": "40",
+"opta/team": "8b523ujgl21tbc01me65q0aoh"
+}
+},
+{
+"reep_id": "rt2c10fab805c3ea",
+"label": "Leeds United",
+"country": "England",
+"understat": "245",
+"ids": {
+"clubelo/team": "Leeds",
+"statsbomb/offline_team": "101",
+"understat/team": "245",
+"transfermarkt/verein": "399",
+"opta/team_numeric": "2",
+"opta/team": "48gk2hpqtsl6p9sx9kjhaydq4"
+}
+},
+{
+"reep_id": "rt0fcab1a2109ab8",
+"label": "Liverpool",
+"country": "England",
+"understat": "87",
+"ids": {
+"clubelo/team": "Liverpool",
+"statsbomb/offline_team": "24",
+"understat/team": "87",
+"transfermarkt/verein": "31",
+"opta/team_numeric": "14",
+"uefa/team": "7889",
+"opta/team": "c8h9bw1l82s06h77xxrelzhur"
+}
+},
+{
+"reep_id": "rt0feb87271aa74b",
+"label": "Luton Town",
+"country": "England",
+"understat": "256",
+"ids": {
+"understat/team": "256",
+"transfermarkt/verein": "1031",
+"opta/team_numeric": "102",
+"opta/team": "aksa492u5hf93giwcn2zt1nzz"
+}
+},
+{
+"reep_id": "rt37c836a696a159",
+"label": "Manchester City",
+"country": "England",
+"understat": "88",
+"ids": {
+"clubelo/team": "ManCity",
+"statsbomb/offline_team": "36",
+"understat/team": "88",
+"transfermarkt/verein": "281",
+"opta/team_numeric": "43",
+"uefa/team": "52919",
+"opta/team": "a3nyxabgsqlnqfkeg41m6tnpp"
+}
+},
+{
+"reep_id": "rt85aa78bccbd812",
+"label": "Manchester United",
+"country": "England",
+"understat": "89",
+"ids": {
+"clubelo/team": "ManUnited",
+"statsbomb/offline_team": "39",
+"understat/team": "89",
+"transfermarkt/verein": "985",
+"opta/team_numeric": "1",
+"uefa/team": "52682",
+"opta/team": "6eqit8ye8aomdsrrq0hk3v7gh"
+}
+},
+{
+"reep_id": "rt46274edfcbcb20",
+"label": "Middlesbrough",
+"country": "England",
+"understat": "93",
+"ids": {
+"clubelo/team": "Middlesbrough",
+"statsbomb/offline_team": "47",
+"understat/team": "93",
+"transfermarkt/verein": "641",
+"opta/team_numeric": "25",
+"opta/team": "cq0jd5ztepqjjeikk5trb15vr"
+}
+},
+{
+"reep_id": "rt9216c37cb92105",
+"label": "Newcastle United",
+"country": "England",
+"understat": "86",
+"ids": {
+"clubelo/team": "Newcastle",
+"statsbomb/offline_team": "37",
+"understat/team": "86",
+"transfermarkt/verein": "762",
+"opta/team_numeric": "4",
+"opta/team": "7vn2i2kd35zuetw6b38gw9jsz"
+}
+},
+{
+"reep_id": "rt9587b13df1ee36",
+"label": "Norwich City",
+"country": "England",
+"understat": "79",
+"ids": {
+"clubelo/team": "Norwich",
+"understat/team": "79",
+"transfermarkt/verein": "1123",
+"opta/team": "suz80crpy3anixyzccmu6jzp",
+"opta/team_numeric": "45"
+}
+},
+{
+"reep_id": "rt9420ae803b8a55",
+"label": "Nottingham Forest",
+"country": "England",
+"understat": "249",
+"ids": {
+"clubelo/team": "Forest",
+"understat/team": "249",
+"transfermarkt/verein": "703",
+"opta/team_numeric": "17",
+"opta/team": "1qtaiy11gswx327s0vkibf70n"
+}
+},
+{
+"reep_id": "rt71340d594d0070",
+"label": "Queens Park Rangers",
+"country": "England",
+"understat": "202",
+"ids": {
+"clubelo/team": "QPR",
+"understat/team": "202",
+"transfermarkt/verein": "1039",
+"opta/team_numeric": "52",
+"opta/team": "72nmbktwvcj3wizfp37yjf0dp"
+}
+},
+{
+"reep_id": "rt1766c4f7cb0931",
+"label": "Sheffield United",
+"country": "England",
+"understat": "238",
+"ids": {
+"clubelo/team": "SheffieldUnited",
+"understat/team": "238",
+"transfermarkt/verein": "350",
+"opta/team_numeric": "49",
+"uefa/team": "bws31egwjda253q9lvykgnivo",
+"opta/team": "bws31egwjda253q9lvykgnivo"
+}
+},
+{
+"reep_id": "rt4ba241d195a7ef",
+"label": "Southampton",
+"country": "England",
+"understat": "74",
+"ids": {
+"clubelo/team": "Southampton",
+"statsbomb/offline_team": "25",
+"understat/team": "74",
+"transfermarkt/verein": "180",
+"opta/team_numeric": "20",
+"opta/team": "d5ydtvt96bv7fq04yqm2w2632"
+}
+},
+{
+"reep_id": "rtebfbadc8ea5e46",
+"label": "Stoke City",
+"country": "England",
+"understat": "85",
+"ids": {
+"clubelo/team": "Stoke",
+"understat/team": "85",
+"transfermarkt/verein": "512",
+"opta/team_numeric": "110",
+"opta/team": "4qioq44vcv619vnyy2rpovk4e"
+}
+},
+{
+"reep_id": "rtb471f322d5ad96",
+"label": "Sunderland",
+"country": "England",
+"understat": "77",
+"ids": {
+"clubelo/team": "Sunderland",
+"understat/team": "77",
+"transfermarkt/verein": "289",
+"opta/team_numeric": "56",
+"opta/team": "1r3545b2dzan8yqa80gtmcjch"
+}
+},
+{
+"reep_id": "rtcffb6a6bdb89fe",
+"label": "Tottenham Hotspur",
+"country": "England",
+"understat": "82",
+"ids": {
+"clubelo/team": "Tottenham",
+"statsbomb/offline_team": "38",
+"understat/team": "82",
+"transfermarkt/verein": "148",
+"opta/team_numeric": "6",
+"opta/team": "22doj4sgsocqpxw45h607udje"
+}
+},
+{
+"reep_id": "rtfc419c6db9e06f",
+"label": "Watford",
+"country": "England",
+"understat": "90",
+"ids": {
+"clubelo/team": "Watford",
+"understat/team": "90",
+"transfermarkt/verein": "1010",
+"opta/team_numeric": "57",
+"opta/team": "4t83rqbdbekinxl5fz2ygsyta"
+}
+},
+{
+"reep_id": "rt411d7e1fcb4344",
+"label": "West Bromwich Albion",
+"country": "England",
+"understat": "76",
+"ids": {
+"clubelo/team": "WestBrom",
+"understat/team": "76",
+"transfermarkt/verein": "984",
+"opta/team_numeric": "35",
+"opta/team": "d1lhefp805y0rcbjqkpu4fq0n"
+}
+},
+{
+"reep_id": "rt63d613341bc69c",
+"label": "West Ham United",
+"country": "England",
+"understat": "81",
+"ids": {
+"clubelo/team": "WestHam",
+"understat/team": "81",
+"transfermarkt/verein": "379",
+"opta/team_numeric": "21",
+"opta/team": "4txjdaqveermfryvbfrr4taf7"
+}
+},
+{
+"reep_id": "rt35d1f783b10ae1",
+"label": "Wolverhampton Wanderers",
+"country": "England",
+"understat": "229",
+"ids": {
+"clubelo/team": "Wolves",
+"statsbomb/offline_team": "46",
+"understat/team": "229",
+"transfermarkt/verein": "543",
+"opta/team_numeric": "39",
+"opta/team": "b9si1jn1lfxfund69e9ogcu2n"
+}
+},
+{
+"reep_id": "rt76ba97e65485e1",
+"label": "Amiens SC",
+"country": "France",
+"understat": "224",
+"ids": {
+"clubelo/team": "Amiens",
+"statsbomb/offline_team": "132",
+"understat/team": "224",
+"transfermarkt/verein": "1416",
+"opta/team": "5191cnvhmuct5kn7yvr0nvd9d"
+}
+},
+{
+"reep_id": "rt3ead64394f088a",
+"label": "Angers SCO",
+"country": "France",
+"understat": "167",
+"ids": {
+"clubelo/team": "Angers",
+"statsbomb/offline_team": "145",
+"understat/team": "167",
+"transfermarkt/verein": "1420",
+"opta/team_numeric": "2128",
+"opta/team": "75qj99fhg5c0ztj2tva5u4uii"
+}
+},
+{
+"reep_id": "rt124ec4279329e4",
+"label": "Auxerre",
+"country": "France",
+"understat": "275",
+"ids": {
+"clubelo/team": "Auxerre",
+"statsbomb/offline_team": "167",
+"understat/team": "275",
+"transfermarkt/verein": "290",
+"opta/team_numeric": "138",
+"opta/team": "9bxav814mkuhueiyivyive82d"
+}
+},
+{
+"reep_id": "rtd388903ba7a357",
+"label": "Bastia",
+"country": "France",
+"understat": "162",
+"ids": {
+"clubelo/team": "Bastia",
+"statsbomb/offline_team": "2736",
+"understat/team": "162",
+"transfermarkt/verein": "595",
+"opta/team": "6l07ga27xfsr7485fuc1ilkkc"
+}
+},
+{
+"reep_id": "rtbce79ca18427c6",
+"label": "Brest",
+"country": "France",
+"understat": "241",
+"ids": {
+"clubelo/team": "Brest",
+"statsbomb/offline_team": "153",
+"understat/team": "241",
+"transfermarkt/verein": "3911",
+"opta/team_numeric": "862",
+"uefa/team": "2601306",
+"opta/team": "3adj8hkws0z1al232bg2h6tk0"
+}
+},
+{
+"reep_id": "rt1c0c3e8061cc09",
+"label": "Clermont",
+"country": "France",
+"understat": "270",
+"ids": {
+"clubelo/team": "Clermont",
+"statsbomb/offline_team": "152",
+"understat/team": "270",
+"transfermarkt/verein": "3524",
+"opta/team": "17o35s8assv3kamxowzz77k4r"
+}
+},
+{
+"reep_id": "rt43e22e9723e5f1",
+"label": "Dijon",
+"country": "France",
+"understat": "181",
+"ids": {
+"statsbomb/offline_team": "148",
+"understat/team": "181",
+"transfermarkt/verein": "2969",
+"opta/team": "79dc2mv3x269nhix3mkhc5wfu"
+}
+},
+{
+"reep_id": "rt9063d4a1781928",
+"label": "Guingamp",
+"country": "France",
+"understat": "169",
+"ids": {
+"clubelo/team": "Guingamp",
+"statsbomb/offline_team": "142",
+"understat/team": "169",
+"transfermarkt/verein": "855",
+"opta/team": "e9mmk1w7cem6r4wysgassacef"
+}
+},
+{
+"reep_id": "rt7738e40dbc4866",
+"label": "Le Havre",
+"country": "France",
+"understat": "282",
+"ids": {
+"clubelo/team": "LeHavre",
+"statsbomb/offline_team": "164",
+"understat/team": "282",
+"transfermarkt/verein": "738",
+"opta/team_numeric": "141",
+"opta/team": "23pqcgxu1tip265hbe01kszbt"
+}
+},
+{
+"reep_id": "rtee6127e65cda46",
+"label": "Lens",
+"country": "France",
+"understat": "210",
+"ids": {
+"clubelo/team": "Lens",
+"statsbomb/offline_team": "168",
+"understat/team": "210",
+"transfermarkt/verein": "826",
+"opta/team_numeric": "142",
+"uefa/team": "52277",
+"opta/team": "3xedluek08t2ka7oypwuullcn"
+}
+},
+{
+"reep_id": "rt8d7b5f8325823b",
+"label": "Lille",
+"country": "France",
+"understat": "160",
+"ids": {
+"clubelo/team": "Lille",
+"statsbomb/offline_team": "143",
+"understat/team": "160",
+"transfermarkt/verein": "1082",
+"opta/team_numeric": "429",
+"uefa/team": "75797",
+"opta/team": "be2k34rut1lz79jxenabttqlc"
+}
+},
+{
+"reep_id": "rtc64f3c679c2053",
+"label": "Lorient",
+"country": "France",
+"understat": "179",
+"ids": {
+"clubelo/team": "Lorient",
+"statsbomb/offline_team": "165",
+"understat/team": "179",
+"transfermarkt/verein": "1158",
+"opta/team_numeric": "694",
+"opta/team": "70nn27vgkt6l48lvv5e66q7ww"
+}
+},
+{
+"reep_id": "rtdf67ba75d4f337",
+"label": "Metz",
+"country": "France",
+"understat": "180",
+"ids": {
+"clubelo/team": "Metz",
+"statsbomb/offline_team": "141",
+"understat/team": "180",
+"transfermarkt/verein": "347",
+"opta/team_numeric": "145",
+"opta/team": "2khen2a38l2hkx33s73pehl6o"
+}
+},
+{
+"reep_id": "rte1ecb562efb09b",
+"label": "Montpellier",
+"country": "France",
+"understat": "166",
+"ids": {
+"clubelo/team": "Montpellier",
+"statsbomb/offline_team": "139",
+"understat/team": "166",
+"transfermarkt/verein": "969",
+"opta/team_numeric": "147",
+"opta/team": "2cjpmotqo8phcqfpgo9xf4gel"
+}
+},
+{
+"reep_id": "rt8ed59ea2f063c4",
+"label": "Nancy",
+"country": "France",
+"understat": "182",
+"ids": {
+"clubelo/team": "Nancy",
+"statsbomb/offline_team": "150",
+"understat/team": "182",
+"transfermarkt/verein": "1159",
+"opta/team": "69b9aoly33h1gpicvxtfteoug"
+}
+},
+{
+"reep_id": "rt558f160f6c4cde",
+"label": "Nantes",
+"country": "France",
+"understat": "168",
+"ids": {
+"clubelo/team": "Nantes",
+"statsbomb/offline_team": "144",
+"understat/team": "168",
+"transfermarkt/verein": "995",
+"opta/team_numeric": "430",
+"opta/team": "750ustvk4jfqmo8q4gnrcxy7z"
+}
+},
+{
+"reep_id": "rtf31aaf55c6f1ef",
+"label": "Nice",
+"country": "France",
+"understat": "170",
+"ids": {
+"clubelo/team": "Nice",
+"statsbomb/offline_team": "136",
+"understat/team": "170",
+"transfermarkt/verein": "417",
+"opta/team_numeric": "1395",
+"uefa/team": "52355",
+"opta/team": "bx0cdmzr2gwr70ez72dorx82p"
+}
+},
+{
+"reep_id": "rt170e5975ae773b",
+"label": "Olympique Lyonnais",
+"country": "France",
+"understat": "178",
+"ids": {
+"clubelo/team": "Lyon",
+"statsbomb/offline_team": "137",
+"understat/team": "178",
+"transfermarkt/verein": "1041",
+"opta/team_numeric": "143",
+"uefa/team": "5312",
+"opta/team": "121le8unjfzug3iu9pgkqa1c7"
+}
+},
+{
+"reep_id": "rt3b32cc33e54066",
+"label": "Olympique Marseille",
+"country": "France",
+"understat": "164",
+"ids": {
+"clubelo/team": "Marseille",
+"statsbomb/offline_team": "147",
+"understat/team": "164",
+"transfermarkt/verein": "244",
+"opta/team_numeric": "144",
+"opta/team": "27xvwccz8kpmqsefjv2b2sc0o"
+}
+},
+{
+"reep_id": "rt8577a2f82c765a",
+"label": "Paris Saint-Germain",
+"country": "France",
+"understat": "161",
+"ids": {
+"clubelo/team": "ParisSG",
+"statsbomb/offline_team": "131",
+"understat/team": "161",
+"transfermarkt/verein": "583",
+"opta/team_numeric": "149",
+"uefa/team": "52747",
+"opta/team": "2b3mar72yy8d6uvat1ka6tn3r"
+}
+},
+{
+"reep_id": "rt4f837f552c142d",
+"label": "Reims",
+"country": "France",
+"understat": "177",
+"ids": {
+"clubelo/team": "Reims",
+"statsbomb/offline_team": "156",
+"understat/team": "177",
+"transfermarkt/verein": "1421",
+"opta/team_numeric": "1423",
+"opta/team": "3c3jcs7vc1t6vz5lev162jyv7"
+}
+},
+{
+"reep_id": "rtf1f0c9180f63c3",
+"label": "Rennes",
+"country": "France",
+"understat": "163",
+"ids": {
+"clubelo/team": "Rennes",
+"statsbomb/offline_team": "134",
+"understat/team": "163",
+"transfermarkt/verein": "273",
+"opta/team": "z1wbqtd0fz5t5eezjvrbld3h",
+"opta/team_numeric": "150"
+}
+},
+{
+"reep_id": "rt059b7555408547",
+"label": "Saint-\u00c9tienne",
+"country": "France",
+"understat": "175",
+"ids": {
+"clubelo/team": "Saint-Etienne",
+"statsbomb/offline_team": "135",
+"understat/team": "175",
+"transfermarkt/verein": "618",
+"opta/team_numeric": "152",
+"opta/team": "2sc9xfhu6tbru9hhlhr4a89zn"
+}
+},
+{
+"reep_id": "rt13c473acaa51ae",
+"label": "Strasbourg",
+"country": "France",
+"understat": "225",
+"ids": {
+"clubelo/team": "Strasbourg",
+"statsbomb/offline_team": "138",
+"understat/team": "225",
+"transfermarkt/verein": "667",
+"opta/team_numeric": "153",
+"uefa/team": "59857",
+"opta/team": "71ajatxnuhc5cnm3xvgdky49w"
+}
+},
+{
+"reep_id": "rt3eeddb521998a0",
+"label": "Toulouse",
+"country": "France",
+"understat": "174",
+"ids": {
+"clubelo/team": "Toulouse",
+"statsbomb/offline_team": "130",
+"understat/team": "174",
+"transfermarkt/verein": "415",
+"opta/team_numeric": "427",
+"opta/team": "4aghw9tyi8ba3ju1ne83gmf9w"
+}
+},
+{
+"reep_id": "rt78790fdf1c4306",
+"label": "Troyes",
+"country": "France",
+"understat": "172",
+"ids": {
+"clubelo/team": "Troyes",
+"statsbomb/offline_team": "133",
+"understat/team": "172",
+"transfermarkt/verein": "1095",
+"opta/team": "3unkqo2g6ag99gd5ynz1j7vse"
+}
+},
+{
+"reep_id": "rt119e4ac75d3a17",
+"label": "Arminia Bielefeld",
+"country": "Germany",
+"understat": "262",
+"ids": {
+"clubelo/team": "Bielefeld",
+"statsbomb/offline_team": "870",
+"understat/team": "262",
+"transfermarkt/verein": "10",
+"api_football/team": "188",
+"opta/team": "bdlavlqj0dshxnepyfanzwu47"
+}
+},
+{
+"reep_id": "rted8857f5fd1074",
+"label": "Augsburg",
+"country": "Germany",
+"understat": "121",
+"ids": {
+"clubelo/team": "Augsburg",
+"statsbomb/offline_team": "172",
+"understat/team": "121",
+"transfermarkt/verein": "167",
+"opta/team_numeric": "1772",
+"api_football/team": "170",
+"opta/team": "ex3psl8e3ajeypwjy4xfltpx6"
+}
+},
+{
+"reep_id": "rtce921fd0b058d4",
+"label": "Bayer Leverkusen",
+"country": "Germany",
+"understat": "119",
+"ids": {
+"clubelo/team": "Leverkusen",
+"statsbomb/offline_team": "904",
+"understat/team": "119",
+"transfermarkt/verein": "15",
+"opta/team_numeric": "164",
+"opta/team": "7ad69ngbpjuyzv96drf8d9sn2"
+}
+},
+{
+"reep_id": "rte09cffe6a3e617",
+"label": "Bayern M\u00fcnchen",
+"country": "Germany",
+"understat": "117",
+"ids": {
+"clubelo/team": "Bayern",
+"statsbomb/offline_team": "169",
+"understat/team": "117",
+"transfermarkt/verein": "27",
+"opta/team_numeric": "156",
+"uefa/team": "50037",
+"opta/team": "apoawtpvac4zqlancmvw4nk4o"
+}
+},
+{
+"reep_id": "rt29e02b2feb92fd",
+"label": "Bochum",
+"country": "Germany",
+"understat": "268",
+"ids": {
+"clubelo/team": "Bochum",
+"statsbomb/offline_team": "868",
+"understat/team": "268",
+"transfermarkt/verein": "80",
+"opta/team_numeric": "431",
+"opta/team": "eq1oq6y61xnzq88zu0cnw131z"
+}
+},
+{
+"reep_id": "rt5b00f3e450abe5",
+"label": "Borussia Dortmund",
+"country": "Germany",
+"understat": "129",
+"ids": {
+"clubelo/team": "Dortmund",
+"statsbomb/offline_team": "180",
+"understat/team": "129",
+"transfermarkt/verein": "16",
+"opta/team_numeric": "157",
+"api_football/team": "165",
+"opta/team": "dt4pinj0vw0t0cvz7za6mhmzy"
+}
+},
+{
+"reep_id": "rt0b8ab8763f4087",
+"label": "Borussia M'gladbach",
+"country": "Germany",
+"understat": "130",
+"ids": {
+"clubelo/team": "Gladbach",
+"statsbomb/offline_team": "185",
+"understat/team": "130",
+"transfermarkt/verein": "18",
+"opta/team_numeric": "683",
+"opta/team": "go76xxm0xyfgqt1h6tcrtimm"
+}
+},
+{
+"reep_id": "rt530a160f6aad5c",
+"label": "Darmstadt 98",
+"country": "Germany",
+"understat": "127",
+"ids": {
+"clubelo/team": "Darmstadt",
+"statsbomb/offline_team": "872",
+"understat/team": "127",
+"transfermarkt/verein": "105",
+"api_football/team": "181",
+"opta/team": "1y7e48j8swyafegsucvewse5a"
+}
+},
+{
+"reep_id": "rt1f8e3ae3386578",
+"label": "Eintracht Frankfurt",
+"country": "Germany",
+"understat": "132",
+"ids": {
+"clubelo/team": "Frankfurt",
+"statsbomb/offline_team": "184",
+"understat/team": "132",
+"transfermarkt/verein": "24",
+"opta/team_numeric": "159",
+"opta/team": "c5hderjlkcoaze51e5wgvptk"
+}
+},
+{
+"reep_id": "rt0251784a5ac5d8",
+"label": "Freiburg",
+"country": "Germany",
+"understat": "135",
+"ids": {
+"clubelo/team": "Freiburg",
+"statsbomb/offline_team": "183",
+"understat/team": "135",
+"transfermarkt/verein": "60",
+"opta/team_numeric": "160",
+"uefa/team": "59880",
+"opta/team": "6k5zscdm9ufw0tguvzyjlp5hq"
+}
+},
+{
+"reep_id": "rt2d7f0d98cabbd0",
+"label": "Hamburger SV",
+"country": "Germany",
+"understat": "118",
+"ids": {
+"clubelo/team": "Hamburg",
+"statsbomb/offline_team": "171",
+"understat/team": "118",
+"transfermarkt/verein": "41",
+"opta/team_numeric": "161",
+"opta/team": "75xi6hloabmnjn2kzgj1g8h1s"
+}
+},
+{
+"reep_id": "rt69d9af97f451c2",
+"label": "Hannover 96",
+"country": "Germany",
+"understat": "128",
+"ids": {
+"clubelo/team": "Hannover",
+"statsbomb/offline_team": "178",
+"understat/team": "128",
+"transfermarkt/verein": "42",
+"opta/team": "5lidfwkteyu9dj9ysmdq2v4tk"
+}
+},
+{
+"reep_id": "rt34e8e6e3731857",
+"label": "Heidenheim",
+"country": "Germany",
+"understat": "280",
+"ids": {
+"clubelo/team": "Heidenheim",
+"statsbomb/offline_team": "201",
+"understat/team": "280",
+"transfermarkt/verein": "2036",
+"opta/team_numeric": "2891",
+"uefa/team": "2603791",
+"opta/team": "3xcg7xikgrn2x8oa65sopb2is"
+}
+},
+{
+"reep_id": "rtee7ee345bdb76b",
+"label": "Hertha BSC",
+"country": "Germany",
+"understat": "122",
+"ids": {
+"clubelo/team": "Hertha",
+"statsbomb/offline_team": "173",
+"understat/team": "122",
+"transfermarkt/verein": "44",
+"opta/team": "f0w62l8zql3tukxsy8fqwp72x"
+}
+},
+{
+"reep_id": "rt68bc8e8f376aec",
+"label": "Hoffenheim",
+"country": "Germany",
+"understat": "120",
+"ids": {
+"clubelo/team": "Hoffenheim",
+"statsbomb/offline_team": "175",
+"understat/team": "120",
+"transfermarkt/verein": "533",
+"opta/team_numeric": "1902",
+"uefa/team": "2600431",
+"opta/team": "4l9mrqzmajz5crzlz50mtbt6x"
+}
+},
+{
+"reep_id": "rt0bfdf41cdb9c31",
+"label": "Ingolstadt",
+"country": "Germany",
+"understat": "126",
+"ids": {
+"statsbomb/offline_team": "189",
+"understat/team": "126",
+"transfermarkt/verein": "4795",
+"opta/team": "auoply899efk4rs1a0ew6v9jq"
+}
+},
+{
+"reep_id": "rta05788088ae5c0",
+"label": "K\u00f6ln",
+"country": "Germany",
+"understat": "134",
+"ids": {
+"clubelo/team": "Koeln",
+"statsbomb/offline_team": "186",
+"understat/team": "134",
+"transfermarkt/verein": "3",
+"opta/team_numeric": "387",
+"opta/team": "8q1ul09cygzswb7tb456bmifv"
+}
+},
+{
+"reep_id": "rt8b750798ad70b3",
+"label": "Mainz 05",
+"country": "Germany",
+"understat": "125",
+"ids": {
+"clubelo/team": "Mainz",
+"statsbomb/offline_team": "177",
+"understat/team": "125",
+"transfermarkt/verein": "39",
+"opta/team_numeric": "810",
+"opta/team": "1c7qokc1j5z50cjj4tcu32haa"
+}
+},
+{
+"reep_id": "rt6b07292a843021",
+"label": "N\u00fcrnberg",
+"country": "Germany",
+"understat": "234",
+"ids": {
+"clubelo/team": "Nuernberg",
+"statsbomb/offline_team": "195",
+"understat/team": "234",
+"transfermarkt/verein": "4",
+"opta/team": "c8rdmlwqz77xe8yzv3r881dz3"
+}
+},
+{
+"reep_id": "rt82f73d0f2fc759",
+"label": "Paderborn",
+"country": "Germany",
+"understat": "205",
+"ids": {
+"clubelo/team": "Paderborn",
+"statsbomb/offline_team": "284",
+"understat/team": "205",
+"transfermarkt/verein": "127",
+"opta/team": "62ljqd4za2a6svd9wgctg8b53"
+}
+},
+{
+"reep_id": "rtaf5845bd35784e",
+"label": "Schalke 04",
+"country": "Germany",
+"understat": "124",
+"ids": {
+"clubelo/team": "Schalke",
+"statsbomb/offline_team": "181",
+"understat/team": "124",
+"transfermarkt/verein": "33",
+"api_football/team": "174",
+"opta/team": "cz4a6wmzx2obyisadhgaccx7b"
+}
+},
+{
+"reep_id": "rt0ded59db8642fe",
+"label": "Stuttgart",
+"country": "Germany",
+"understat": "133",
+"ids": {
+"clubelo/team": "Stuttgart",
+"statsbomb/offline_team": "174",
+"understat/team": "133",
+"transfermarkt/verein": "79",
+"opta/team_numeric": "169",
+"uefa/team": "50107",
+"opta/team": "3dwlvz6cl4lcavvrg0y2dycrt"
+}
+},
+{
+"reep_id": "rt58a40f042bfcfd",
+"label": "Union Berlin",
+"country": "Germany",
+"understat": "240",
+"ids": {
+"clubelo/team": "UnionBerlin",
+"statsbomb/offline_team": "190",
+"understat/team": "240",
+"transfermarkt/verein": "89",
+"opta/team_numeric": "816",
+"uefa/team": "77977",
+"opta/team": "a8d2gb2nag8fy0itbuxmcibh2"
+}
+},
+{
+"reep_id": "rte2da7a277916f2",
+"label": "Werder Bremen",
+"country": "Germany",
+"understat": "123",
+"ids": {
+"clubelo/team": "Werder",
+"statsbomb/offline_team": "176",
+"understat/team": "123",
+"transfermarkt/verein": "86",
+"opta/team_numeric": "171",
+"opta/team": "cu0eztmjcsbydyp53aleznorw"
+}
+},
+{
+"reep_id": "rt1c683b74f5e1e3",
+"label": "Wolfsburg",
+"country": "Germany",
+"understat": "131",
+"ids": {
+"clubelo/team": "Wolfsburg",
+"statsbomb/offline_team": "179",
+"understat/team": "131",
+"transfermarkt/verein": "82",
+"opta/team_numeric": "172",
+"opta/team": "a8l3w3n0j99qjlsxj3jnmgkz1"
+}
+},
+{
+"reep_id": "rtb02fbed24c7ea4",
+"label": "Atalanta",
+"country": "Italy",
+"understat": "107",
+"ids": {
+"clubelo/team": "Atalanta",
+"statsbomb/offline_team": "228",
+"understat/team": "107",
+"transfermarkt/verein": "800",
+"opta/team_numeric": "456",
+"uefa/team": "52816",
+"opta/team": "e75syeuawg3ql8nwpi3vr2btz"
+}
+},
+{
+"reep_id": "rt1baaaf4100b4a0",
+"label": "Benevento",
+"country": "Italy",
+"understat": "222",
+"ids": {
+"statsbomb/offline_team": "235",
+"understat/team": "222",
+"transfermarkt/verein": "4171",
+"api_football/team": "506",
+"opta/team": "4cq1gkb2yelnvz4z7jdo6q81"
+}
+},
+{
+"reep_id": "rte23a04ed7a0934",
+"label": "Bologna",
+"country": "Italy",
+"understat": "97",
+"ids": {
+"clubelo/team": "Bologna",
+"statsbomb/offline_team": "240",
+"understat/team": "97",
+"transfermarkt/verein": "1025",
+"opta/team_numeric": "123",
+"uefa/team": "52969",
+"opta/team": "ej5er0oyngdw138yuumwqbyqt"
+}
+},
+{
+"reep_id": "rt1ad877e5ba9bab",
+"label": "Brescia",
+"country": "Italy",
+"understat": "242",
+"ids": {
+"statsbomb/offline_team": "1382",
+"understat/team": "242",
+"transfermarkt/verein": "19",
+"opta/team": "a80afp6w8wof6ci633u8k93de"
+}
+},
+{
+"reep_id": "rt2c8373ad3468d9",
+"label": "Cagliari",
+"country": "Italy",
+"understat": "116",
+"ids": {
+"clubelo/team": "Cagliari",
+"statsbomb/offline_team": "225",
+"understat/team": "116",
+"transfermarkt/verein": "1390",
+"opta/team_numeric": "124",
+"opta/team": "5rwlg5cfv1hu7yf0ek1zxpzy3"
+}
+},
+{
+"reep_id": "rt5b2a55de7555d0",
+"label": "Cesena",
+"country": "Italy",
+"understat": "203",
+"ids": {
+"clubelo/team": "Cesena",
+"understat/team": "203",
+"transfermarkt/verein": "1429",
+"opta/team": "9sn08yeeqqhlclha1tgjqk6kb"
+}
+},
+{
+"reep_id": "rt2be91c9b483a69",
+"label": "Cremonese",
+"country": "Italy",
+"understat": "272",
+"ids": {
+"clubelo/team": "Cremonese",
+"statsbomb/offline_team": "1456",
+"understat/team": "272",
+"transfermarkt/verein": "2239",
+"opta/team_numeric": "2174",
+"opta/team": "af91jdcs6x0bqkmdb78rokod2"
+}
+},
+{
+"reep_id": "rt92cabc8288eb1c",
+"label": "Empoli",
+"country": "Italy",
+"understat": "108",
+"ids": {
+"clubelo/team": "Empoli",
+"statsbomb/offline_team": "290",
+"understat/team": "108",
+"transfermarkt/verein": "749",
+"opta/team_numeric": "695",
+"opta/team": "8le3orkfz6iix3jns6g9ojqjg"
+}
+},
+{
+"reep_id": "rt77e94c8ff0ebd3",
+"label": "Fiorentina",
+"country": "Italy",
+"understat": "110",
+"ids": {
+"clubelo/team": "Fiorentina",
+"statsbomb/offline_team": "239",
+"understat/team": "110",
+"transfermarkt/verein": "430",
+"opta/team_numeric": "125",
+"uefa/team": "52817",
+"opta/team": "4raiad4l2j5lkfaz92pk4osb"
+}
+},
+{
+"reep_id": "rtf3632c98e381de",
+"label": "Frosinone",
+"country": "Italy",
+"understat": "112",
+"ids": {
+"clubelo/team": "Frosinone",
+"statsbomb/offline_team": "291",
+"understat/team": "112",
+"transfermarkt/verein": "8970",
+"opta/team": "5khizzei8z0qbb7exz622wxw3"
+}
+},
+{
+"reep_id": "rt4ef8a1dafb90e5",
+"label": "Genoa",
+"country": "Italy",
+"understat": "101",
+"ids": {
+"clubelo/team": "Genoa",
+"statsbomb/offline_team": "233",
+"understat/team": "101",
+"transfermarkt/verein": "252",
+"opta/team_numeric": "990",
+"opta/team": "4kumqzwifv478caxed8zywlh3"
+}
+},
+{
+"reep_id": "rtfa8d1f9c50ed3b",
+"label": "Hellas Verona",
+"country": "Italy",
+"understat": "94",
+"ids": {
+"clubelo/team": "Verona",
+"statsbomb/offline_team": "226",
+"understat/team": "94",
+"transfermarkt/verein": "276",
+"opta/team_numeric": "126",
+"opta/team": "ap6blbxhq9elm62vw6tutzlwg"
+}
+},
+{
+"reep_id": "rtd16cab27b76809",
+"label": "Juventus",
+"country": "Italy",
+"understat": "98",
+"ids": {
+"clubelo/team": "Juventus",
+"statsbomb/offline_team": "224",
+"understat/team": "98",
+"transfermarkt/verein": "506",
+"opta/team_numeric": "128",
+"uefa/team": "50139",
+"opta/team": "bqbbqm98ud8obe45ds9ohgyrd"
+}
+},
+{
+"reep_id": "rt390749f063fece",
+"label": "Lazio",
+"country": "Italy",
+"understat": "96",
+"ids": {
+"clubelo/team": "Lazio",
+"statsbomb/offline_team": "236",
+"understat/team": "96",
+"transfermarkt/verein": "398",
+"opta/team_numeric": "129",
+"uefa/team": "52973",
+"opta/team": "btcy9nra9ak4m22ovr2ia6m5v"
+}
+},
+{
+"reep_id": "rtfec9cdfb9dce58",
+"label": "Lecce",
+"country": "Italy",
+"understat": "243",
+"ids": {
+"clubelo/team": "Lecce",
+"statsbomb/offline_team": "1383",
+"understat/team": "243",
+"transfermarkt/verein": "1005",
+"opta/team_numeric": "130",
+"opta/team": "bi1fxjrncd0ram0oi7ja1jyuo"
+}
+},
+{
+"reep_id": "rt92846cee69557a",
+"label": "Monza",
+"country": "Italy",
+"understat": "271",
+"ids": {
+"clubelo/team": "Monza",
+"statsbomb/offline_team": "1677",
+"understat/team": "271",
+"transfermarkt/verein": "2919",
+"opta/team_numeric": "742",
+"opta/team": "67z1gqyiuzpmmb15q5fy7ntc4"
+}
+},
+{
+"reep_id": "rt4c540e697cd963",
+"label": "Napoli",
+"country": "Italy",
+"understat": "105",
+"ids": {
+"clubelo/team": "Napoli",
+"statsbomb/offline_team": "277",
+"understat/team": "105",
+"transfermarkt/verein": "6195",
+"opta/team_numeric": "459",
+"uefa/team": "50136",
+"opta/team": "gi0l1habji5hpgar77dl5jqe"
+}
+},
+{
+"reep_id": "rt64cd1ad55b0238",
+"label": "Palermo",
+"country": "Italy",
+"understat": "100",
+"ids": {
+"clubelo/team": "Palermo",
+"statsbomb/offline_team": "2256",
+"understat/team": "100",
+"transfermarkt/verein": "458",
+"opta/team": "2ungwfinfq61qrc6py1skd7ds"
+}
+},
+{
+"reep_id": "rte7e155aed7c764",
+"label": "Pescara",
+"country": "Italy",
+"understat": "114",
+"ids": {
+"clubelo/team": "Pescara",
+"statsbomb/offline_team": "1435",
+"understat/team": "114",
+"transfermarkt/verein": "2921",
+"api_football/team": "525",
+"opta/team": "13x31xf866impd8gbjf6a05g3"
+}
+},
+{
+"reep_id": "rt31e54dda6aaf86",
+"label": "Roma",
+"country": "Italy",
+"understat": "95",
+"ids": {
+"clubelo/team": "Roma",
+"statsbomb/offline_team": "229",
+"understat/team": "95",
+"transfermarkt/verein": "12",
+"opta/team_numeric": "121",
+"uefa/team": "50137",
+"opta/team": "2tk2l9sgktwc9jhzqdd4mpdtb"
+}
+},
+{
+"reep_id": "rt72e1d84e64df83",
+"label": "Salernitana",
+"country": "Italy",
+"understat": "264",
+"ids": {
+"statsbomb/offline_team": "1434",
+"understat/team": "264",
+"transfermarkt/verein": "380",
+"api_football/team": "514",
+"opta/team": "49rkyo4do8uwj06geomw0xr4i"
+}
+},
+{
+"reep_id": "rt7f8be1fc986ca4",
+"label": "Sampdoria",
+"country": "Italy",
+"understat": "102",
+"ids": {
+"clubelo/team": "Sampdoria",
+"statsbomb/offline_team": "234",
+"understat/team": "102",
+"transfermarkt/verein": "1038",
+"opta/team": "4plikfte18rv8v4l89z803d4y"
+}
+},
+{
+"reep_id": "rt267acaea10521e",
+"label": "Sassuolo",
+"country": "Italy",
+"understat": "104",
+"ids": {
+"clubelo/team": "Sassuolo",
+"statsbomb/offline_team": "232",
+"understat/team": "104",
+"transfermarkt/verein": "6574",
+"opta/team_numeric": "2182",
+"opta/team": "6tuibxq39fdryu8ou06wcm0q3"
+}
+},
+{
+"reep_id": "rt3463c48f3a1cbb",
+"label": "Spezia",
+"country": "Italy",
+"understat": "260",
+"ids": {
+"clubelo/team": "Spezia",
+"statsbomb/offline_team": "1436",
+"understat/team": "260",
+"transfermarkt/verein": "3522",
+"opta/team": "4klvxyeh3xcus4ongu7c00mgc"
+}
+},
+{
+"reep_id": "rte534dd7dc794c0",
+"label": "Torino",
+"country": "Italy",
+"understat": "113",
+"ids": {
+"clubelo/team": "Torino",
+"statsbomb/offline_team": "241",
+"understat/team": "113",
+"transfermarkt/verein": "416",
+"opta/team_numeric": "135",
+"opta/team": "7gnly6999wao1xarwct4p8fe9"
+}
+},
+{
+"reep_id": "rta16842d30bb857",
+"label": "Udinese",
+"country": "Italy",
+"understat": "99",
+"ids": {
+"clubelo/team": "Udinese",
+"statsbomb/offline_team": "230",
+"understat/team": "99",
+"transfermarkt/verein": "410",
+"opta/team_numeric": "136",
+"opta/team": "dxq76zcvnokq07cszdx0i6kve"
+}
+},
+{
+"reep_id": "rt4b0352a028b599",
+"label": "Venezia",
+"country": "Italy",
+"understat": "265",
+"ids": {
+"clubelo/team": "Venezia",
+"statsbomb/offline_team": "1433",
+"understat/team": "265",
+"transfermarkt/verein": "607",
+"opta/team_numeric": "137",
+"opta/team": "565sm63rjm2y7xeae0dcdbtnu"
+}
+},
+{
+"reep_id": "rt9b9371ba8df185",
+"label": "Monaco",
+"country": "Monaco",
+"understat": "171",
+"ids": {
+"clubelo/team": "Monaco",
+"statsbomb/offline_team": "129",
+"understat/team": "171",
+"transfermarkt/verein": "162",
+"opta/team_numeric": "146",
+"uefa/team": "50023",
+"opta/team": "4t4hod56fsj7utpjdor8so5q6"
+}
+},
+{
+"reep_id": "rte2d3bb22ad0646",
+"label": "Akhmat Grozny",
+"country": "Russia",
+"understat": "188",
+"ids": {
+"clubelo/team": "TerekGrozny",
+"understat/team": "188",
+"transfermarkt/verein": "3725",
+"opta/team": "akank46134gx4nnpfbm5wttgu"
+}
+},
+{
+"reep_id": "rt60ad6b1d1cacd7",
+"label": "Akron",
+"country": "Russia",
+"understat": "283",
+"ids": {
+"clubelo/team": "AkronTogliatti",
+"understat/team": "283",
+"transfermarkt/verein": "71985",
+"api_football/team": "6786",
+"opta/team": "4limsu2almsie8d6vw7b4amwa"
+}
+},
+{
+"reep_id": "rt4abd7541d3e494",
+"label": "Amkar Perm",
+"country": "Russia",
+"understat": "195",
+"ids": {
+"understat/team": "195",
+"transfermarkt/verein": "4128",
+"opta/team": "5pqvn4cdfh0v0679mndd9vyb5"
+}
+},
+{
+"reep_id": "rtdbb6f0a3491cb4",
+"label": "Anzhi",
+"country": "Russia",
+"understat": "193",
+"ids": {
+"understat/team": "193",
+"transfermarkt/verein": "2700",
+"api_football/team": "1082",
+"opta/team": "4ytcams71v0n16i5o2g5x1aig"
+}
+},
+{
+"reep_id": "rta49568cacb2ff3",
+"label": "Arsenal Tula",
+"country": "Russia",
+"understat": "200",
+"ids": {
+"understat/team": "200",
+"transfermarkt/verein": "3729",
+"api_football/team": "1077",
+"opta/team": "5an60wwlaot267vote51h7ge2"
+}
+},
+{
+"reep_id": "rtf2d3e877e636bf",
+"label": "Baltika",
+"country": "Russia",
+"understat": "278",
+"ids": {
+"clubelo/team": "Baltika",
+"understat/team": "278",
+"transfermarkt/verein": "2741",
+"api_football/team": "2006",
+"opta/team": "73a4lk9f0nurp4huviejjaoxh"
+}
+},
+{
+"reep_id": "rtfbb3bc0879ac15",
+"label": "CSKA Moskva",
+"country": "Russia",
+"understat": "185",
+"ids": {
+"clubelo/team": "CSKAMoskva",
+"understat/team": "185",
+"transfermarkt/verein": "2410",
+"opta/team": "6nfubpry6l0z27drwbvesjpvn"
+}
+},
+{
+"reep_id": "rt4960ebc32ab6fa",
+"label": "Dinamo Makhachkala",
+"country": "Russia",
+"understat": "284",
+"ids": {
+"clubelo/team": "DynamoMakhachkala",
+"understat/team": "284",
+"transfermarkt/verein": "75231",
+"api_football/team": "6813",
+"opta/team": "f1b4t024a0u37ojeja2una7ai"
+}
+},
+{
+"reep_id": "rta26bb091938d28",
+"label": "Dinamo Moskva",
+"country": "Russia",
+"understat": "190",
+"ids": {
+"clubelo/team": "DynamoMoskva",
+"understat/team": "190",
+"transfermarkt/verein": "121",
+"opta/team": "8mrwjyt72h0oqpj24xi4f7e8s"
+}
+},
+{
+"reep_id": "rt82067a6e3eeff7",
+"label": "FK Spartak Tambov",
+"country": "Russia",
+"understat": "237",
+"ids": {
+"understat/team": "237",
+"transfermarkt/verein": "71624",
+"uefa/team": "6pzvyrqzc2shf7z4q1zsx9i39",
+"opta/team": "6pzvyrqzc2shf7z4q1zsx9i39"
+}
+},
+{
+"reep_id": "rt906161c4545615",
+"label": "Fakel",
+"country": "Russia",
+"understat": "277",
+"ids": {
+"understat/team": "277",
+"transfermarkt/verein": "1124",
+"api_football/team": "1993",
+"opta/team": "c49dcd6hd81tv9f2o9ltxqsfx"
+}
+},
+{
+"reep_id": "rt16d45522a455cc",
+"label": "Krasnodar",
+"country": "Russia",
+"understat": "196",
+"ids": {
+"clubelo/team": "FCKrasnodar",
+"understat/team": "196",
+"transfermarkt/verein": "16704",
+"opta/team": "17icf335ajx0bgofq41xsz8tv"
+}
+},
+{
+"reep_id": "rt54f26a2ed1a7fb",
+"label": "Krylya Sovetov",
+"country": "Russia",
+"understat": "194",
+"ids": {
+"clubelo/team": "KryliyaSovetov",
+"understat/team": "194",
+"transfermarkt/verein": "2696",
+"opta/team": "2kf8wmpaiufla46toezfpguas"
+}
+},
+{
+"reep_id": "rt0131129dd59df0",
+"label": "Kuban Krasnodar",
+"country": "Russia",
+"understat": "197",
+"ids": {
+"understat/team": "197",
+"transfermarkt/verein": "67241",
+"uefa/team": "8155f5253m7x653sa1tqeqr8q",
+"opta/team": "8155f5253m7x653sa1tqeqr8q"
+}
+},
+{
+"reep_id": "rtb12207d33fc127",
+"label": "Nizhny Novgorod",
+"country": "Russia",
+"understat": "263",
+"ids": {
+"clubelo/team": "NizhnyNovgorod",
+"understat/team": "263",
+"transfermarkt/verein": "49702",
+"opta/team": "551am27ynhfd2ciffnfz1ehk7"
+}
+},
+{
+"reep_id": "rt8e5cfd0e074802",
+"label": "Orenburg",
+"country": "Russia",
+"understat": "199",
+"ids": {
+"clubelo/team": "Orenburg",
+"understat/team": "199",
+"transfermarkt/verein": "14589",
+"api_football/team": "1080",
+"opta/team": "6j1r4zpoysezjln5ro143mqnt"
+}
+},
+{
+"reep_id": "rtde41b88d498716",
+"label": "Rostov",
+"country": "Russia",
+"understat": "187",
+"ids": {
+"clubelo/team": "Rostov",
+"understat/team": "187",
+"transfermarkt/verein": "1083",
+"opta/team": "c21b842qbf0i82euyl4yb5y0l"
+}
+},
+{
+"reep_id": "rt4f6bb23c0819c6",
+"label": "Rotor Volgograd",
+"country": "Russia",
+"understat": "258",
+"ids": {
+"understat/team": "258",
+"transfermarkt/verein": "3609",
+"opta/team": "z6tb4g9z3x4b5hmlslts9hbu",
+"api_football/team": "2010"
+}
+},
+{
+"reep_id": "rtbb5804dc00d51c",
+"label": "Rubin Kazan",
+"country": "Russia",
+"understat": "186",
+"ids": {
+"clubelo/team": "RubinKazan",
+"understat/team": "186",
+"transfermarkt/verein": "2698",
+"opta/team": "8zz9e2ser5l4mdi9xb1q530z0"
+}
+},
+{
+"reep_id": "rt507b3870c115bb",
+"label": "SKA Khabarovsk",
+"country": "Russia",
+"understat": "218",
+"ids": {
+"understat/team": "218",
+"transfermarkt/verein": "3690",
+"api_football/team": "1087",
+"opta/team": "6yrlfbiqclf4oz6zhviwxxk5r"
+}
+},
+{
+"reep_id": "rt538531dff21a01",
+"label": "Tom Tomsk",
+"country": "Russia",
+"understat": "201",
+"ids": {
+"understat/team": "201",
+"transfermarkt/verein": "3691",
+"api_football/team": "1081",
+"opta/team": "e5pcnartmbv64avai7ju9qrxh"
+}
+},
+{
+"reep_id": "rt973c2387f59584",
+"label": "Tosno",
+"country": "Russia",
+"understat": "217",
+"ids": {
+"understat/team": "217",
+"transfermarkt/verein": "40426",
+"api_football/team": "1086",
+"opta/team": "d13qu06c6h2985nqhft4jv9m5"
+}
+},
+{
+"reep_id": "rtd2b3c6cae3d678",
+"label": "Ufa",
+"country": "Russia",
+"understat": "184",
+"ids": {
+"understat/team": "184",
+"transfermarkt/verein": "28095",
+"api_football/team": "1078",
+"opta/team": "eoxg024aemqhm65eh6f5m91ux"
+}
+},
+{
+"reep_id": "rt55e37ab783b445",
+"label": "Ural",
+"country": "Russia",
+"understat": "198",
+"ids": {
+"understat/team": "198",
+"transfermarkt/verein": "11127",
+"api_football/team": "1084",
+"opta/team": "8z118klpzvd6vslyas9wugj87"
+}
+},
+{
+"reep_id": "rt0a10788618af25",
+"label": "Yenisey",
+"country": "Russia",
+"understat": "226",
+"ids": {
+"understat/team": "226",
+"transfermarkt/verein": "3714",
+"opta/team": "36ry3uqjui4210d52sxvuoe7v"
+}
+},
+{
+"reep_id": "rt51f22a81a326bc",
+"label": "Alav\u00e9s",
+"country": "Spain",
+"understat": "158",
+"ids": {
+"clubelo/team": "Alaves",
+"statsbomb/offline_team": "206",
+"understat/team": "158",
+"transfermarkt/verein": "1108",
+"opta/team_numeric": "173",
+"opta/team": "4dtdjgnpdq9uw4sdutti0vaar"
+}
+},
+{
+"reep_id": "rt4286976e124141",
+"label": "Almer\u00eda",
+"country": "Spain",
+"understat": "208",
+"ids": {
+"clubelo/team": "Almeria",
+"statsbomb/offline_team": "403",
+"understat/team": "208",
+"transfermarkt/verein": "3302",
+"opta/team": "cobffe32r7g4skka9m19qib63"
+}
+},
+{
+"reep_id": "rtd29a7a123d25a1",
+"label": "Athletic Club",
+"country": "Spain",
+"understat": "147",
+"ids": {
+"clubelo/team": "Bilbao",
+"statsbomb/offline_team": "215",
+"understat/team": "147",
+"transfermarkt/verein": "621",
+"opta/team_numeric": "174",
+"uefa/team": "50125",
+"opta/team": "3czravw89omgc9o4s0w3l1bg5"
+}
+},
+{
+"reep_id": "rtddd2e265b3306c",
+"label": "Atl\u00e9tico de Madrid",
+"country": "Spain",
+"understat": "143",
+"ids": {
+"clubelo/team": "Atletico",
+"statsbomb/offline_team": "212",
+"understat/team": "143",
+"transfermarkt/verein": "13",
+"opta/team_numeric": "175",
+"opta/team": "4ku8o6uf87yd8iecdalipo6wd"
+}
+},
+{
+"reep_id": "rtf2d6a11b80a5cd",
+"label": "Celta de Vigo",
+"country": "Spain",
+"understat": "152",
+"ids": {
+"clubelo/team": "Celta",
+"statsbomb/offline_team": "209",
+"understat/team": "152",
+"transfermarkt/verein": "940",
+"opta/team_numeric": "176",
+"api_football/team": "538",
+"uefa/team": "53043",
+"opta/team": "6f27yvbqcngegwsg2ozxxdj4"
+}
+},
+{
+"reep_id": "rte0b9e3112660b2",
+"label": "C\u00e1diz",
+"country": "Spain",
+"understat": "261",
+"ids": {
+"clubelo/team": "Cadiz",
+"statsbomb/offline_team": "552",
+"understat/team": "261",
+"transfermarkt/verein": "2687",
+"opta/team": "82q9159y2u7mkfn3z6hy75r4o"
+}
+},
+{
+"reep_id": "rtd94f73a3fd2cb2",
+"label": "C\u00f3rdoba",
+"country": "Spain",
+"understat": "206",
+"ids": {
+"clubelo/team": "Cordoba",
+"statsbomb/offline_team": "373",
+"understat/team": "206",
+"transfermarkt/verein": "993",
+"opta/team": "7tpg5hj5gutjb58m6trjcaika"
+}
+},
+{
+"reep_id": "rtf3292c71878d5c",
+"label": "Deportivo de La Coru\u00f1a",
+"country": "Spain",
+"understat": "139",
+"ids": {
+"clubelo/team": "Depor",
+"statsbomb/offline_team": "219",
+"understat/team": "139",
+"transfermarkt/verein": "897",
+"opta/team": "1r541mega6d838hi0p44sv0h2"
+}
+},
+{
+"reep_id": "rtd4768fe3431e81",
+"label": "Eibar",
+"country": "Spain",
+"understat": "156",
+"ids": {
+"clubelo/team": "Eibar",
+"statsbomb/offline_team": "322",
+"understat/team": "156",
+"transfermarkt/verein": "1533",
+"opta/team": "bjltc68ihd23uu3svnq0o3qrs"
+}
+},
+{
+"reep_id": "rt1aeb4e4f512ce7",
+"label": "Elche",
+"country": "Spain",
+"understat": "207",
+"ids": {
+"clubelo/team": "Elche",
+"statsbomb/offline_team": "1042",
+"understat/team": "207",
+"transfermarkt/verein": "1531",
+"opta/team_numeric": "954",
+"opta/team": "4yg9ttzw0m51048doksv8uq5r"
+}
+},
+{
+"reep_id": "rtcac7c533504c13",
+"label": "Espanyol",
+"country": "Spain",
+"understat": "141",
+"ids": {
+"clubelo/team": "Espanyol",
+"statsbomb/offline_team": "214",
+"understat/team": "141",
+"transfermarkt/verein": "714",
+"opta/team_numeric": "177",
+"opta/team": "c8llrezkm3b3op4afrou6b487"
+}
+},
+{
+"reep_id": "rt3b3ba148e6596d",
+"label": "Getafe",
+"country": "Spain",
+"understat": "142",
+"ids": {
+"clubelo/team": "Getafe",
+"statsbomb/offline_team": "216",
+"understat/team": "142",
+"transfermarkt/verein": "3709",
+"opta/team_numeric": "1450",
+"api_football/team": "546",
+"opta/team": "1n1j0wsl763lq7ee1k0c11c02"
+}
+},
+{
+"reep_id": "rt81138faf473ccd",
+"label": "Girona",
+"country": "Spain",
+"understat": "223",
+"ids": {
+"clubelo/team": "Girona",
+"statsbomb/offline_team": "211",
+"understat/team": "223",
+"transfermarkt/verein": "12321",
+"opta/team_numeric": "2893",
+"api_football/team": "547",
+"uefa/team": "2602798",
+"opta/team": "7h7eg7q7dbwvzww78h9d5eh0h"
+}
+},
+{
+"reep_id": "rtfc400462cbc492",
+"label": "Granada",
+"country": "Spain",
+"understat": "155",
+"ids": {
+"clubelo/team": "Granada",
+"statsbomb/offline_team": "1049",
+"understat/team": "155",
+"transfermarkt/verein": "16795",
+"opta/team": "26fes5ubaeq0fk1nay2pj2ob2"
+}
+},
+{
+"reep_id": "rtb6fab1fff50211",
+"label": "Huesca",
+"country": "Spain",
+"understat": "232",
+"ids": {
+"clubelo/team": "Huesca",
+"statsbomb/offline_team": "902",
+"understat/team": "232",
+"transfermarkt/verein": "5358",
+"opta/team": "egfc4v1d08dgbhkw8gxz85bzr"
+}
+},
+{
+"reep_id": "rt81d3665e479bc8",
+"label": "Las Palmas",
+"country": "Spain",
+"understat": "144",
+"ids": {
+"clubelo/team": "LasPalmas",
+"statsbomb/offline_team": "208",
+"understat/team": "144",
+"transfermarkt/verein": "472",
+"opta/team_numeric": "407",
+"opta/team": "1ae3awgwm3i1jds5tfct5441j"
+}
+},
+{
+"reep_id": "rt038f78680c0da3",
+"label": "Legan\u00e9s",
+"country": "Spain",
+"understat": "159",
+"ids": {
+"clubelo/team": "Leganes",
+"statsbomb/offline_team": "205",
+"understat/team": "159",
+"transfermarkt/verein": "1244",
+"opta/team_numeric": "957",
+"opta/team": "3krm0f4yr1l80j1sd7823f9xn"
+}
+},
+{
+"reep_id": "rtec6b5829356b14",
+"label": "Levante",
+"country": "Spain",
+"understat": "151",
+"ids": {
+"clubelo/team": "Levante",
+"statsbomb/offline_team": "221",
+"understat/team": "151",
+"transfermarkt/verein": "3368",
+"opta/team_numeric": "855",
+"opta/team": "4grc9qgcvusllap8h5j6gc5h5"
+}
+},
+{
+"reep_id": "rt7fa25a0b134eaa",
+"label": "Mallorca",
+"country": "Spain",
+"understat": "239",
+"ids": {
+"clubelo/team": "Mallorca",
+"statsbomb/offline_team": "1043",
+"understat/team": "239",
+"transfermarkt/verein": "237",
+"opta/team_numeric": "181",
+"api_football/team": "798",
+"opta/team": "50x1m4u58lffhq6v6ga1hbxmy"
+}
+},
+{
+"reep_id": "rtbb5c4037edb834",
+"label": "M\u00e1laga",
+"country": "Spain",
+"understat": "137",
+"ids": {
+"clubelo/team": "Malaga",
+"statsbomb/offline_team": "223",
+"understat/team": "137",
+"transfermarkt/verein": "1084",
+"opta/team": "7012hpp3p5vg4fzyn3h0yvf09"
+}
+},
+{
+"reep_id": "rt7fe21ad9533d06",
+"label": "Osasuna",
+"country": "Spain",
+"understat": "157",
+"ids": {
+"clubelo/team": "Osasuna",
+"statsbomb/offline_team": "422",
+"understat/team": "157",
+"transfermarkt/verein": "331",
+"opta/team_numeric": "450",
+"opta/team": "2l0ldgiwsgb8d6y3z0sfgjzyj"
+}
+},
+{
+"reep_id": "rtcd4698e91172ff",
+"label": "Rayo Vallecano",
+"country": "Spain",
+"understat": "145",
+"ids": {
+"clubelo/team": "RayoVallecano",
+"statsbomb/offline_team": "360",
+"understat/team": "145",
+"transfermarkt/verein": "367",
+"opta/team_numeric": "184",
+"uefa/team": "74070",
+"opta/team": "3budh3j9xivsid3ptm8ptpy4k"
+}
+},
+{
+"reep_id": "rtb2602eb76f3369",
+"label": "Real Betis",
+"country": "Spain",
+"understat": "153",
+"ids": {
+"clubelo/team": "Betis",
+"statsbomb/offline_team": "218",
+"understat/team": "153",
+"transfermarkt/verein": "150",
+"opta/team_numeric": "185",
+"uefa/team": "52265",
+"opta/team": "ah8dala7suqqkj04n2l8xz4zd"
+}
+},
+{
+"reep_id": "rt55bc517cd4c57b",
+"label": "Real Madrid",
+"country": "Spain",
+"understat": "150",
+"ids": {
+"clubelo/team": "RealMadrid",
+"statsbomb/offline_team": "220",
+"understat/team": "150",
+"transfermarkt/verein": "418",
+"opta/team_numeric": "186",
+"uefa/team": "50051",
+"opta/team": "3kq9cckrnlogidldtdie2fkbl"
+}
+},
+{
+"reep_id": "rtd8a2bb674109b9",
+"label": "Real Sociedad",
+"country": "Spain",
+"understat": "140",
+"ids": {
+"clubelo/team": "Sociedad",
+"statsbomb/offline_team": "210",
+"understat/team": "140",
+"transfermarkt/verein": "681",
+"opta/team_numeric": "188",
+"uefa/team": "50123",
+"opta/team": "63f5h8t5e9qm1fqmvfkb23ghh"
+}
+},
+{
+"reep_id": "rt40451204d00d85",
+"label": "Real Valladolid",
+"country": "Spain",
+"understat": "231",
+"ids": {
+"clubelo/team": "Valladolid",
+"statsbomb/offline_team": "901",
+"understat/team": "231",
+"transfermarkt/verein": "366",
+"opta/team_numeric": "192",
+"opta/team": "4jelr92fsge73q39is6qvhxb3"
+}
+},
+{
+"reep_id": "rt54e7121959ab4c",
+"label": "Sevilla",
+"country": "Spain",
+"understat": "138",
+"ids": {
+"clubelo/team": "Sevilla",
+"statsbomb/offline_team": "213",
+"understat/team": "138",
+"transfermarkt/verein": "368",
+"opta/team_numeric": "179",
+"uefa/team": "52714",
+"opta/team": "10eyb18v5puw4ez03ocaug09m"
+}
+},
+{
+"reep_id": "rtf8d9e3adebdfa0",
+"label": "Sporting de Gij\u00f3n",
+"country": "Spain",
+"understat": "149",
+"ids": {
+"clubelo/team": "Gijon",
+"statsbomb/offline_team": "1041",
+"understat/team": "149",
+"transfermarkt/verein": "2448",
+"opta/team": "9wfi6tgumbrnkp72z8zab89kr"
+}
+},
+{
+"reep_id": "rte32af9ed82e3ef",
+"label": "Valencia",
+"country": "Spain",
+"understat": "146",
+"ids": {
+"clubelo/team": "Valencia",
+"statsbomb/offline_team": "207",
+"understat/team": "146",
+"transfermarkt/verein": "1049",
+"opta/team_numeric": "191",
+"opta/team": "ba5e91hjacvma2sjvixn00pjo"
+}
+},
+{
+"reep_id": "rtb7ee4b315e86ec",
+"label": "Villarreal",
+"country": "Spain",
+"understat": "154",
+"ids": {
+"clubelo/team": "Villarreal",
+"statsbomb/offline_team": "222",
+"understat/team": "154",
+"transfermarkt/verein": "1050",
+"opta/team_numeric": "449",
+"uefa/team": "70691",
+"opta/team": "74mcjsm72vr3l9pw2i4qfjchj"
+}
+},
+{
+"reep_id": "rt6dc1794a66104e",
+"label": "Cardiff City",
+"country": "Wales",
+"understat": "227",
+"ids": {
+"understat/team": "227",
+"transfermarkt/verein": "603",
+"opta/team_numeric": "97",
+"opta/team": "3ash57c0q2tgok6gvzbsta93"
+}
+},
+{
+"reep_id": "rtb3e9f092ec5270",
+"label": "Swansea City",
+"country": "Wales",
+"understat": "84",
+"ids": {
+"clubelo/team": "Swansea",
+"understat/team": "84",
+"transfermarkt/verein": "2288",
+"opta/team_numeric": "80",
+"opta/team": "410jti6axb01yhvbc0axsp8li"
+}
+}
+]

@@ -1,53 +1,62 @@
-"""Reep crosswalk tests — the CSV column contract is defined HERE, so a
-release-schema drift fails loudly in CI instead of silently mis-joining."""
+"""Reep crosswalk tests — pinned to the REAL reep-register-v1 schema
+(provider/namespace/external_id/reep_id), verified against the release on
+9 Sep 2026. Fixture values are Chelsea's actual published bridges, so a
+mapping regression is caught against ground truth."""
 
 import pytest
 
 from bluebot_analytics.reep import Crosswalk, ReepSchemaError, parse_bridges, parse_entities
 
-BRIDGES = """reep_id,provider,provider_id,confidence
-rp_team_chelsea,football-data,61,1.0
-rp_team_chelsea,understat,Chelsea,1.0
-rp_team_chelsea,wikidata,Q9616,1.0
-rp_player_palmer,football-data,fd_777,1.0
-rp_player_palmer,understat,8995,1.0
+BRIDGES = """provider,namespace,external_id,reep_id
+understat,team,80,rt3763d29e7947d8
+transfermarkt,verein,631,rt3763d29e7947d8
+statsbomb,offline_team,33,rt3763d29e7947d8
+opta,team_numeric,8,rt3763d29e7947d8
+uefa,team,52914,rt3763d29e7947d8
+understat,player,8995,rp_palmer_x
+transfermarkt,spieler,568177,rp_palmer_x
 """.splitlines()
 
-ENTITIES = """reep_id,type,label,country
-rp_team_chelsea,team,Chelsea FC,England
-rp_player_palmer,player,Cole Palmer,England
+ENTITIES = """reep_id,entity_type,status,label,gender,country
+rt3763d29e7947d8,team,active,Chelsea,,England
+rp_palmer_x,player,active,Cole Palmer,male,England
 """.splitlines()
 
 
-def test_parse_bridges_groups_by_provider():
+def test_parse_bridges_keys_by_provider_and_namespace():
     b = parse_bridges(BRIDGES)
-    assert b["football-data"]["61"] == "rp_team_chelsea"
-    assert b["understat"]["8995"] == "rp_player_palmer"
+    assert b[("understat", "team")]["80"] == "rt3763d29e7947d8"
+    assert b[("transfermarkt", "spieler")]["568177"] == "rp_palmer_x"
 
 
-def test_crosswalk_translates_between_providers():
+def test_crosswalk_translates_chelsea_across_providers():
     xw = Crosswalk(parse_bridges(BRIDGES))
-    assert xw.translate("football-data", "61", "understat") == "Chelsea"
-    assert xw.translate("understat", "8995", "football-data") == "fd_777"
-    assert xw.translate("football-data", "999", "understat") is None
+    assert xw.translate("understat", "team", "80", "transfermarkt", "verein") == "631"
+    assert xw.translate("statsbomb", "offline_team", "33", "opta", "team_numeric") == "8"
+    assert xw.translate("understat", "team", "999", "uefa", "team") is None
 
 
-def test_bridges_for_returns_all_providers():
+def test_namespace_separation_prevents_cross_kind_hits():
     xw = Crosswalk(parse_bridges(BRIDGES))
-    assert xw.bridges_for("rp_team_chelsea") == {
-        "football-data": "61",
-        "understat": "Chelsea",
-        "wikidata": "Q9616",
-    }
+    # a player id must never resolve through a team namespace
+    assert xw.reep_id("understat", "team", "8995") is None
+    assert xw.reep_id("understat", "player", "8995") == "rp_palmer_x"
 
 
-def test_entities_filter_by_type():
+def test_bridges_for_lists_provider_slash_namespace():
+    xw = Crosswalk(parse_bridges(BRIDGES))
+    b = xw.bridges_for("rt3763d29e7947d8")
+    assert b["understat/team"] == "80"
+    assert b["uefa/team"] == "52914"
+    assert len(b) == 5
+
+
+def test_entities_use_entity_type():
     e = parse_entities(ENTITIES, entity_type="team")
-    assert list(e) == ["rp_team_chelsea"]
-    assert e["rp_team_chelsea"]["label"] == "Chelsea FC"
+    assert list(e) == ["rt3763d29e7947d8"]
+    assert e["rt3763d29e7947d8"]["label"] == "Chelsea"
 
 
 def test_schema_drift_fails_loudly():
-    bad = ["id,source,source_id", "1,fd,61"]
     with pytest.raises(ReepSchemaError):
-        parse_bridges(bad)
+        parse_bridges(["reep_id,provider,provider_id", "x,fd,61"])  # the OLD guessed schema
