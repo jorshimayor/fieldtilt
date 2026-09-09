@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Prep Terminal</title>
+<meta name="description" content="jorshimayor's interview masterclass: junior to senior across SWE, football tech, blockchain and bounties — built from his own repos, revised daily." />
+<style>
+  :root {
+    --bg: #07090D; --surface: #0D1117; --ink: #E7EDF7; --dim: #A9B4C9;
+    --mute: #66738C; --line: #1B2230; --accent: #3D6BFF; --win: #3FDF8C; --loss: #FF5F56;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px;
+    line-height: 1.62; margin: 0; padding: 0 1.1rem 4rem; }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  .mono { font-family: var(--mono); }
+  header { padding: 2.6rem 0 1.2rem; border-bottom: 1px solid var(--line); }
+  .eyebrow { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--accent); }
+  .eyebrow::before { content: "❯ "; }
+  h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em; margin: 0.35rem 0 0.5rem; text-wrap: balance; }
+  .lede { color: var(--dim); max-width: 60ch; margin: 0 0 0.8rem; }
+  .bar-wrap { position: sticky; top: 0; background: var(--bg); z-index: 5;
+    padding: 0.7rem 0; border-bottom: 1px solid var(--line); }
+  .bar-line { display: flex; justify-content: space-between; font-family: var(--mono);
+    font-size: 0.7rem; color: var(--mute); margin-bottom: 0.35rem; }
+  .bar-line b { color: var(--win); }
+  .meter { height: 6px; background: var(--line); }
+  .meter i { display: block; height: 100%; background: var(--accent); transition: width 0.2s; }
+  h2 { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--accent); margin: 2.4rem 0 0.3rem; }
+  h2::before { content: "❯ "; }
+  .why { color: var(--mute); font-size: 0.85rem; margin: 0 0 1rem; max-width: 60ch; }
+  .ladder { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin: 1rem 0; }
+  @media (max-width: 640px) { .ladder { grid-template-columns: 1fr; } }
+  .rung { border: 1px solid var(--line); background: var(--surface); padding: 0.8rem 0.9rem; }
+  .rung h3 { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em;
+    text-transform: uppercase; margin: 0 0 0.4rem; color: var(--ink); }
+  .rung p { margin: 0; color: var(--dim); font-size: 0.83rem; }
+  .item { display: flex; gap: 0.7rem; padding: 0.65rem 0; border-top: 1px solid var(--line); }
+  .item:first-of-type { border-top: 0; }
+  .item input { accent-color: var(--win); width: 1rem; height: 1rem; margin-top: 0.25rem; flex: none; cursor: pointer; }
+  .item .body { color: var(--dim); }
+  .item .body b { color: var(--ink); font-weight: 600; }
+  .item.done .body { color: var(--mute); }
+  .item.done .body b { color: var(--mute); }
+  .repo { font-family: var(--mono); font-size: 0.74rem; color: var(--win); }
+  .repo::before { content: "◆ your repo: "; color: var(--mute); }
+  a { color: var(--accent); text-decoration: none; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.5rem; }
+  th { font-family: var(--mono); text-align: left; color: var(--mute); font-weight: 400;
+    font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.1em; padding: 0.2rem 0.6rem 0.4rem 0; }
+  td { padding: 0.3rem 0.6rem 0.3rem 0; border-top: 1px solid var(--line); color: var(--dim); vertical-align: top; }
+  td.d { font-family: var(--mono); color: var(--ink); white-space: nowrap; }
+  footer { font-family: var(--mono); font-size: 0.68rem; color: var(--mute);
+    border-top: 1px solid var(--line); margin-top: 2.6rem; padding-top: 1.2rem; letter-spacing: 0.05em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="eyebrow">interview_prep · github.com/jorshimayor</span>
+  <h1>The Prep Terminal</h1>
+  <p class="lede">Junior to senior, four lanes: core SWE, football tech, blockchain, bounties. Every module is grounded in repos you already own — the job is converting collected knowledge into scheduled reps and shipped proof.</p>
+</header>
+<div class="bar-wrap">
+  <div class="bar-line"><span class="mono">progress</span><span id="count" class="mono"></span></div>
+  <div class="meter"><i id="meter"></i></div>
+</div>
+
+<h2>the ladder — what each level is actually tested on</h2>
+<div class="ladder">
+  <div class="rung"><h3>junior</h3><p>Can you code cleanly under time pressure, and do you test? DSA screens, a take-home done properly, basics of HTTP/DB/git. Portfolio matters more than experience here — you already beat this bar.</p></div>
+  <div class="rung"><h3>mid</h3><p>Can you own a feature end to end? Debugging stories, API design, trade-off talk, code review judgment. Your STAR bank IS this level's currency.</p></div>
+  <div class="rung"><h3>senior</h3><p>Can you design systems and carry others? System design rounds, architecture narratives, mentorship signals, saying "I measured it" instead of "I think". This is the season target.</p></div>
+</div>
+
+<h2>lane 1 · core swe — the reps</h2>
+<p class="why">You forked leetcode-company-wise-problems, system-design-primer and the Xu book notes. Collecting is done; the ladder is climbed by cadence. Everything below is a repeating weekly commitment, not a one-off.</p>
+<div id="lane1"></div>
+
+<h2>lane 2 · football tech — the show-don't-tell lane</h2>
+<p class="why">The Hudl-family bar: TypeScript, PostgreSQL, React, GraphQL, agentic engineering, CI. You now hold live artifacts for all six. This lane is about narration and visibility, not new code.</p>
+<div id="lane2"></div>
+
+<h2>lane 3 · blockchain — from repos to contests</h2>
+<p class="why">Goldgard (Solidity), panoptic-v2-core (DeFi options) and stablearc-settlement-agent (stablecoin P2P settlement) prove interest with code behind it. The blockchain hiring market pays for SECURITY judgment — the path runs through audit contests, which are also your bounty lane.</p>
+<div id="lane3"></div>
+
+<h2>lane 4 · bounties — income while you interview</h2>
+<p class="why">Two different games: OSS feature bounties (fast, plays to your TypeScript speed) and audit contests (slower ramp, higher ceiling, compounds with lane 3). Start with the first, grow the second.</p>
+<div id="lane4"></div>
+
+<h2>the week — when each rep happens</h2>
+<table>
+  <thead><tr><th>day</th><th>rep</th></tr></thead>
+  <tbody>
+    <tr><td class="d">mon</td><td>2 DSA problems (timed, out loud) · score review: what did the model call miss</td></tr>
+    <tr><td class="d">tue</td><td>1 system-design narration (35 min, whiteboard, no code open) · publish model scoring</td></tr>
+    <tr><td class="d">wed</td><td>2 DSA problems · 1 hour contest/bounty work</td></tr>
+    <tr><td class="d">thu</td><td>STAR bank practice mode, 3 stories out loud · applications: send 2</td></tr>
+    <tr><td class="d">fri</td><td>publish model call · 1 hour bounty work · applications: send 2</td></tr>
+    <tr><td class="d">sat/sun</td><td>match-day content runs itself — write the week's thread, rest</td></tr>
+  </tbody>
+</table>
+
+<h2>application engine — the boring machine that gets interviews</h2>
+<div id="lane5"></div>
+
+<footer>❯ progress lives in this browser · reminder rides the assistant daily · fieldtilt.</footer>
+</div>
+<script>
+const L = {
+lane1: [
+  { b: "DSA cadence", t: "NeetCode 75 in JavaScript or Python, 4/week, 25-minute timer, THINKING OUT LOUD (record yourself weekly; the mumble is what fails screens). Priority order: arrays/hashing, two pointers, sliding window, stack, binary search, trees/BFS/DFS, heaps, intervals, 1-D DP.", r: "data_structures_and_algorithms_using_javascript, leetcode-company-wise-problems" },
+  { b: "System design, from your own systems", t: "Alternate weeks: (a) a fieldtilt subsystem narrated cold on a whiteboard in 35 minutes: the match-day poller, the burst engine, the scheduler, the provider overlay; (b) a classic from the Xu book you already keep notes on: rate limiter, news feed, chat, URL shortener. Learn the grading rubric at Hello Interview so you speak interviewer.", r: "system-design-notes, system-design-primer, fieldtilt" },
+  { b: "Behavioral, weaponized", t: "Your STAR bank has ten stories from production. Thursday ritual: practice mode, three stories out loud, 90 seconds each. Rotate so every story gets touched weekly.", r: "openclaw-monster-agent, fieldtilt" },
+  { b: "Mock interviews from week 2", t: "One mock a week minimum: Pramp (free peer mocks) for DSA, a peer or interviewing.io for design. A mock a week beats a month of silent grinding — the skill IS performing under observation.", r: "" },
+  { b: "The take-home standard", t: "Any take-home you submit gets: tests, a README with trade-offs stated, CI passing, small commits with real messages. You already work this way in fieldtilt — just never drop the standard because it's 'only' a take-home.", r: "fieldtilt (140+ tests, CI)" },
+],
+lane2: [
+  { b: "The terminal is the demo", t: "Lead every football-tech application with the public terminal link: React + GraphQL over a live model, scored in public. Rehearse a 5-minute walkthrough: constraints first (free tier, quotas), then architecture, then trade-offs.", r: "fieldtilt /terminal" },
+  { b: "The model is the credential", t: "Every Friday call and Tuesday scoring compounds. After 6 weeks you have a public calibration record no CV bullet can fake. The xG model (weeks 8-14) then becomes the JSDSS paper draft.", r: "fieldtilt analytics/ (season-forecast-v1)" },
+  { b: "Agentic engineering story", t: "Every Hudl posting demanded 'AI-forward, agentic techniques'. Your compose DAG + burst engine + OpenClaw orchestration is a rehearsed 5-minute segment with the dashboard live. Almost nobody else in the pipeline has this.", r: "fieldtilt (compose graph), openclaw-monster-agent" },
+  { b: "Ship the weekly write-up", t: "The season calendar's post/blog columns are literally interview practice for 'communicates trade-offs to stakeholders'. Never skip the week's thread; it is the visible half of the portfolio.", r: "" },
+  { b: "Targets", t: "Vendors first (remote-friendly): StatsBomb/Hudl ecosystem, Zelus, Teamworks, SkillCorner, Stats Perform, Sportec, Genius Sports, Sportradar. Watch their Greenhouse/Lever boards weekly; apply the Thursday/Friday slots.", r: "" },
+],
+lane3: [
+  { b: "Solidity depth pass", t: "Ship Goldgard to a public testnet with a test suite (Foundry, not Hardhat — the market moved). Foundry's forge test + fuzzing on your own contract is the fastest credibility upgrade your existing repo can get.", r: "Goldgard" },
+  { b: "Security fundamentals", t: "Work Ethernaut and Damn Vulnerable DeFi end to end — they are the interview screens of this niche. Keep a write-up per level in a public repo: your solutions ARE the blockchain portfolio.", r: "new repo: security-writeups" },
+  { b: "DeFi mechanism literacy", t: "You forked panoptic-v2-core: turn that from a fork into a study — one written deep-dive on how Panoptic's options mechanism works (collateral, streamia, liquidation). Mechanism write-ups get noticed in this market.", r: "panoptic-v2-core" },
+  { b: "The StableArc story", t: "African-currency P2P settlement is a genuinely differentiated thesis. Write the architecture doc and threat model even if the product is early — payments + agents + stablecoins is a hot intersection and you're IN it.", r: "stablearc-settlement-agent" },
+  { b: "Contest ramp", t: "Month 1: read past reports on Solodit (one/day). Month 2: enter Code4rena or Sherlock contests, expect zero findings, submit anyway. Month 3+: QA reports and gas findings land first; mediums come with reps.", r: "" },
+],
+lane4: [
+  { b: "OSS bounties now", t: "Algora (algora.io) lists paid TypeScript/OSS bounties — your fastest lane. Filter TS, start with $100-300 issues, over-deliver on tests and PR descriptions. Two shipped bounties = income AND public proof of shipping in other people's codebases.", r: "" },
+  { b: "Audit contests as bounties", t: "Code4rena, Sherlock, Cantina, Immunefi (live-protocol bug bounties — only after contest reps). This lane compounds with lane 3; treat contest losses as paid-in training.", r: "" },
+  { b: "One bounty rule", t: "Never more than one open bounty commitment at a time; they must not eat the model call, the applications, or the DSA cadence. Bounties are the side pot, not the game.", r: "" },
+],
+lane5: [
+  { b: "Pipeline discipline", t: "4 applications/week minimum (Thu 2, Fri 2), tracked in a sheet: company, role, date, status, follow-up date. Follow up once at day 7. Volume with tailoring beats either alone.", r: "" },
+  { b: "The CV rule", t: "One page. Lead with fieldtilt + OpenClaw as production systems (numbers: tests, uptime, posts/day, model scored publicly). GitHub pinned repos: fieldtilt, openclaw-monster-agent, Goldgard, stablearc + the two write-up repos. Unpin the forks.", r: "" },
+  { b: "Warm > cold", t: "Every write-up/thread ends with distribution: post it, tag the tools used, answer replies. Reply to engineers at target companies with substance for 2 weeks BEFORE applying. Nigeria-remote reality: warm intros clear the location filter far more often than cold applies.", r: "" },
+  { b: "Interview log", t: "After every real interview: same-day notes — questions asked, where you wobbled, one drill added to next week. Interviews are also reps; the log turns rejections into curriculum.", r: "" },
+],
+};
+const order = ["lane1","lane2","lane3","lane4","lane5"];
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem("prep-progress") || "{}"); } catch {}
+let total = 0;
+order.forEach((lane) => {
+  const host = document.getElementById(lane);
+  L[lane].forEach((it, i) => {
+    const id = lane + ":" + i; total++;
+    const row = document.createElement("div");
+    row.className = "item" + (saved[id] ? " done" : "");
+    row.innerHTML = '<input type="checkbox" ' + (saved[id] ? "checked" : "") + ' aria-label="done"><div class="body"><b>' + it.b + ".</b> " + it.t + (it.r ? '<div class="repo">' + it.r + "</div>" : "") + "</div>";
+    row.querySelector("input").addEventListener("change", (ev) => {
+      saved[id] = ev.target.checked;
+      try { localStorage.setItem("prep-progress", JSON.stringify(saved)); } catch {}
+      row.classList.toggle("done", ev.target.checked); paint();
+    });
+    host.appendChild(row);
+  });
+});
+function paint() {
+  const n = Object.values(saved).filter(Boolean).length;
+  document.getElementById("count").innerHTML = n === total ? "<b>" + n + "/" + total + " — ladder climbed</b>" : n + "/" + total + " modules in motion";
+  document.getElementById("meter").style.width = Math.round((n / total) * 100) + "%";
+}
+paint();
+</script>
+</body>
+</html>

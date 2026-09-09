@@ -1,5 +1,6 @@
 import dashboardHtml from "../public/index.html";
 import terminalHtml from "../public/terminal.html";
+import prepHtml from "../public/prep.html";
 import themeCss from "../public/theme.css";
 import sortableJs from "../public/sortable.min.js.txt";
 
@@ -129,6 +130,12 @@ export default {
     const p = url.pathname;
 
     if (p === "/" || p === "/index.html") return serveDashboard();
+    if (p === "/prep") {
+      return new Response(prepHtml, {
+        status: 200,
+        headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=300" },
+      });
+    }
     if (p === "/terminal") {
       return new Response(terminalHtml, {
         status: 200,
