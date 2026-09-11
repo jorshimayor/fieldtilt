@@ -150,3 +150,16 @@ if (failures) {
   process.exit(1);
 }
 console.log("\nAll football tests passed");
+
+// ---- squad coverage counting ----
+import { countMentions } from "../../packages/tools/squad";
+{
+  const squad = [{ name: "João Pedro" }, { name: "Romeo Lavia" }, { name: "Jorrel Hato" }, { name: "Wes To" }];
+  const posts = ["Joao Pedro scores again", "LAVIA runs the midfield. Lavia!", "quiet week"];
+  const m = Object.fromEntries(countMentions(squad, posts).map((x) => [x.name, x.mentions]));
+  if (m["João Pedro"] !== 1) { console.error("✗ accent-folded mention count"); process.exit(1); }
+  if (m["Romeo Lavia"] !== 1) { console.error("✗ per-post (not per-occurrence) count"); process.exit(1); }
+  if (m["Jorrel Hato"] !== 0) { console.error("✗ zero mentions stays zero"); process.exit(1); }
+  if (m["Wes To"] !== 0) { console.error("✗ short surname must not match substrings"); process.exit(1); }
+  console.log("  ✓ countMentions: accents, dedup per post, short-name guard");
+}

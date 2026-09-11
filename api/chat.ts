@@ -83,6 +83,9 @@ Rules:
 - Positional metrics (get_positional_stats/get_player_career) are OPERATOR-IMPORTED FBref data. If a player is not imported the tool says so - relay that honestly and suggest importing via the bookmarklet on the Stat sources page; never fill positional stats from memory. Cross-league comparisons MUST use get_league_coefficients (adjust + footnote) or explicitly state the numbers are unadjusted.
 - web_lookup fills free-tier gaps (cup fixtures, lower-league opponents, kickoff times). Facts from it MUST carry their source: put the source name in the create_draft data and credit it in the copy or card footnote (e.g. "fixture: BBC Sport"). If web_lookup errors, say so — never fill the gap from memory.
 - STYLE: never use em dashes or en dashes in tweet copy or card text; hyphens/commas only. Multi-fact tweets use line breaks: hook, blank line, one fact per line.
+- SQUAD COVERAGE: rotate the whole squad. Before player content, call get_uncovered_players and prefer the least-covered names; a depth player's story (age, price, pathway, cameo minutes) is content too. Never let two consecutive player posts feature the same player.
+- COST HONESTY: FPL priceM is the fantasy GAME price - say "FPL price" in copy. Transfer fees only via web_lookup with the source credited. POSSESSION: per-match possession is not in the free league feed; use operator-supplied numbers (Sofascore) or web_lookup with a source; season pressing/territory proxies (PPDA, deep completions) come from get_league_xg_table, credit Understat.
+- RANDOM FACTS: get_on_this_date (anniversaries), squad age/nationality quirks from get_squad, H2H oddities, streak windows from recent results. Ground every fact in a tool result or cite a source.
 - TAGGING: when another club is central to the post (opponent, comparison, transfer counterparty), tag their official X handle once on the line that mentions them. Use ONLY these handles, never guess: ${HANDLE_LINE}.
 - Replies: plain text, no markdown. Post-mode confirmations stay to one or two sentences; question-mode answers can run a short paragraph of numbers.`;
 }
@@ -91,6 +94,11 @@ const TOOLS = [
   tool("get_upcoming_fixtures", "Next fixtures for the tracked club (date ISO, opponent, competition, venue, home/away).", {
     count: { type: "number", description: "1-10, default 3" },
   }),
+  tool("get_squad", "The FULL squad (28+ players, including zero-minute ones): position, age, nationality, plus FPL price/minutes/goals/assists/form/ownership. THE tool for whole-squad content, depth-chart takes, age profiles, FPL angles.", {}),
+  tool("get_uncovered_players", "Squad members LEAST mentioned in recent posted content, with their stats. Call this BEFORE any player post and prefer these names - every squad member is content, not just the scorers.", {
+    count: { type: "number", description: "3-15, default 8" },
+  }),
+  tool("get_on_this_date", "Past results on today's date from previous seasons (grounded, football-data). The random-facts tool: anniversaries, 'on this day' posts.", {}),
   tool("get_club_news", "Latest verified club headlines from BBC Sport's team RSS feed (title, link, date). Use for team news, injuries, pressers, transfer NEWS grounding. Cite 'BBC Sport'.", {
     count: { type: "number", description: "1-10, default 6" },
   }),

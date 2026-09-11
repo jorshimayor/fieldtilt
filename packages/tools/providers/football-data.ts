@@ -251,8 +251,9 @@ export const footballDataProvider: FootballProvider = {
   async getFixtures(opts) {
     const status = opts.last ? "FINISHED" : "SCHEDULED";
     const limit = opts.next || opts.last || 5;
-    const path = `/teams/${teamId()}/matches?status=${status}&limit=${limit}`;
-    const key = `fd:fixtures:${slug()}:${status}:${limit}`;
+    const seasonQ = opts.season ? `&season=${opts.season}` : "";
+    const path = `/teams/${teamId()}/matches?status=${status}&limit=${limit}${seasonQ}`;
+    const key = `fd:fixtures:${slug()}:${status}:${limit}:${opts.season || "cur"}`;
     const cached = await getCache<{ fixtures: NormalizedFixture[]; citation: string }>(key);
     if (cached) return cached;
 

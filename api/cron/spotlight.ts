@@ -28,7 +28,36 @@ function isoWeek(d = new Date()): string {
 
 export default withErrorLogging(async function handler(): Promise<Response> {
   const season = currentSeason();
-  const { players } = await getTeamTopPerformers(season);
+  // Coverage-first: the whole squad is content. Spotlight the LEAST-covered
+  // player who is actually getting minutes; top performers get plenty of
+  // airtime from every other pipeline.
+  const { players: topPerformers } = await getTeamTopPerformers(season);
+  let players = topPerformers;
+  try {
+    const { getFullSquad, countMentions } = await import("../../packages/tools/squad");
+    const { db } = await import("../../packages/db/client");
+    const { drafts } = await import("../../packages/db/schema");
+    const { desc: descOp, eq: eqOp } = await import("drizzle-orm");
+    const { players: squad } = await getFullSquad();
+    const recent = await db.select({ content: drafts.content }).from(drafts)
+      .where(eqOp(drafts.status, "posted")).orderBy(descOp(drafts.createdAt)).limit(200);
+    const counts = countMentions(squad, recent.map((r) => r.content));
+    const ranked = squad
+      .filter((sp) => (sp.fpl?.minutes || 0) > 0)
+      .sort((a, b) =>
+        (counts.find((c) => c.name === a.name)?.mentions || 0) - (counts.find((c) => c.name === b.name)?.mentions || 0)
+        || (b.fpl?.minutes || 0) - (a.fpl?.minutes || 0));
+    if (ranked.length) {
+      // map least-covered squad names onto the performers list shape when
+      // possible; fall back to a synthetic entry from FPL numbers.
+      players = ranked.slice(0, 8).map((sp) => {
+        const perf = topPerformers.find((tp) => tp.player.toLowerCase().includes(sp.name.split(" ").slice(-1)[0].toLowerCase()));
+        return perf || ({ player: sp.name, playerId: 0, photoUrl: null, position: sp.position, appearances: Math.round((sp.fpl!.minutes) / 90), goals: sp.fpl!.goals, assists: sp.fpl!.assists, minutes: sp.fpl!.minutes, rating: null } as any);
+      });
+    }
+  } catch {
+    /* coverage layer optional - top performers remain the fallback */
+  }
   const candidates = players.filter((p) => p.appearances > 0).slice(0, 6);
   if (!candidates.length) return json({ skipped: "no player data for this season yet" });
 

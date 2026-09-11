@@ -76,6 +76,52 @@ export async function execTool(name: string, args: any): Promise<any> {
       const { getClubNews } = await import("../tools/rss");
       return await getClubNews(clamp(args?.count, 1, 10, 6));
     }
+    case "get_squad": {
+      const { getFullSquad } = await import("../tools/squad");
+      const { players, sources } = await getFullSquad();
+      return { count: players.length, players, sources, note: "fpl.priceM is the FANTASY game price, never a transfer fee. Real fees need web_lookup with a source." };
+    }
+    case "get_uncovered_players": {
+      const { getFullSquad, countMentions } = await import("../tools/squad");
+      const { players } = await getFullSquad();
+      const rows = await db
+        .select({ content: drafts.content })
+        .from(drafts)
+        .where(eq(drafts.status, "posted"))
+        .orderBy(desc(drafts.createdAt))
+        .limit(200);
+      const counts = countMentions(players, rows.map((r) => r.content));
+      const merged = counts
+        .map((c) => ({ ...c, ...players.find((pl) => pl.name === c.name) }))
+        .sort((a, b) => a.mentions - b.mentions || (b.fpl?.minutes || 0) - (a.fpl?.minutes || 0));
+      return {
+        leastCovered: merged.slice(0, clamp(args?.count, 3, 15, 8)),
+        note: "mentions counted across recent POSTED content. Rotate: the least-covered players are the next content, not the top scorers again.",
+      };
+    }
+    case "get_on_this_date": {
+      const { getCache, setCache } = await import("../tools/cache");
+      const today = new Date();
+      const md = `${String(today.getUTCMonth() + 1).padStart(2, "0")}-${String(today.getUTCDate()).padStart(2, "0")}`;
+      const cacheKey = `onthisdate:${md}`;
+      const hit = await getCache<any>(cacheKey);
+      if (hit) return hit;
+      const season = currentSeason();
+      const facts: any[] = [];
+      for (const past of [season - 1, season - 2, season - 3, season - 4]) {
+        try {
+          const { fixtures } = await getTeamFixtures({ season: past, last: 60 });
+          for (const f of fixtures) {
+            if (f.outcome && f.date.slice(5, 10) === md) {
+              facts.push({ season: `${past}/${String((past + 1) % 100).padStart(2, "0")}`, date: f.date.slice(0, 10), match: `${f.home} ${f.goalsHome}-${f.goalsAway} ${f.away}`, competition: f.competition, outcome: f.outcome });
+            }
+          }
+        } catch { /* season outside plan window - fine */ }
+      }
+      const data = { date: md, facts, note: facts.length ? "grounded past results on today's date (source: football-data)" : "no past matches on this date in the available seasons" };
+      await setCache(cacheKey, data, 24 * 60 * 60 * 1000);
+      return data;
+    }
     case "get_standings": {
       const { team, table } = await getLeagueStandings(currentSeason());
       return { team, topSix: table.slice(0, 6) };

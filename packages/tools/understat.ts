@@ -55,6 +55,9 @@ export type TeamXgRow = {
   xGA: number;
   npxG: number;
   npxGA: number;
+  ppda?: number | null;
+  deep?: number;
+  deepAllowed?: number;
   xPts: number;
 };
 
@@ -121,6 +124,11 @@ export function mapUnderstatTeams(teamsData: any): TeamXgRow[] {
     const t = teamsData[key];
     const history: any[] = Array.isArray(t?.history) ? t.history : [];
     const sum = (field: string) => round2(history.reduce((acc, h) => acc + num(h?.[field]), 0));
+    // Pressing/territory proxies (possession itself isn't in free data):
+    // PPDA = opponent passes allowed per defensive action (lower = more
+    // aggressive press); deep = completed passes within ~20m of goal.
+    const ppdaAtt = history.reduce((a, h) => a + num(h?.ppda?.att), 0);
+    const ppdaDef = history.reduce((a, h) => a + num(h?.ppda?.def), 0);
     rows.push({
       team: t?.title || key,
       matches: history.length,
@@ -129,6 +137,9 @@ export function mapUnderstatTeams(teamsData: any): TeamXgRow[] {
       npxG: sum("npxG"),
       npxGA: sum("npxGA"),
       xPts: sum("xpts"),
+      ppda: ppdaDef > 0 ? round2(ppdaAtt / ppdaDef) : null,
+      deep: sum("deep"),
+      deepAllowed: sum("deep_allowed"),
     });
   }
   return rows.sort((a, b) => b.xG - a.xG);
