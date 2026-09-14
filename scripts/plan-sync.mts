@@ -93,6 +93,27 @@ try {
   console.log("crash course not found - skipping");
 }
 
+// ---- ZK ladder (daily track) ----
+try {
+  const zk = readFileSync("docs/private/ZK_LADDER.md", "utf8");
+  const sections = zk
+    .split(/\n(?=## )/)
+    .map((chunk) => {
+      const m = chunk.match(/^##\s+(\d+)\.\s*(.*)$/m);
+      return {
+        num: m ? Number(m[1]) : -1,
+        title: m ? m[2].replace(/[*_`]/g, "").trim() : "Overview",
+        body: chunk,
+      };
+    })
+    .filter((x) => x.body.trim().length > 80);
+  if (study) study.docs.push({ name: "ZK ladder", sections });
+  else study = { docs: [{ name: "ZK ladder", sections }], syncedAt: new Date().toISOString() };
+  console.log(`zk ladder: ${sections.length} sections, ${Math.round(zk.length / 1024)}KB`);
+} catch (e) {
+  console.log("zk ladder not found - skipping");
+}
+
 const far = new Date("2028-01-01");
 for (const [key, data] of [
   ["plan:season", { header, rows, syncedAt: new Date().toISOString() }],
