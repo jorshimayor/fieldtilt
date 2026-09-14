@@ -114,6 +114,27 @@ try {
   console.log("zk ladder not found - skipping");
 }
 
+// ---- football analytics writing ladder ----
+try {
+  const al = readFileSync("docs/private/ANALYTICS_LADDER.md", "utf8");
+  const sections = al
+    .split(/\n(?=## )/)
+    .map((chunk) => {
+      const m = chunk.match(/^##\s+(\d+)\.\s*(.*)$/m);
+      return {
+        num: m ? Number(m[1]) : -1,
+        title: m ? m[2].replace(/[*_`]/g, "").trim() : "Overview",
+        body: chunk,
+      };
+    })
+    .filter((x) => x.body.trim().length > 80);
+  if (study) study.docs.push({ name: "Analytics ladder", sections });
+  else study = { docs: [{ name: "Analytics ladder", sections }], syncedAt: new Date().toISOString() };
+  console.log(`analytics ladder: ${sections.length} sections, ${Math.round(al.length / 1024)}KB`);
+} catch (e) {
+  console.log("analytics ladder not found - skipping");
+}
+
 const far = new Date("2028-01-01");
 for (const [key, data] of [
   ["plan:season", { header, rows, syncedAt: new Date().toISOString() }],

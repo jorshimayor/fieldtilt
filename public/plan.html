@@ -56,6 +56,21 @@
   .gate button { background: var(--accent); color: #fff; border: 0; font-family: var(--mono);
     padding: 0.5rem 1rem; cursor: pointer; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.72rem; }
   .err { color: var(--loss); }
+  .docbar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.7rem; }
+  .docbtn { background: var(--surface); border: 1px solid var(--line); color: var(--dim);
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 0.35rem 0.7rem; cursor: pointer; }
+  .docbtn.on { border-color: var(--accent); color: var(--accent); }
+  .studygrid { display: grid; grid-template-columns: 290px 1fr; gap: 1rem; margin-top: 0.7rem; align-items: start; }
+  @media (max-width: 860px) { .studygrid { grid-template-columns: 1fr; } }
+  .toc { border: 1px solid var(--line); background: var(--surface); padding: 0.6rem; max-height: 62vh; overflow-y: auto; }
+  .tocbtn { display: block; width: 100%; text-align: left; background: none; border: 0; cursor: pointer;
+    color: var(--dim); font-family: var(--mono); font-size: 0.72rem; padding: 0.25rem 0.35rem; line-height: 1.4; }
+  .tocbtn:hover { color: var(--ink); }
+  .tocbtn.on { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--ink); }
+  .tocbtn .n { color: var(--accent); }
+  .reader { border: 1px solid var(--line); background: var(--surface); padding: 1rem 1.2rem;
+    white-space: pre-wrap; color: var(--dim); font-size: 0.8rem; line-height: 1.62; max-height: 62vh; overflow-y: auto; }
 </style>
 </head>
 <body>
@@ -125,6 +140,60 @@ function render(d) {
     root.appendChild(lh);
     const curEl = lh.querySelector(".week.current");
   }
+  // ---- study docs (index only; bodies fetched on demand) ----
+  const ST = d.study;
+  if (ST && ST.docs && ST.docs.length) {
+    const sh = document.createElement("div");
+    sh.innerHTML = '<h2>the study shelf — ladders and guides</h2><p class="meta">sections load when opened, not all at once. synced ' + (ST.syncedAt || "").slice(0, 10) + "</p>";
+    const bar = document.createElement("div");
+    bar.className = "docbar";
+    const grid = document.createElement("div");
+    grid.className = "studygrid";
+    const toc = document.createElement("div");
+    toc.className = "toc";
+    const reader = document.createElement("div");
+    reader.className = "reader";
+    reader.textContent = "Pick a section.";
+    grid.appendChild(toc);
+    grid.appendChild(reader);
+
+    let curDoc = 0;
+    const loadSection = (di, si, btn) => {
+      [...toc.querySelectorAll(".tocbtn")].forEach((b) => b.classList.remove("on"));
+      if (btn) btn.classList.add("on");
+      reader.textContent = "Loading…";
+      fetch("/api/plan?doc=" + di + "&section=" + si, { headers: { Authorization: "Bearer " + KEY } })
+        .then((r) => r.json())
+        .then((j) => (reader.textContent = j.body || j.error || "empty"))
+        .catch((e) => (reader.textContent = "Could not load: " + e.message));
+    };
+    const renderToc = (di) => {
+      curDoc = di;
+      [...bar.children].forEach((b, i) => b.classList.toggle("on", i === di));
+      toc.innerHTML = "";
+      (ST.docs[di].sections || []).forEach((sec, si) => {
+        const b = document.createElement("button");
+        b.className = "tocbtn";
+        b.innerHTML = '<span class="n">' + (sec.num >= 0 ? sec.num : "·") + "</span> ";
+        b.appendChild(document.createTextNode(sec.title));
+        b.addEventListener("click", () => loadSection(di, si, b));
+        toc.appendChild(b);
+      });
+      reader.textContent = "Pick a section.";
+    };
+    ST.docs.forEach((doc, di) => {
+      const b = document.createElement("button");
+      b.className = "docbtn";
+      b.textContent = doc.name + " (" + (doc.sections || []).length + ")";
+      b.addEventListener("click", () => renderToc(di));
+      bar.appendChild(b);
+    });
+    sh.appendChild(bar);
+    sh.appendChild(grid);
+    root.appendChild(sh);
+    renderToc(0);
+  }
+
   // ---- season calendar ----
   const S = d.season;
   if (S) {
