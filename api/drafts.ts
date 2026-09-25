@@ -19,6 +19,8 @@ import { desc, asc, eq } from "drizzle-orm";
 import { composeAndPost, postDraftNow } from "../packages/shared/poster";
 import { TweetKind, Tone } from "../packages/shared/tweet-prompts";
 import { CardKind } from "../packages/render/index";
+import { getCache, setCache } from "../packages/tools/cache";
+import { NEXT_KEY } from "./cron/scheduled-posts";
 import { withErrorLogging } from "../packages/observability/index";
 
 const VALID_KINDS: TweetKind[] = [
@@ -123,6 +125,7 @@ export default withErrorLogging(async function handler(req: Request): Promise<Re
     if (typeof body.pngBase64 === "string" && body.pngBase64.length) set.scheduledPng = body.pngBase64;
     if (typeof body.content === "string" && body.content.trim()) set.content = body.content;
     await db.update(drafts).set(set).where(eq(drafts.id, body.id));
+    await noteScheduled(at);
     return json({ ok: true, id: body.id, status: "scheduled", scheduledFor: at.toISOString() });
   }
 
@@ -141,6 +144,7 @@ export default withErrorLogging(async function handler(req: Request): Promise<Re
       .update(drafts)
       .set({ status: "scheduled", scheduledFor: at, scheduleAttempts: 0 })
       .where(eq(drafts.id, body.id));
+    await noteScheduled(at);
     return json({ ok: true, id: body.id, status: "scheduled", scheduledFor: at.toISOString() });
   }
 
@@ -173,6 +177,19 @@ async function composeAndPostAsDraft(opts: {
 }) {
   const result = await composeAndPost({ ...opts, source: "dashboard", forceQueue: true });
   return result;
+}
+
+
+/** Pull the sweep's wake-up clock earlier when something is scheduled sooner. */
+async function noteScheduled(at: Date): Promise<void> {
+  try {
+    const cur = await getCache<string>(NEXT_KEY);
+    if (!cur || Date.parse(cur) > at.getTime()) {
+      await setCache(NEXT_KEY, at.toISOString(), 30 * 24 * 60 * 60 * 1000);
+    }
+  } catch {
+    /* the hourly probe is the backstop */
+  }
 }
 
 function json(obj: unknown, status = 200): Response {
