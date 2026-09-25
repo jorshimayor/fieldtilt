@@ -40,15 +40,40 @@ type ApiFootballResponse<T> = {
   results?: number;
 };
 
-/** Soft daily request budget (free tier = 100 req/day; default cap 90). */
+/**
+ * Soft daily request budget (free tier = 100 req/day; default cap 90).
+ *
+ * Counted in KV when available, Redis otherwise. KV has no INCR, so this is
+ * read-then-write and two simultaneous calls can share a number - fine for a
+ * soft cap set 10 below the hard limit, and far better than the previous
+ * behaviour, where a missing backend made the guard return true forever and
+ * spent the whole day's quota unmetered.
+ */
 async function underBudget(): Promise<boolean> {
-  if (!redis) return true;
   const limit = Number((globalThis as any).process?.env?.API_FOOTBALL_DAILY_BUDGET || 90);
   const day = new Date().toISOString().slice(0, 10);
   const key = `af:budget:${day}`;
-  const n = await redis.incr(key);
-  if (n === 1) await redis.expire(key, 26 * 60 * 60);
-  return n <= limit;
+  const kv = (globalThis as any).__CACHE_KV;
+  if (kv) {
+    try {
+      const n = Number((await kv.get(key)) || 0) + 1;
+      await kv.put(key, String(n), { expirationTtl: 26 * 60 * 60 });
+      return n <= limit;
+    } catch {
+      // Unknown spend is not permission to spend.
+      return false;
+    }
+  }
+  if (redis) {
+    try {
+      const n = await redis.incr(key);
+      if (n === 1) await redis.expire(key, 26 * 60 * 60);
+      return n <= limit;
+    } catch {
+      return false;
+    }
+  }
+  return false;
 }
 
 async function af<T>(path: string): Promise<ApiFootballResponse<T>> {
