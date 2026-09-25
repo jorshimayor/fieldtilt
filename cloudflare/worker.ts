@@ -42,6 +42,8 @@ function setProcessEnv(env: EnvBindings): void {
   if (!g.process) g.process = {};
   // Service bindings aren't strings — handlers reach them via globalThis.
   if ((env as any).ASSISTANT) g.__ASSISTANT = (env as any).ASSISTANT;
+  // KV is an object binding too — handlers reach it through globalThis.
+  if ((env as any).CACHE) g.__CACHE_KV = (env as any).CACHE;
   const normalized: Record<string, string | undefined> = {};
   for (const [k, v] of Object.entries(env || {})) {
     normalized[k] = v;

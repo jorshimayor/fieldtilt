@@ -17,7 +17,9 @@ import { buildSchema, graphql } from "graphql";
 import { getCache, setCache } from "../packages/tools/cache";
 import { withErrorLogging } from "../packages/observability/index";
 
-const TTL = 10 * 60 * 1000;
+// 30 min: standings and xG move at most daily, and this bounds KV writes
+// on a public endpoint to a few hundred a day.
+const TTL = 30 * 60 * 1000;
 
 const schema = buildSchema(/* GraphQL */ `
   type ClubInfo { name: String!, league: String!, season: String! }

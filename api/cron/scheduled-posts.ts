@@ -24,7 +24,7 @@ const MAX_PER_TICK = 3;
 const MAX_RENDER_ATTEMPTS = 3;
 
 /**
- * Redis-held "when is the next scheduled post due".
+ * Cache-held "when is the next scheduled post due".
  *
  * This sweep used to query Postgres on every 5-minute tick, forever. Neon
  * auto-suspends an idle compute after ~5 minutes, so a query every 5
@@ -32,11 +32,13 @@ const MAX_RENDER_ATTEMPTS = 3;
  * against a free-tier allowance near 190. It exhausted the quota and took
  * the whole bot down with it.
  *
- * Now the clock lives in Redis (which is what a cheap hot key is for) and
- * Postgres is only woken when something is actually due. NEXT_KEY holds the
- * earliest due time; PROBE_KEY bounds how often we re-derive that from the
- * database when Redis has no opinion (cold start, eviction), so a lost key
- * degrades to one wakeup an hour rather than silently never posting.
+ * Now the clock lives in the cache (Cloudflare KV) and Postgres is only
+ * woken when something is actually due. NEXT_KEY holds the earliest due
+ * time; PROBE_KEY bounds how often we re-derive that from the database when
+ * the cache has no opinion (cold start, eviction), so a lost key degrades to
+ * one wakeup an hour rather than silently never posting. That path is also
+ * the bootstrap: the first probe that reaches a healthy database writes the
+ * real clock, after which the sweep stops touching Postgres entirely.
  */
 export const NEXT_KEY = "sched:next";
 const PROBE_KEY = "sched:probe";
@@ -52,7 +54,7 @@ export default withErrorLogging(async function handler(): Promise<Response> {
     return json({
       due: 0,
       skipped: "cache unavailable - refusing to poll the database",
-      fix: "recreate the Upstash database and update UPSTASH_REDIS_URL / UPSTASH_REDIS_TOKEN",
+      fix: "check the CACHE KV namespace binding in wrangler.toml is still attached",
     });
   }
   const next = await getCache<string>(NEXT_KEY);

@@ -31,3 +31,10 @@ crons = [
 type = "CompiledWasm"
 globs = ["**/*.wasm"]
 fallthrough = true
+
+# Cache backend. First-party on purpose: the previous cache was an external
+# free-tier Redis that was deleted without warning, which stopped absorbing
+# load and let the 5-minute crons exhaust the database quota.
+[[kv_namespaces]]
+binding = "CACHE"
+id = "9ff6453ae52f44c69b59e535ff57e00f"
