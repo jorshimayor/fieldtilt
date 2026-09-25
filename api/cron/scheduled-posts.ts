@@ -17,7 +17,7 @@ import { and, eq, lte, asc } from "drizzle-orm";
 import { postDraftNow } from "../../packages/shared/poster";
 import { notifyAssistant } from "../../packages/shared/assistant";
 import { once } from "../../packages/shared/redis";
-import { getCache, isCacheHealthy, setCache } from "../../packages/tools/cache";
+import { getCache, setCache, verifyCache } from "../../packages/tools/cache";
 import { withErrorLogging } from "../../packages/observability/index";
 
 const MAX_PER_TICK = 3;
@@ -43,8 +43,9 @@ const PROBE_KEY = "sched:probe";
 const PROBE_COOLDOWN_MS = 60 * 60 * 1000;
 
 export default withErrorLogging(async function handler(): Promise<Response> {
-  const next = await getCache<string>(NEXT_KEY);
-  if (!isCacheHealthy()) {
+  // Prove the cache works BEFORE deciding to query Postgres: it is the only
+  // thing standing between this five-minute cron and the compute quota.
+  if (!(await verifyCache())) {
     // Without a working cache there is no way to stop this sweep from waking
     // Postgres every five minutes. Delaying scheduled posts is recoverable;
     // burning the database's compute quota is not.
@@ -54,6 +55,7 @@ export default withErrorLogging(async function handler(): Promise<Response> {
       fix: "recreate the Upstash database and update UPSTASH_REDIS_URL / UPSTASH_REDIS_TOKEN",
     });
   }
+  const next = await getCache<string>(NEXT_KEY);
   if (next) {
     if (Date.parse(next) > Date.now()) {
       return json({ due: 0, skipped: "nothing due", next });
